@@ -40,7 +40,8 @@ tap(63, 1);
 tap(63, 2);
 
 // Bars 15-16: closing pattern
-for (let i = 0; i < 8; i++) tap(64 + i * 0.5, [0, 2, 1, 3, 2, 0, 3, 1][i]);
+const closing = [0, 2, 1, 3, 2, 0, 3, 1];
+closing.forEach((lane, i) => tap(64 + i * 0.5, lane));
 tap(70, 0);
 tap(70, 1);
 tap(70, 2);
