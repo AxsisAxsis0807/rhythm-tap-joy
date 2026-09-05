@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { DEFAULT_MODE_ID } from "@/game/modes";
 import { ClientOnly } from "@tanstack/react-router";
 import { GameScreen } from "@/components/game/GameScreen";
 import { TEST_CHART } from "@/game/charts/test-chart";
@@ -26,10 +28,15 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const [modeId, setModeId] = useState(DEFAULT_MODE_ID);
   return (
     <main>
       <ClientOnly fallback={<div className="h-[100dvh] bg-background" />}>
-        <GameScreen chart={TEST_CHART} />
+        <GameScreen
+          chart={TEST_CHART}
+          modeId={modeId}
+          onModeChange={setModeId}
+        />
       </ClientOnly>
     </main>
   );
