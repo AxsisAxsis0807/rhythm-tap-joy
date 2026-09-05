@@ -71,6 +71,12 @@
   --font-sans: "Zen Kaku Gothic New", ui-sans-serif, system-ui, sans-serif;
   --shadow-glow: 0 0 14px 2px oklch(0.85 0.16 195 / 0.75);
   --shadow-note: 0 0 10px oklch(0.8 0.17 195 / 0.55);
+  --color-mania-lane-a: var(--mania-lane-a);
+  --color-mania-lane-b: var(--mania-lane-b);
+  --color-fnf-lane-1: var(--fnf-lane-1);
+  --color-fnf-lane-2: var(--fnf-lane-2);
+  --color-fnf-lane-3: var(--fnf-lane-3);
+  --color-fnf-lane-4: var(--fnf-lane-4);
 }
 
 :root {
@@ -118,6 +124,17 @@
   --judge-great: oklch(0.86 0.15 140);
   --judge-good: oklch(0.88 0.14 90);
   --judge-miss: oklch(0.68 0.2 20);
+
+  /* Mode skins */
+  --mania-lane-a: oklch(0.95 0.01 250);
+  --mania-lane-b: oklch(0.76 0.16 250);
+  --fnf-lane-1: oklch(0.68 0.22 320);
+  --fnf-lane-2: oklch(0.72 0.17 235);
+  --fnf-lane-3: oklch(0.82 0.2 145);
+  --fnf-lane-4: oklch(0.66 0.22 25);
+  --arrow-foreground: oklch(0.15 0.03 265);
+  --gradient-mania-field: linear-gradient(180deg, oklch(0.16 0.03 265), oklch(0.22 0.05 270));
+  --gradient-fnf-field: linear-gradient(180deg, oklch(0.24 0.08 320), oklch(0.15 0.04 280));
 }
 
 .dark {
@@ -153,6 +170,14 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@utility bg-mania-field {
+  background-image: var(--gradient-mania-field);
+}
+
+@utility bg-fnf-field {
+  background-image: var(--gradient-fnf-field);
 }
 
 @layer base {
