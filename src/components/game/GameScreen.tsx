@@ -198,7 +198,23 @@ export function GameScreen({
             )}
           </div>
         </div>
+
+        {/* Touch layer: the whole screen is split into 4 key areas */}
+        <div className="absolute inset-0 z-20 flex touch-none">
+          {lanes.map((lane) => (
+            <div
+              key={lane}
+              onPointerDown={onPointerDown(lane)}
+              onPointerUp={() => releaseLane(lane)}
+              onPointerCancel={() => releaseLane(lane)}
+              onContextMenu={(e) => e.preventDefault()}
+              className="flex-1"
+              style={{ touchAction: "none" }}
+            />
+          ))}
+        </div>
       </div>
+
 
       {/* Song progress bar */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-center gap-3 px-4 pb-2">
