@@ -1,4 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { RotateCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_KEY_LABELS } from "@/game/config";
 import { useRhythmGame } from "@/game/useRhythmGame";
 import type { Chart } from "@/game/types";
@@ -32,6 +34,30 @@ export function GameScreen({
 
   const lanes = Array.from({ length: chart.laneCount }, (_, i) => i);
   const judge = mode.judgeLinePct;
+  const [isLandscape, setIsLandscape] = useState(false);
+  const [orientationMessage, setOrientationMessage] = useState("");
+
+  useEffect(() => {
+    const media = window.matchMedia("(orientation: landscape)");
+    const updateOrientation = () => {
+      setIsLandscape(media.matches);
+      if (media.matches) setOrientationMessage("");
+    };
+    updateOrientation();
+    media.addEventListener("change", updateOrientation);
+    return () => media.removeEventListener("change", updateOrientation);
+  }, []);
+
+  const requestLandscape = useCallback(async () => {
+    try {
+      if (document.fullscreenEnabled && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+      await screen.orientation.lock("landscape");
+    } catch {
+      setOrientationMessage("端末を横向きにしてください");
+    }
+  }, []);
 
   /** Pointer events give us multi-touch (simultaneous lanes) for free. */
   const onPointerDown = useCallback(
@@ -200,6 +226,24 @@ export function GameScreen({
           <p className="text-sm text-muted-foreground">
             4レーンをタップ、または D / F / J / K キーで演奏します。横画面でもプレイできます。
           </p>
+          {!isLandscape && (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void requestLandscape()}
+                className="font-display tracking-widest"
+              >
+                <RotateCw aria-hidden="true" />
+                横画面にする
+              </Button>
+              {orientationMessage && (
+                <p className="text-xs text-muted-foreground" role="status">
+                  {orientationMessage}
+                </p>
+              )}
+            </div>
+          )}
           <button
             disabled={status !== "ready"}
             onClick={() => void start()}
