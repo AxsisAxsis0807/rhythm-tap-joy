@@ -237,7 +237,11 @@ export function GameScreen({
               onPointerUp={() => releaseLane(lane)}
               onPointerCancel={() => releaseLane(lane)}
               onContextMenu={(e) => e.preventDefault()}
-              className="flex-1"
+              className={`flex-1 ${
+                settings.showTouchBorders
+                  ? "border-r border-lane-border last:border-r-0"
+                  : ""
+              }`}
               style={{ touchAction: "none" }}
             />
           ))}
