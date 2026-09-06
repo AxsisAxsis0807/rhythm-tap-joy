@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { RotateCw } from "lucide-react";
+import { RotateCw, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_KEY_LABELS } from "@/game/config";
 import { useRhythmGame } from "@/game/useRhythmGame";
@@ -7,6 +7,11 @@ import type { Chart } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { ModePicker } from "./ModePicker";
+import {
+  DEFAULT_SETTINGS,
+  SettingsPanel,
+  type GameSettings,
+} from "./SettingsPanel";
 
 export function GameScreen({
   chart,
