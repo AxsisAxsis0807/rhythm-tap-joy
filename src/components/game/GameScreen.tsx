@@ -41,6 +41,8 @@ export function GameScreen({
   const judge = mode.judgeLinePct;
   const [isLandscape, setIsLandscape] = useState(false);
   const [orientationMessage, setOrientationMessage] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     const media = window.matchMedia("(orientation: landscape)");
