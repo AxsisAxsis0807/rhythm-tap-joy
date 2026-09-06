@@ -50,7 +50,7 @@ export const GAME_MODES: GameMode[] = [
   },
   {
     id: "mania",
-    name: "PSU!MANIA",
+    name: "OSU!MANIA",
     description: "osu!mania風。丸ノーツとレシーバー、白と青のレーン。",
     noteShape: "circle",
     scroll: "down",
