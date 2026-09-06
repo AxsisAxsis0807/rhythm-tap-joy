@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { RotateCw } from "lucide-react";
+import { RotateCw, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_KEY_LABELS } from "@/game/config";
 import { useRhythmGame } from "@/game/useRhythmGame";
@@ -7,6 +7,11 @@ import type { Chart } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { ModePicker } from "./ModePicker";
+import {
+  DEFAULT_SETTINGS,
+  SettingsPanel,
+  type GameSettings,
+} from "./SettingsPanel";
 
 export function GameScreen({
   chart,
@@ -36,6 +41,8 @@ export function GameScreen({
   const judge = mode.judgeLinePct;
   const [isLandscape, setIsLandscape] = useState(false);
   const [orientationMessage, setOrientationMessage] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     const media = window.matchMedia("(orientation: landscape)");
@@ -83,6 +90,9 @@ export function GameScreen({
     : 100;
   const progress = duration ? Math.min(1, Math.max(0, songTime / duration)) : 0;
 
+  const showOverlay =
+    status === "ready" || status === "loading" || status === "idle" || status === "finished";
+
   return (
     <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none">
       {/* Top HUD */}
@@ -95,6 +105,25 @@ export function GameScreen({
         <span className="text-muted-foreground">|</span>
         <span className="tabular-nums">ACC {accuracy.toFixed(2)}%</span>
       </header>
+
+      {/* Settings button (start / result screens) */}
+      {showOverlay && (
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="設定を開く"
+          className="absolute right-3 top-2 z-30 rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <Settings aria-hidden="true" className="size-5" />
+        </button>
+      )}
+
+      <SettingsPanel
+        open={settingsOpen}
+        settings={settings}
+        onChange={setSettings}
+        onClose={() => setSettingsOpen(false)}
+      />
 
       {/* Playfield: a centred column that stays playable in landscape */}
       <div className="relative flex flex-1 justify-center overflow-hidden">
