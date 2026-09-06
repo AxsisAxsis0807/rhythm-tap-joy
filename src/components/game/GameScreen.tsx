@@ -90,6 +90,9 @@ export function GameScreen({
     : 100;
   const progress = duration ? Math.min(1, Math.max(0, songTime / duration)) : 0;
 
+  const showOverlay =
+    status === "ready" || status === "loading" || status === "idle" || status === "finished";
+
   return (
     <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none">
       {/* Top HUD */}
@@ -102,6 +105,25 @@ export function GameScreen({
         <span className="text-muted-foreground">|</span>
         <span className="tabular-nums">ACC {accuracy.toFixed(2)}%</span>
       </header>
+
+      {/* Settings button (start / result screens) */}
+      {showOverlay && (
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="設定を開く"
+          className="absolute right-3 top-2 z-30 rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <Settings aria-hidden="true" className="size-5" />
+        </button>
+      )}
+
+      <SettingsPanel
+        open={settingsOpen}
+        settings={settings}
+        onChange={setSettings}
+        onClose={() => setSettingsOpen(false)}
+      />
 
       {/* Playfield: a centred column that stays playable in landscape */}
       <div className="relative flex flex-1 justify-center overflow-hidden">
