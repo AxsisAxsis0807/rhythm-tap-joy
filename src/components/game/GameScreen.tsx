@@ -107,13 +107,9 @@ export function GameScreen({
             {lanes.map((lane) => (
               <div
                 key={lane}
-                onPointerDown={onPointerDown(lane)}
-                onPointerUp={() => releaseLane(lane)}
-                onPointerCancel={() => releaseLane(lane)}
-                onContextMenu={(e) => e.preventDefault()}
                 className="relative flex-1 border-r border-lane-border last:border-r-0 bg-lane"
-                style={{ touchAction: "none" }}
               >
+
                 {activeLanes.has(lane) && (
                   <div className="absolute inset-0 bg-lane-active" />
                 )}
