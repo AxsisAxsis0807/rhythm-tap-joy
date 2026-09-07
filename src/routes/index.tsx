@@ -3,7 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DEFAULT_MODE_ID } from "@/game/modes";
 import { ClientOnly } from "@tanstack/react-router";
 import { GameScreen } from "@/components/game/GameScreen";
+import { TitleScreen } from "@/components/menu/TitleScreen";
+import { MusicSelect, type SongEntry } from "@/components/menu/MusicSelect";
+import { buildSongList } from "@/game/songs";
 import { TEST_CHART } from "@/game/charts/test-chart";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
