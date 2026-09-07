@@ -1,4 +1,4 @@
-import type { Chart } from "../types";
+import type { Chart } from "./types";
 import type { SongEntry } from "@/components/menu/MusicSelect";
 
 /**

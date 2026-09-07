@@ -38,7 +38,7 @@ const SONGS = buildSongList(TEST_CHART);
 function Index() {
   const [modeId, setModeId] = useState(DEFAULT_MODE_ID);
   const [screen, setScreen] = useState<Screen>("title");
-  const [song, setSong] = useState<SongEntry>(SONGS[0]);
+  const [song, setSong] = useState<SongEntry>(SONGS[0]!);
 
   return (
     <main>
