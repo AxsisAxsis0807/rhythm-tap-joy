@@ -17,10 +17,12 @@ export function GameScreen({
   chart,
   modeId,
   onModeChange,
+  onExit,
 }: {
   chart: Chart;
   modeId: string;
   onModeChange: (id: string) => void;
+  onExit?: () => void;
 }) {
   const mode = getMode(modeId);
   const game = useRhythmGame(chart);
