@@ -31,17 +31,42 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+type Screen = "title" | "select" | "play";
+
+const SONGS = buildSongList(TEST_CHART);
+
 function Index() {
   const [modeId, setModeId] = useState(DEFAULT_MODE_ID);
+  const [screen, setScreen] = useState<Screen>("title");
+  const [song, setSong] = useState<SongEntry>(SONGS[0]);
+
   return (
     <main>
       <ClientOnly fallback={<div className="h-[100dvh] bg-background" />}>
-        <GameScreen
-          chart={TEST_CHART}
-          modeId={modeId}
-          onModeChange={setModeId}
-        />
+        {screen === "title" && (
+          <TitleScreen onContinue={() => setScreen("select")} />
+        )}
+        {screen === "select" && (
+          <MusicSelect
+            songs={SONGS}
+            onBack={() => setScreen("title")}
+            onPlay={(s) => {
+              setSong(s);
+              setScreen("play");
+            }}
+          />
+        )}
+        {screen === "play" && song.chart && (
+          <GameScreen
+            key={song.id}
+            chart={song.chart}
+            modeId={modeId}
+            onModeChange={setModeId}
+            onExit={() => setScreen("select")}
+          />
+        )}
       </ClientOnly>
     </main>
   );
 }
+
