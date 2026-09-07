@@ -17,10 +17,12 @@ export function GameScreen({
   chart,
   modeId,
   onModeChange,
+  onExit,
 }: {
   chart: Chart;
   modeId: string;
   onModeChange: (id: string) => void;
+  onExit?: () => void;
 }) {
   const mode = getMode(modeId);
   const game = useRhythmGame(chart);
@@ -296,6 +298,15 @@ export function GameScreen({
           >
             {status === "ready" ? "START" : "LOADING…"}
           </button>
+          {onExit && (
+            <button
+              type="button"
+              onClick={onExit}
+              className="text-xs tracking-[0.3em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              BACK
+            </button>
+          )}
         </Overlay>
       )}
 
@@ -334,6 +345,15 @@ export function GameScreen({
           >
             RETRY
           </button>
+          {onExit && (
+            <button
+              type="button"
+              onClick={onExit}
+              className="text-xs tracking-[0.3em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              BACK
+            </button>
+          )}
         </Overlay>
       )}
     </div>
