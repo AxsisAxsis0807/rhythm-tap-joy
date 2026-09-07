@@ -48,6 +48,7 @@ export function MusicSelect({
 }) {
   const [selectedId, setSelectedId] = useState(songs[0]?.id ?? "");
   const selected = songs.find((s) => s.id === selectedId) ?? songs[0];
+  if (!selected) return null;
 
   return (
     <div
