@@ -7,6 +7,7 @@ import { TitleScreen } from "@/components/menu/TitleScreen";
 import { MusicSelect, type SongEntry } from "@/components/menu/MusicSelect";
 import { buildSongList } from "@/game/songs";
 import { TEST_CHART } from "@/game/charts/test-chart";
+import { BEWILDERMENT_CHART } from "@/game/charts/bewilderment";
 
 
 export const Route = createFileRoute("/")({
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/")({
 
 type Screen = "title" | "select" | "play";
 
-const SONGS = buildSongList(TEST_CHART);
+const SONGS = buildSongList(TEST_CHART, BEWILDERMENT_CHART);
 
 function Index() {
   const [modeId, setModeId] = useState(DEFAULT_MODE_ID);

@@ -5,14 +5,14 @@ import type { SongEntry } from "@/components/menu/MusicSelect";
  * Song list for the select screen. Only entries with a chart are playable;
  * the rest are placeholders until their charts/audio exist.
  */
-export function buildSongList(testChart: Chart): SongEntry[] {
+export function buildSongList(...charts: Chart[]): SongEntry[] {
   return [
-    {
-      id: testChart.id,
-      title: testChart.title,
-      artist: testChart.artist,
-      chart: testChart,
-    },
+    ...charts.map((chart) => ({
+      id: chart.id,
+      title: chart.title,
+      artist: chart.artist,
+      chart,
+    })),
     { id: "ph-1", title: "Midnight Drive", artist: "Chroma" },
     { id: "ph-2", title: "Neon Steps", artist: "Kyutatsuki" },
     { id: "ph-3", title: "Overheat", artist: "CAMELLIA" },

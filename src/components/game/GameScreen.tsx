@@ -81,6 +81,23 @@ export function GameScreen({
   const notePct = (progress: number) =>
     mode.scroll === "down" ? progress * judge : 100 - progress * (100 - judge);
 
+  // Only notes inside the visible time window are rendered. Notes are
+  // time-sorted, so binary-search the window instead of scanning all of
+  // them every frame (dense charts have tens of thousands).
+  let lo = 0;
+  let hi = notes.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (notes[mid]!.time < songTime - 0.25) lo = mid + 1;
+    else hi = mid;
+  }
+  const visibleNotes: typeof notes = [];
+  for (let i = lo; i < notes.length; i++) {
+    const note = notes[i]!;
+    if (note.time - songTime > scrollTime) break;
+    visibleNotes.push(note);
+  }
+
   const last = play.lastJudgement;
   const judgeAge = last ? songTime - last.at : Infinity;
   const showJudge = judgeAge >= 0 && judgeAge < 0.45;
@@ -176,7 +193,7 @@ export function GameScreen({
                   </div>
                 )}
 
-                {notes.map((note) => {
+                {visibleNotes.map((note) => {
                   if (note.lane !== lane || note.judged) return null;
                   const remaining = note.time - songTime;
                   if (remaining > scrollTime || remaining < -0.25) return null;
