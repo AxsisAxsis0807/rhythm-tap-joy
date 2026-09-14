@@ -42,6 +42,8 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const playRef = useRef<PlayState>(createPlayState());
   const timeRef = useRef(0);
   const activeLanesRef = useRef<Set<number>>(new Set());
+  /** Index of the first possibly-unjudged note; keeps auto-miss O(1) per tick. */
+  const missCursorRef = useRef(0);
 
   const [status, setStatus] = useState<GameStatus>("idle");
   const [, setFrame] = useState(0);
