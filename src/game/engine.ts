@@ -52,13 +52,23 @@ export function findHittableNote(
   time: number,
   w: JudgementWindows,
 ): RuntimeNote | null {
+  // Binary-search the first note inside the window so dense charts
+  // (tens of thousands of notes) stay O(log n + hits) per input.
+  let lo = 0;
+  let hi = notes.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (notes[mid]!.time < time - w.miss) lo = mid + 1;
+    else hi = mid;
+  }
   let best: RuntimeNote | null = null;
   let bestDelta = Infinity;
-  for (const note of notes) {
-    if (note.judged || note.lane !== lane) continue;
+  for (let i = lo; i < notes.length; i++) {
+    const note = notes[i]!;
     if (note.time - time > w.miss) break; // notes are time-sorted
+    if (note.judged || note.lane !== lane) continue;
     const d = Math.abs(note.time - time);
-    if (d <= w.miss && d < bestDelta) {
+    if (d < bestDelta) {
       best = note;
       bestDelta = d;
     }
