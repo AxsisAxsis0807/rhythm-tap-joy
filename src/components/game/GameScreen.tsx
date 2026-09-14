@@ -193,7 +193,7 @@ export function GameScreen({
                   </div>
                 )}
 
-                {notes.map((note) => {
+                {visibleNotes.map((note) => {
                   if (note.lane !== lane || note.judged) return null;
                   const remaining = note.time - songTime;
                   if (remaining > scrollTime || remaining < -0.25) return null;

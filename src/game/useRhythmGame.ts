@@ -74,6 +74,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     if (!clock) return;
     notesRef.current = buildRuntimeNotes(chart);
     playRef.current = createPlayState();
+    missCursorRef.current = 0;
     await clock.start(START_DELAY);
     timeRef.current = -START_DELAY;
     setStatus("playing");
@@ -104,14 +105,22 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       const clock = clockRef.current;
       if (clock) timeRef.current = clock.now();
       const time = timeRef.current;
-      for (const note of notesRef.current) {
-        if (note.judged) continue;
+      const all = notesRef.current;
+      let cursor = missCursorRef.current;
+      while (cursor < all.length) {
+        const note = all[cursor]!;
+        if (note.judged) {
+          cursor++;
+          continue;
+        }
         if (time - note.time > windows.miss) {
           note.judged = true;
           note.judgement = "MISS";
           applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
+          cursor++;
         } else break;
       }
+      missCursorRef.current = cursor;
       const last = notesRef.current[notesRef.current.length - 1];
       if (last && time > last.time + 2.5) {
         setStatus("finished");
