@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string
+          created_at?: string
+          display_name?: string
+          id: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      songs: {
+        Row: {
+          artist: string
+          audio_path: string | null
+          background_path: string | null
+          bpm: number
+          chart_path: string | null
+          cover_path: string | null
+          created_at: string
+          difficulty_name: string
+          id: string
+          is_published: boolean
+          lane_count: number
+          mode_id: string
+          note_count: number
+          offset_sec: number
+          opponent_image_path: string | null
+          play_count: number
+          player_image_path: string | null
+          published_at: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          artist?: string
+          audio_path?: string | null
+          background_path?: string | null
+          bpm?: number
+          chart_path?: string | null
+          cover_path?: string | null
+          created_at?: string
+          difficulty_name?: string
+          id?: string
+          is_published?: boolean
+          lane_count?: number
+          mode_id?: string
+          note_count?: number
+          offset_sec?: number
+          opponent_image_path?: string | null
+          play_count?: number
+          player_image_path?: string | null
+          published_at?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          artist?: string
+          audio_path?: string | null
+          background_path?: string | null
+          bpm?: number
+          chart_path?: string | null
+          cover_path?: string | null
+          created_at?: string
+          difficulty_name?: string
+          id?: string
+          is_published?: boolean
+          lane_count?: number
+          mode_id?: string
+          note_count?: number
+          offset_sec?: number
+          opponent_image_path?: string | null
+          play_count?: number
+          player_image_path?: string | null
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
