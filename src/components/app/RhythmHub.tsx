@@ -18,7 +18,9 @@ import {
   X,
 } from "lucide-react";
 import type { Chart } from "@/game/types";
-import { parseChartJson } from "@/game/chartFile";
+import { detectFnfSides, parseChartByType, type ChartType, type FnfSide } from "@/game/chartFile";
+import { useServerFn } from "@tanstack/react-start";
+import { redeemAdminCode } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import type { SongEntry } from "@/components/menu/MusicSelect";
@@ -41,6 +43,9 @@ type SongRow = {
   chart_path: string | null;
   cover_path: string | null;
   is_published: boolean;
+  chart_type: string;
+  fnf_side: string;
+  is_official: boolean;
   play_count: number;
   user_id: string;
 };
@@ -69,7 +74,7 @@ function fileLabel(file: File | null) {
   return file ? file.name : "ファイルを選択";
 }
 
-function toChart(row: SongRow, chart: ReturnType<typeof parseChartJson>, audioUrl: string): Chart {
+function toChart(row: SongRow, chart: ReturnType<typeof parseChartByType>, audioUrl: string): Chart {
   return {
     id: row.id,
     title: row.title,
@@ -123,7 +128,7 @@ export function RhythmHub({
       ]);
       if (audio.error || chartFile.error) continue;
       try {
-        const parsed = parseChartJson(await chartFile.data.text());
+        const parsed = parseChartByType(await chartFile.data.text(), row.chart_type, row.fnf_side);
         remote.push({
           id: row.id,
           title: row.title,
@@ -841,7 +846,7 @@ function ProfileScreen({
                           supabase.storage.from(BUCKET).download(song.chart_path!),
                         ]);
                         if (audio.data && chartFile.data) {
-                          const parsed = parseChartJson(await chartFile.data.text());
+                          const parsed = parseChartByType(await chartFile.data.text(), song.chart_type, song.fnf_side);
                           onPlay({
                             id: song.id,
                             title: song.title,
@@ -886,18 +891,65 @@ function UploadScreen({
   const [player, setPlayer] = useState<File | null>(null);
   const [opponent, setOpponent] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [chartType, setChartType] = useState<ChartType>("mania");
+  const [side, setSide] = useState<FnfSide>("right");
+  const [sides, setSides] = useState<Record<FnfSide, number> | null>(null);
+  const [official, setOfficial] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCode, setAdminCode] = useState("");
+  const [adminMsg, setAdminMsg] = useState("");
+  const redeem = useServerFn(redeemAdminCode);
+  useEffect(() => {
+    void supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user.id]);
+  const unlockAdmin = async () => {
+    setAdminMsg("");
+    try {
+      const res = await redeem({ data: { code: adminCode } });
+      if (res.ok) {
+        setIsAdmin(true);
+        setOfficial(true);
+        setAdminMsg("管理者として認証されました");
+      } else setAdminMsg("コードが違います");
+    } catch {
+      setAdminMsg("認証できませんでした");
+    }
+  };
   const [chartInfo, setChartInfo] = useState<{
     bpm: number;
     laneCount: number;
     noteCount: number;
     format: string;
   } | null>(null);
-  const readChart = async (file: File | null) => {
+  const readChart = async (
+    file: File | null,
+    type: ChartType = chartType,
+    pickedSide: FnfSide = side,
+  ) => {
     setChart(file);
     setChartInfo(null);
     if (!file) return;
     try {
-      const parsed = parseChartJson(await file.text());
+      const text = await file.text();
+      let useSide = pickedSide;
+      if (type === "fnf") {
+        const found = detectFnfSides(text);
+        setSides(found);
+        const other: FnfSide = useSide === "left" ? "right" : "left";
+        if (found[useSide] === 0 && found[other] > 0) {
+          useSide = other;
+          setSide(useSide);
+        }
+      } else setSides(null);
+      const parsed = parseChartByType(text, type, useSide);
+      if (parsed.difficultyName && (!difficulty || difficulty === "NORMAL"))
+        setDifficulty(parsed.difficultyName);
       setChartInfo({
         bpm: parsed.bpm,
         laneCount: parsed.laneCount,
@@ -918,7 +970,7 @@ function UploadScreen({
     }
     setBusy(true);
     try {
-      const parsed = parseChartJson(await chart.text());
+      const parsed = parseChartByType(await chart.text(), chartType, side);
       const songId = crypto.randomUUID();
       const files: [string, File | null][] = [
         ["audio_path", audio],
@@ -952,7 +1004,10 @@ function UploadScreen({
         offset_sec: parsed.offset,
         lane_count: parsed.laneCount,
         note_count: parsed.notes.length,
-        mode_id: "classic",
+        mode_id: chartType === "fnf" ? "fnf" : "mania",
+        chart_type: chartType,
+        fnf_side: side,
+        is_official: official && isAdmin,
         ...paths,
       });
       if (error) throw new Error(error.message);
@@ -971,6 +1026,63 @@ function UploadScreen({
         className="grid gap-5 lg:grid-cols-[1fr_0.9fr]"
       >
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+          <p className="mb-2 text-xs uppercase tracking-[0.25em] text-white/40">CHART TYPE</p>
+          <div className="mb-5 grid grid-cols-2 gap-2">
+            {(
+              [
+                ["mania", "osu!mania", ".osu ファイル"],
+                ["fnf", "FNF", "譜面 JSON"],
+              ] as const
+            ).map(([id, name, hint]) => (
+              <button
+                type="button"
+                key={id}
+                onClick={() => {
+                  setChartType(id);
+                  setChart(null);
+                  setChartInfo(null);
+                  setSides(null);
+                }}
+                className={`rounded-2xl border p-4 text-left ${chartType === id ? "border-cyan-200/60 bg-cyan-200/10" : "border-white/10 bg-black/20 hover:bg-white/5"}`}
+              >
+                <span className="block font-bold">{name}</span>
+                <span className="block text-xs text-white/45">{hint}</span>
+              </button>
+            ))}
+          </div>
+          {chartType === "fnf" && (
+            <div className="mb-5">
+              <p className="mb-2 text-xs text-white/50">遊ぶサイド</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    ["left", "レフトサイド（相手側）"],
+                    ["right", "ライトサイド（プレイヤー側）"],
+                  ] as const
+                ).map(([id, name]) => {
+                  const count = sides?.[id];
+                  const missing = sides !== null && count === 0;
+                  return (
+                    <button
+                      type="button"
+                      key={id}
+                      disabled={missing}
+                      onClick={() => {
+                        setSide(id);
+                        if (chart) void readChart(chart, "fnf", id);
+                      }}
+                      className={`rounded-xl border p-3 text-left text-sm disabled:opacity-35 ${side === id ? "border-cyan-200/60 bg-cyan-200/10" : "border-white/10 bg-black/20"}`}
+                    >
+                      {name}
+                      <span className="block text-[11px] text-white/45">
+                        {sides === null ? "譜面を選ぶと確認します" : missing ? "譜面なし" : `${count} notes`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="label sm:col-span-2">
               曲名
@@ -1012,9 +1124,9 @@ function UploadScreen({
             />
             <UploadField
               icon={<FileJson className="size-5" />}
-              label="譜面（JSON）"
+              label={chartType === "fnf" ? "FNF譜面（JSON）" : "osu!mania譜面（.osu）"}
               file={chart}
-              accept=".json,application/json"
+              accept={chartType === "fnf" ? ".json,application/json" : ".osu,text/plain"}
               onChange={(file) => void readChart(file)}
               required
             />
@@ -1045,6 +1157,7 @@ function UploadScreen({
               accept="image/*"
               onChange={setBackground}
             />
+            {chartType === "fnf" && (<>
             <UploadField
               icon={<ImagePlus className="size-5" />}
               label="自機画像"
@@ -1059,8 +1172,44 @@ function UploadScreen({
               accept="image/*"
               onChange={setOpponent}
             />
+            </>)}
           </div>
-          <div className="mt-6 rounded-xl bg-cyan-200/10 p-4 text-xs leading-5 text-cyan-100/80">
+          <div className="mt-6 rounded-xl border border-amber-200/20 bg-amber-200/5 p-4">
+            <p className="text-sm font-semibold text-amber-100">正規版として投稿</p>
+            {isAdmin ? (
+              <label className="mt-2 flex items-center gap-2 text-xs text-white/70">
+                <input
+                  type="checkbox"
+                  checked={official}
+                  onChange={(e) => setOfficial(e.target.checked)}
+                />
+                正規版マークを付ける（管理者）
+              </label>
+            ) : (
+              <div className="mt-2 flex gap-2">
+                <input
+                  value={adminCode}
+                  onChange={(e) => setAdminCode(e.target.value)}
+                  placeholder="管理者コード"
+                  type="password"
+                  className="field flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => void unlockAdmin()}
+                  disabled={!adminCode}
+                  className="rounded-xl border border-amber-200/40 px-3 text-xs text-amber-100 disabled:opacity-40"
+                >
+                  認証
+                </button>
+              </div>
+            )}
+            {adminMsg && <p className="mt-2 text-xs text-amber-100/80">{adminMsg}</p>}
+            {!isAdmin && (
+              <p className="mt-2 text-[11px] text-white/40">コードが無くても通常版として投稿できます。</p>
+            )}
+          </div>
+          <div className="mt-4 rounded-xl bg-cyan-200/10 p-4 text-xs leading-5 text-cyan-100/80">
             アップロードした曲はまず下書きとして保存されます。次の公開画面で内容を確認してから公開できます。
           </div>
           <button
@@ -1172,6 +1321,8 @@ function PublishScreen({
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{song.title}</span>
                   <span className="block text-xs text-white/45">
+                    {song.is_official ? "正規版 · " : ""}
+                    {song.chart_type === "fnf" ? `FNF(${song.fnf_side === "left" ? "左" : "右"})` : "osu!mania"} ·{" "}
                     {song.artist || "アーティスト未設定"} · {song.difficulty_name} ·{" "}
                     {song.note_count} notes
                   </span>
