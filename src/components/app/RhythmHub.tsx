@@ -64,7 +64,7 @@ function displayName(user: User | null, profile: Profile | null) {
   return (
     profile?.display_name ||
     profile?.username ||
-    user?.user_metadata?.display_name ||
+    user?.user_metadata?.['display_name'] ||
     user?.email?.split("@")[0] ||
     "Player"
   );
