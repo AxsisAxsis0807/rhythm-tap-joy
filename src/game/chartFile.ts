@@ -21,11 +21,15 @@ export interface ParsedChart {
 
 type Json = Record<string, unknown>;
 
+/** FNF: "right" = player (BF) side, "left" = opponent side. */
+export type FnfSide = "left" | "right";
+export type ChartType = "mania" | "fnf";
+
 const num = (v: unknown, fallback = 0) =>
   typeof v === "number" && Number.isFinite(v) ? v : fallback;
 
 /** Legacy FNF: { song: { song, bpm, notes: [{ mustHitSection, sectionNotes }] } } */
-function parseFnfLegacy(song: Json): ParsedChart {
+function parseFnfLegacy(song: Json, side: FnfSide = "right"): ParsedChart {
   const sections = Array.isArray(song['notes']) ? (song['notes'] as Json[]) : [];
   const notes: ChartNote[] = [];
   for (const section of sections) {
@@ -40,7 +44,7 @@ function parseFnfLegacy(song: Json): ParsedChart {
       if (data < 0) continue;
       // Lanes 0-3 belong to whoever "must hit" the section.
       const isPlayer = mustHit ? data < 4 : data >= 4;
-      if (!isPlayer) continue;
+      if (isPlayer !== (side === "right")) continue;
       const lengthMs = num(entry[2]);
       notes.push({
         beat: time,
@@ -62,7 +66,7 @@ function parseFnfLegacy(song: Json): ParsedChart {
 }
 
 /** V-slice FNF chart: { notes: { hard: [{ t, d, l }] } } */
-function parseFnfVslice(root: Json): ParsedChart | null {
+function parseFnfVslice(root: Json, side: FnfSide = "right"): ParsedChart | null {
   const byDifficulty = root['notes'];
   if (!byDifficulty || typeof byDifficulty !== "object") return null;
   const entries = Object.entries(byDifficulty as Json).filter(([, v]) =>
@@ -74,7 +78,8 @@ function parseFnfVslice(root: Json): ParsedChart | null {
   for (const item of list as Json[]) {
     if (!item || typeof item !== "object") continue;
     const data = num(item['d'], -1);
-    if (data < 0 || data > 3) continue; // 0-3 = player side
+    if (data < 0 || data > 7) continue;
+    if ((data < 4) !== (side === "right")) continue; // 0-3 = player (right)
     const length = num(item['l']);
     notes.push({
       beat: num(item['t']) / 1000,
@@ -152,4 +157,103 @@ export function parseChartJson(text: string): ParsedChart {
   const legacy = parseFnfLegacy(obj);
   if (legacy.notes.length > 0) return legacy;
   throw new Error("この譜面ファイルからノーツを見つけられませんでした");
+}
+
+/** Parse an FNF chart JSON for the chosen side. */
+export function parseFnfJson(text: string, side: FnfSide): ParsedChart {
+  let root: unknown;
+  try {
+    root = JSON.parse(text);
+  } catch {
+    throw new Error("FNF譜面がJSONとして読み込めませんでした");
+  }
+  if (!root || typeof root !== "object") throw new Error("FNF譜面の形式が読み取れませんでした");
+  const obj = root as Json;
+  if (obj["song"] && typeof obj["song"] === "object") {
+    const r = parseFnfLegacy(obj["song"] as Json, side);
+    if (r.notes.length > 0) return r;
+  }
+  const v = parseFnfVslice(obj, side);
+  if (v && v.notes.length > 0) return v;
+  const l = parseFnfLegacy(obj, side);
+  if (l.notes.length > 0) return l;
+  throw new Error(
+    side === "right" ? "右サイド（プレイヤー側）の譜面がありません" : "左サイド（相手側）の譜面がありません",
+  );
+}
+
+/** Which FNF sides contain notes. */
+export function detectFnfSides(text: string): Record<FnfSide, number> {
+  const count = (side: FnfSide) => {
+    try {
+      return parseFnfJson(text, side).notes.length;
+    } catch {
+      return 0;
+    }
+  };
+  return { left: count("left"), right: count("right") };
+}
+
+/** Parse an osu!mania .osu beatmap (text format). */
+export function parseOsuMania(text: string): ParsedChart {
+  const lines = text.split(/\r?\n/);
+  if (!lines[0]?.includes("osu file format")) {
+    if (text.trim().startsWith("{")) return parseChartJson(text);
+    throw new Error("osu!maniaの .osu ファイルではありません");
+  }
+  let section = "";
+  const kv: Record<string, string> = {};
+  const hit: string[] = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line || line.startsWith("//")) continue;
+    const m = line.match(/^\[(.+)\]$/);
+    if (m) {
+      section = m[1]!;
+      continue;
+    }
+    if (section === "HitObjects") hit.push(line);
+    else if (["General", "Metadata", "Difficulty"].includes(section)) {
+      const i = line.indexOf(":");
+      if (i > 0) kv[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+    }
+  }
+  if (kv["Mode"] && kv["Mode"] !== "3") throw new Error("osu!mania（Mode: 3）の譜面ではありません");
+  const keys = Math.max(1, Math.round(Number(kv["CircleSize"]) || 4));
+  const notes: ChartNote[] = [];
+  for (const h of hit) {
+    const p = h.split(",");
+    const x = Number(p[0]);
+    const time = Number(p[2]) / 1000;
+    const type = Number(p[3]);
+    if (!Number.isFinite(x) || !Number.isFinite(time)) continue;
+    const lane = Math.min(keys - 1, Math.max(0, Math.floor((x * keys) / 512)));
+    const isHold = (type & 128) !== 0;
+    const end = isHold ? Number((p[5] ?? "").split(":")[0]) / 1000 : 0;
+    notes.push({
+      beat: time,
+      lane,
+      kind: "tap",
+      ...(isHold && end > time ? { lengthBeats: end - time } : {}),
+    });
+  }
+  if (notes.length === 0) throw new Error("この .osu ファイルにノーツがありません");
+  notes.sort((a, b) => a.beat - b.beat);
+  return {
+    bpm: 60,
+    offset: 0,
+    laneCount: keys,
+    notes,
+    format: "osu-mania",
+    ...(kv["Title"] ? { title: kv["TitleUnicode"] || kv["Title"] } : {}),
+    ...(kv["Artist"] ? { artist: kv["ArtistUnicode"] || kv["Artist"] } : {}),
+    ...(kv["Version"] ? { difficultyName: kv["Version"] } : {}),
+  };
+}
+
+/** Parse an uploaded chart according to its declared type. */
+export function parseChartByType(text: string, type: string, side: string = "right"): ParsedChart {
+  if (type === "fnf") return parseFnfJson(text, side === "left" ? "left" : "right");
+  if (type === "mania") return parseOsuMania(text);
+  return parseChartJson(text);
 }
