@@ -1477,3 +1477,15 @@ function NavButton({
     </button>
   );
 }
+
+/** Returns human-readable reasons a password is too weak (empty = OK). */
+function passwordIssues(pw: string, id: string): string[] {
+  const issues: string[] = [];
+  if (pw.length < 8) issues.push("8文字以上");
+  if (!/[a-zA-Z]/.test(pw)) issues.push("英字を含める");
+  if (!/[0-9]/.test(pw)) issues.push("数字を含める");
+  if (/^(.)\1+$/.test(pw)) issues.push("同じ文字の繰り返しは不可");
+  if (id && pw.toLowerCase().includes(id)) issues.push("IDを含めない");
+  if (/^(password|12345678|qwerty|abc12345)/i.test(pw)) issues.push("よくあるパスワードは不可");
+  return issues;
+}
