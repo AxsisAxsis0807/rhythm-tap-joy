@@ -561,28 +561,63 @@ function AuthScreen({
   onDone: () => void;
   onBack: () => void;
 }) {
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [displayNameInput, setDisplayNameInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [idStatus, setIdStatus] = useState<"" | "checking" | "free" | "taken" | "invalid">("");
+  const normalizedId = username.trim().replace(/^@/, "").toLowerCase();
+  const idValid = /^[a-z0-9_]{3,20}$/.test(normalizedId);
+  const pwIssues = passwordIssues(password, normalizedId);
+
+  useEffect(() => {
+    if (mode !== "signup" || !normalizedId) return setIdStatus("");
+    if (!idValid) return setIdStatus("invalid");
+    setIdStatus("checking");
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", normalizedId)
+        .maybeSingle();
+      setIdStatus(data ? "taken" : "free");
+    }, 400);
+    return () => clearTimeout(t);
+  }, [normalizedId, idValid, mode]);
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setBusy(true);
     setError("");
+    if (!idValid) return setError("プレイヤーIDは半角英小文字・数字・_ の3〜20文字です。");
+    const email = `${normalizedId}@players.pulselane.app`;
+    if (mode === "signup") {
+      if (idStatus === "taken") return setError(`@${normalizedId} はすでに使われています。`);
+      if (pwIssues.length) return setError(`パスワードが弱すぎます：${pwIssues.join("、")}`);
+    }
+    setBusy(true);
     const result =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({
             email,
             password,
-            options: { data: { username, display_name: username } },
+            options: {
+              data: {
+                username: normalizedId,
+                display_name: displayNameInput.trim() || normalizedId,
+              },
+            },
           });
     setBusy(false);
-    if (result.error) setError(result.error.message);
-    else if (mode === "signup" && !result.data.session)
-      setError("確認メールを送信しました。メールのリンクを開いてからログインしてください。");
-    else onDone();
+    if (result.error) {
+      const msg = result.error.message;
+      if (/invalid login/i.test(msg)) setError("プレイヤーIDまたはパスワードが違います。");
+      else if (/already registered/i.test(msg)) setError(`@${normalizedId} はすでに使われています。`);
+      else if (/pwned|weak|compromised/i.test(msg))
+        setError("このパスワードは流出済みのため使えません。別のパスワードにしてください。");
+      else setError(msg);
+    } else onDone();
   };
   const google = async () => {
     setBusy(true);
@@ -777,18 +812,13 @@ function ProfileScreen({
             />
             <div>
               <p className="font-semibold">{displayName(user, profile)}</p>
-              <p className="text-xs text-white/40">{user.email}</p>
+              <p className="text-xs text-white/40">@{username}</p>
             </div>
           </div>
           <div className="space-y-3">
             <label className="label">
-              ユーザー名
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="field"
-              />
+              プレイヤーID（ログインに使うため変更不可）
+              <input value={`@${username}`} readOnly disabled className="field opacity-60" />
             </label>
             <label className="label">
               表示名
