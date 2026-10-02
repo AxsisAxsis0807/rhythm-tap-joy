@@ -561,28 +561,63 @@ function AuthScreen({
   onDone: () => void;
   onBack: () => void;
 }) {
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [displayNameInput, setDisplayNameInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [idStatus, setIdStatus] = useState<"" | "checking" | "free" | "taken" | "invalid">("");
+  const normalizedId = username.trim().replace(/^@/, "").toLowerCase();
+  const idValid = /^[a-z0-9_]{3,20}$/.test(normalizedId);
+  const pwIssues = passwordIssues(password, normalizedId);
+
+  useEffect(() => {
+    if (mode !== "signup" || !normalizedId) return setIdStatus("");
+    if (!idValid) return setIdStatus("invalid");
+    setIdStatus("checking");
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", normalizedId)
+        .maybeSingle();
+      setIdStatus(data ? "taken" : "free");
+    }, 400);
+    return () => clearTimeout(t);
+  }, [normalizedId, idValid, mode]);
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setBusy(true);
     setError("");
+    if (!idValid) return setError("プレイヤーIDは半角英小文字・数字・_ の3〜20文字です。");
+    const email = `${normalizedId}@players.pulselane.app`;
+    if (mode === "signup") {
+      if (idStatus === "taken") return setError(`@${normalizedId} はすでに使われています。`);
+      if (pwIssues.length) return setError(`パスワードが弱すぎます：${pwIssues.join("、")}`);
+    }
+    setBusy(true);
     const result =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({
             email,
             password,
-            options: { data: { username, display_name: username } },
+            options: {
+              data: {
+                username: normalizedId,
+                display_name: displayNameInput.trim() || normalizedId,
+              },
+            },
           });
     setBusy(false);
-    if (result.error) setError(result.error.message);
-    else if (mode === "signup" && !result.data.session)
-      setError("確認メールを送信しました。メールのリンクを開いてからログインしてください。");
-    else onDone();
+    if (result.error) {
+      const msg = result.error.message;
+      if (/invalid login/i.test(msg)) setError("プレイヤーIDまたはパスワードが違います。");
+      else if (/already registered/i.test(msg)) setError(`@${normalizedId} はすでに使われています。`);
+      else if (/pwned|weak|compromised/i.test(msg))
+        setError("このパスワードは流出済みのため使えません。別のパスワードにしてください。");
+      else setError(msg);
+    } else onDone();
   };
   const google = async () => {
     setBusy(true);
@@ -632,34 +667,53 @@ function AuthScreen({
           <span className="h-px flex-1 bg-white/10" />
         </div>
         <form onSubmit={(event) => void submit(event)} className="space-y-3">
+          <div>
+            <div className="flex items-center rounded-xl">
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoCapitalize="none"
+                autoComplete="username"
+                placeholder="@プレイヤーID（英小文字・数字・_）"
+                className="field"
+              />
+            </div>
+            {mode === "signup" && idStatus && (
+              <p
+                className={`mt-1 text-xs ${idStatus === "free" ? "text-emerald-300" : idStatus === "checking" ? "text-white/40" : "text-rose-300"}`}
+              >
+                {idStatus === "checking" && "確認中…"}
+                {idStatus === "free" && `@${normalizedId} は使えます`}
+                {idStatus === "taken" && `@${normalizedId} はすでに存在します`}
+                {idStatus === "invalid" && "半角英小文字・数字・_ の3〜20文字にしてください"}
+              </p>
+            )}
+          </div>
           {mode === "signup" && (
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              placeholder="ユーザー名"
+              value={displayNameInput}
+              onChange={(e) => setDisplayNameInput(e.target.value)}
+              placeholder="表示名（自由・あとで変更可）"
               className="field"
             />
           )}
-          {
+          <div>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="メールアドレス"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              placeholder={mode === "login" ? "パスワード" : "パスワード（8文字以上・英字と数字）"}
               className="field"
             />
-          }
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            placeholder="パスワード（6文字以上）"
-            className="field"
-          />
+            {mode === "signup" && password && (
+              <p className={`mt-1 text-xs ${pwIssues.length ? "text-rose-300" : "text-emerald-300"}`}>
+                {pwIssues.length ? `弱いパスワード：${pwIssues.join("、")}` : "強度OK"}
+              </p>
+            )}
+          </div>
           {error && (
             <p className="rounded-xl bg-rose-400/10 p-3 text-xs leading-5 text-rose-200">{error}</p>
           )}
@@ -777,18 +831,13 @@ function ProfileScreen({
             />
             <div>
               <p className="font-semibold">{displayName(user, profile)}</p>
-              <p className="text-xs text-white/40">{user.email}</p>
+              <p className="text-xs text-white/40">@{username}</p>
             </div>
           </div>
           <div className="space-y-3">
             <label className="label">
-              ユーザー名
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="field"
-              />
+              プレイヤーID（ログインに使うため変更不可）
+              <input value={`@${username}`} readOnly disabled className="field opacity-60" />
             </label>
             <label className="label">
               表示名
@@ -1427,4 +1476,16 @@ function NavButton({
       {label}
     </button>
   );
+}
+
+/** Returns human-readable reasons a password is too weak (empty = OK). */
+function passwordIssues(pw: string, id: string): string[] {
+  const issues: string[] = [];
+  if (pw.length < 8) issues.push("8文字以上");
+  if (!/[a-zA-Z]/.test(pw)) issues.push("英字を含める");
+  if (!/[0-9]/.test(pw)) issues.push("数字を含める");
+  if (/^(.)\1+$/.test(pw)) issues.push("同じ文字の繰り返しは不可");
+  if (id && pw.toLowerCase().includes(id)) issues.push("IDを含めない");
+  if (/^(password|12345678|qwerty|abc12345)/i.test(pw)) issues.push("よくあるパスワードは不可");
+  return issues;
 }
