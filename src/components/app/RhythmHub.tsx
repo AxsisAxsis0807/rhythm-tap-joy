@@ -667,34 +667,53 @@ function AuthScreen({
           <span className="h-px flex-1 bg-white/10" />
         </div>
         <form onSubmit={(event) => void submit(event)} className="space-y-3">
+          <div>
+            <div className="flex items-center rounded-xl">
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoCapitalize="none"
+                autoComplete="username"
+                placeholder="@プレイヤーID（英小文字・数字・_）"
+                className="field"
+              />
+            </div>
+            {mode === "signup" && idStatus && (
+              <p
+                className={`mt-1 text-xs ${idStatus === "free" ? "text-emerald-300" : idStatus === "checking" ? "text-white/40" : "text-rose-300"}`}
+              >
+                {idStatus === "checking" && "確認中…"}
+                {idStatus === "free" && `@${normalizedId} は使えます`}
+                {idStatus === "taken" && `@${normalizedId} はすでに存在します`}
+                {idStatus === "invalid" && "半角英小文字・数字・_ の3〜20文字にしてください"}
+              </p>
+            )}
+          </div>
           {mode === "signup" && (
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              placeholder="ユーザー名"
+              value={displayNameInput}
+              onChange={(e) => setDisplayNameInput(e.target.value)}
+              placeholder="表示名（自由・あとで変更可）"
               className="field"
             />
           )}
-          {
+          <div>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="メールアドレス"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              placeholder={mode === "login" ? "パスワード" : "パスワード（8文字以上・英字と数字）"}
               className="field"
             />
-          }
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            placeholder="パスワード（6文字以上）"
-            className="field"
-          />
+            {mode === "signup" && password && (
+              <p className={`mt-1 text-xs ${pwIssues.length ? "text-rose-300" : "text-emerald-300"}`}>
+                {pwIssues.length ? `弱いパスワード：${pwIssues.join("、")}` : "強度OK"}
+              </p>
+            )}
+          </div>
           {error && (
             <p className="rounded-xl bg-rose-400/10 p-3 text-xs leading-5 text-rose-200">{error}</p>
           )}
