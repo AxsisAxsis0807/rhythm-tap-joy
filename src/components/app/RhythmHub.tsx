@@ -190,6 +190,12 @@ export function RhythmHub({
     setNotice("");
   };
 
+  const openAuthForm = (mode: AuthMode) => {
+    setAuthMode(mode);
+    setScreen("authForm");
+    setNotice("");
+  };
+
   const afterAuth = () => {
     setScreen("home");
     setNotice("ログインしました");
@@ -259,11 +265,17 @@ export function RhythmHub({
           />
         )}
         {screen === "auth" && (
+          <AuthEntryScreen
+            onSelect={openAuthForm}
+            onBack={() => setScreen("home")}
+          />
+        )}
+        {screen === "authForm" && (
           <AuthScreen
             mode={authMode}
             onModeChange={setAuthMode}
             onDone={afterAuth}
-            onBack={() => setScreen("home")}
+            onBack={() => setScreen("auth")}
           />
         )}
         {screen === "profile" && user && (
@@ -308,7 +320,7 @@ export function RhythmHub({
           />
         )}
       </div>
-      {screen !== "auth" && screen !== "play" && (
+      {screen !== "auth" && screen !== "authForm" && screen !== "play" && (
         <BottomNav
           screen={screen}
           user={user}
@@ -553,6 +565,61 @@ function SelectScreen({
             </button>
           ))}
         </div>
+      </div>
+    </main>
+  );
+}
+
+function AuthEntryScreen({
+  onSelect,
+  onBack,
+}: {
+  onSelect: (mode: AuthMode) => void;
+  onBack: () => void;
+}) {
+  return (
+    <main className="flex flex-1 items-center justify-center px-4 pb-24">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-6 md:p-8">
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-7 flex items-center gap-2 text-sm text-white/50 hover:text-white"
+        >
+          <ArrowLeft className="size-4" />
+          戻る
+        </button>
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-violet-500 text-[#090a0f]">
+            <Music2 className="size-7" />
+          </div>
+          <p className="text-xs uppercase tracking-[0.3em] text-cyan-200">PULSE LANE</p>
+          <h1 className="mt-2 text-2xl font-bold leading-snug">
+            はじめまして？
+            <br />
+            <span className="text-white/60 text-lg font-medium">アカウントを選んでください</span>
+          </h1>
+        </div>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => onSelect("signup")}
+            className="w-full rounded-xl bg-cyan-200 py-4 text-sm font-bold text-[#0b101a] hover:bg-cyan-100"
+          >
+            アカウントを作成
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelect("login")}
+            className="w-full rounded-xl border border-white/15 py-4 text-sm font-semibold hover:bg-white/10"
+          >
+            ログイン
+          </button>
+        </div>
+        <p className="mt-6 text-center text-[11px] leading-5 text-white/35">
+          アカウントを作成すると、譜面の投稿や
+          <br />
+          プロフィールページが使えるようになります。
+        </p>
       </div>
     </main>
   );
