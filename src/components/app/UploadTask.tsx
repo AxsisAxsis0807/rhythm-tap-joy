@@ -23,7 +23,7 @@ export interface UploadTaskState {
   sent: number;
   total: number;
   fileIndex: number;
-  error?: string;
+  error?: string | undefined;
 }
 
 /** PUT a file to a signed upload URL with progress + abort support. */
