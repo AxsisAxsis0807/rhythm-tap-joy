@@ -1096,46 +1096,41 @@ function UploadScreen({
     try {
       const parsed = parseChartByType(await chart.text(), chartType, side);
       const songId = crypto.randomUUID();
-      const files: [string, File | null][] = [
+      const candidates: [string, File | null][] = [
         ["audio_path", audio],
         ["chart_path", chart],
         ["cover_path", cover],
         ["background_path", background],
-        ["player_image_path", player],
-        ["opponent_image_path", opponent],
+        ...(chartType === "fnf"
+          ? ([
+              ["player_image_path", player],
+              ["opponent_image_path", opponent],
+            ] as [string, File | null][])
+          : []),
       ];
-      const paths: Record<string, string | null> = {};
-      for (const [field, file] of files) {
-        if (!file) {
-          paths[field] = null;
-          continue;
-        }
-        const path = `${user.id}/${songId}/${field}-${file.name}`;
-        const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-          upsert: false,
-          contentType: file.type || "application/octet-stream",
-        });
-        if (error) throw new Error(`${file.name}: ${error.message}`);
-        paths[field] = path;
-      }
-      const { error } = await supabase.from("songs").insert({
-        id: songId,
-        user_id: user.id,
+      onUploaded({
+        songId,
+        userId: user.id,
         title: title.trim(),
-        artist: artist.trim(),
-        difficulty_name: difficulty.trim() || "NORMAL",
-        bpm: parsed.bpm,
-        offset_sec: parsed.offset,
-        lane_count: parsed.laneCount,
-        note_count: parsed.notes.length,
-        mode_id: chartType === "fnf" ? "fnf" : "mania",
-        chart_type: chartType,
-        fnf_side: side,
-        is_official: official && isAdmin,
-        ...paths,
+        subtitle: artist.trim(),
+        cover,
+        files: candidates.filter((c): c is [string, File] => !!c[1]),
+        row: {
+          id: songId,
+          user_id: user.id,
+          title: title.trim(),
+          artist: artist.trim(),
+          difficulty_name: difficulty.trim() || "NORMAL",
+          bpm: parsed.bpm,
+          offset_sec: parsed.offset,
+          lane_count: parsed.laneCount,
+          note_count: parsed.notes.length,
+          mode_id: chartType === "fnf" ? "fnf" : "mania",
+          chart_type: chartType,
+          fnf_side: side,
+          is_official: official && isAdmin,
+        },
       });
-      if (error) throw new Error(error.message);
-      onUploaded();
     } catch (error) {
       onError(error instanceof Error ? error.message : "アップロードに失敗しました");
     } finally {
@@ -1240,9 +1235,9 @@ function UploadScreen({
           <div className="mt-6 space-y-3">
             <UploadField
               icon={<AudioLines className="size-5" />}
-              label="音源（MP3 / OGG / WAV）"
+              label={chartType === "fnf" ? "音源（MP3 / OGG / WAV・両サイド共通）" : "音源（MP3 / OGG / WAV）"}
               file={audio}
-              accept="audio/*"
+              accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac"
               onChange={setAudio}
               required
             />
@@ -1276,7 +1271,7 @@ function UploadScreen({
             />
             <UploadField
               icon={<ImagePlus className="size-5" />}
-              label="背景画像"
+              label={chartType === "fnf" ? "背景画像（両サイド共通）" : "背景画像"}
               file={background}
               accept="image/*"
               onChange={setBackground}
@@ -1284,17 +1279,17 @@ function UploadScreen({
             {chartType === "fnf" && (<>
             <UploadField
               icon={<ImagePlus className="size-5" />}
-              label="自機画像"
-              file={player}
-              accept="image/*"
-              onChange={setPlayer}
-            />
-            <UploadField
-              icon={<ImagePlus className="size-5" />}
-              label="敵キャラ画像"
+              label="レフトサイドのキャラ画像（任意）"
               file={opponent}
               accept="image/*"
               onChange={setOpponent}
+            />
+            <UploadField
+              icon={<ImagePlus className="size-5" />}
+              label="ライトサイドのキャラ画像（任意）"
+              file={player}
+              accept="image/*"
+              onChange={setPlayer}
             />
             </>)}
           </div>
