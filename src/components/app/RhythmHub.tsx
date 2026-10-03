@@ -26,7 +26,15 @@ import { useAuth } from "@/lib/useAuth";
 import type { SongEntry } from "@/components/menu/MusicSelect";
 import { GameScreen } from "@/components/game/GameScreen";
 
-type HubScreen = "home" | "auth" | "profile" | "upload" | "publish" | "select" | "play";
+type HubScreen =
+  | "home"
+  | "auth"
+  | "authForm"
+  | "profile"
+  | "upload"
+  | "publish"
+  | "select"
+  | "play";
 type AuthMode = "login" | "signup";
 
 type SongRow = {
