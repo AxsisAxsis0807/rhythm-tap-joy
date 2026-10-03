@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import type { SongEntry } from "@/components/menu/MusicSelect";
 import { GameScreen } from "@/components/game/GameScreen";
+import { UploadMiniBar, useUploadTask, type UploadJob } from "./UploadTask";
 
 type HubScreen =
   | "home"
@@ -114,6 +115,10 @@ export function RhythmHub({
   const [selectedSong, setSelectedSong] = useState<SongEntry | null>(null);
   const [notice, setNotice] = useState("");
   const [loadingSongs, setLoadingSongs] = useState(false);
+  const uploadTask = useUploadTask(() => {
+    if (user) void loadAccount(user);
+    setNotice("アップロード完了。公開できます");
+  });
 
   const loadPublicSongs = async () => {
     setLoadingSongs(true);
@@ -298,10 +303,13 @@ export function RhythmHub({
           <UploadScreen
             user={user}
             onBack={() => setScreen("home")}
-            onUploaded={async () => {
-              await loadAccount(user);
+            onUploaded={(job) => {
+              if (uploadTask.busy) {
+                setNotice("別のアップロードが進行中です");
+                return;
+              }
+              uploadTask.start(job);
               setScreen("publish");
-              setNotice("下書きを保存しました。公開内容を確認してください");
             }}
             onError={setNotice}
           />
@@ -320,6 +328,14 @@ export function RhythmHub({
           />
         )}
       </div>
+      {uploadTask.task && screen !== "play" && (
+        <UploadMiniBar
+          task={uploadTask.task}
+          onPause={uploadTask.pause}
+          onResume={uploadTask.resume}
+          onDismiss={uploadTask.dismiss}
+        />
+      )}
       {screen !== "auth" && screen !== "authForm" && screen !== "play" && (
         <BottomNav
           screen={screen}
@@ -1002,7 +1018,7 @@ function UploadScreen({
 }: {
   user: User;
   onBack: () => void;
-  onUploaded: () => void;
+  onUploaded: (job: UploadJob) => void;
   onError: (message: string) => void;
 }) {
   const [title, setTitle] = useState("");
