@@ -50,6 +50,7 @@ export type Database = {
           audio_path: string | null
           background_path: string | null
           bpm: number
+          chart_author: string
           chart_path: string | null
           chart_type: string
           cover_path: string | null
@@ -76,6 +77,7 @@ export type Database = {
           audio_path?: string | null
           background_path?: string | null
           bpm?: number
+          chart_author?: string
           chart_path?: string | null
           chart_type?: string
           cover_path?: string | null
@@ -102,6 +104,7 @@ export type Database = {
           audio_path?: string | null
           background_path?: string | null
           bpm?: number
+          chart_author?: string
           chart_path?: string | null
           chart_type?: string
           cover_path?: string | null

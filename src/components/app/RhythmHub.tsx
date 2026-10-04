@@ -42,6 +42,7 @@ type SongRow = {
   id: string;
   title: string;
   artist: string;
+  chart_author: string;
   difficulty_name: string;
   bpm: number;
   offset_sec: number;
@@ -1023,6 +1024,7 @@ function UploadScreen({
 }) {
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
+  const [charter, setCharter] = useState("");
   const [difficulty, setDifficulty] = useState("NORMAL");
   const [audio, setAudio] = useState<File | null>(null);
   const [chart, setChart] = useState<File | null>(null);

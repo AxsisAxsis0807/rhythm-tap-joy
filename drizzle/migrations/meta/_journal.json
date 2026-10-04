@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791076296465,
+      "tag": "0000_add_chart_author_to_songs",
+      "breakpoints": true
+    }
+  ]
+}
