@@ -1,4 +1,5 @@
 import type { Chart, ChartNote } from "../types";
+import { BEWILDERMENT_LEFT } from "./bewilderment-left";
 import audioAsset from "@/assets/bewilderment-inst.ogg.asset.json";
 
 /**
@@ -23,6 +24,8 @@ function parse(raw: string): ChartNote[] {
   return notes;
 }
 
+const RIGHT_NOTES = parse(RAW);
+
 export const BEWILDERMENT_CHART: Chart = {
   id: "bewilderment-insane",
   title: "BEWILDERMENT",
@@ -32,5 +35,6 @@ export const BEWILDERMENT_CHART: Chart = {
   offset: 0,
   laneCount: 4,
   difficultyName: "INSANE",
-  notes: parse(RAW),
+  notes: RIGHT_NOTES,
+  fnf: { playerSide: "right", left: BEWILDERMENT_LEFT, right: RIGHT_NOTES },
 };
