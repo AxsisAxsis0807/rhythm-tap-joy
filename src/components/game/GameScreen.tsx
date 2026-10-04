@@ -6,12 +6,11 @@ import { useRhythmGame } from "@/game/useRhythmGame";
 import type { Chart } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
+import { FnfField } from "./FnfField";
+import { useGameSettings } from "@/game/settings";
+import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
-import {
-  DEFAULT_SETTINGS,
-  SettingsPanel,
-  type GameSettings,
-} from "./SettingsPanel";
+import { SettingsPanel } from "./SettingsPanel";
 
 export function GameScreen({
   chart,
@@ -24,8 +23,9 @@ export function GameScreen({
   onModeChange: (id: string) => void;
   onExit?: () => void;
 }) {
-  const mode = getMode(modeId);
-  const game = useRhythmGame(chart);
+  const { settings, setSettings, saveError } = useGameSettings();
+  const mode = getMode(chart.fnf ? "fnf" : modeId);
+  const game = useRhythmGame(chart, { scrollTime: DEFAULT_SCROLL_TIME / settings.scrollSpeed });
   const {
     status,
     start,
@@ -44,7 +44,6 @@ export function GameScreen({
   const [isLandscape, setIsLandscape] = useState(false);
   const [orientationMessage, setOrientationMessage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     const media = window.matchMedia("(orientation: landscape)");
@@ -88,12 +87,13 @@ export function GameScreen({
   let hi = notes.length;
   while (lo < hi) {
     const mid = (lo + hi) >> 1;
-    if (notes[mid]!.time < songTime - 0.25) lo = mid + 1;
+    if ((notes[mid]?.time ?? Infinity) < songTime - 0.25) lo = mid + 1;
     else hi = mid;
   }
   const visibleNotes: typeof notes = [];
   for (let i = lo; i < notes.length; i++) {
-    const note = notes[i]!;
+    const note = notes[i];
+    if (!note) break;
     if (note.time - songTime > scrollTime) break;
     visibleNotes.push(note);
   }
@@ -127,14 +127,16 @@ export function GameScreen({
 
       {/* Settings button (start / result screens) */}
       {showOverlay && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => setSettingsOpen(true)}
           aria-label="設定を開く"
-          className="absolute right-3 top-2 z-30 rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="absolute right-3 top-2 z-40 text-muted-foreground"
         >
           <Settings aria-hidden="true" className="size-5" />
-        </button>
+        </Button>
       )}
 
       <SettingsPanel
@@ -142,11 +144,15 @@ export function GameScreen({
         settings={settings}
         onChange={setSettings}
         onClose={() => setSettingsOpen(false)}
+        fnf={Boolean(chart.fnf)}
+        saveError={saveError}
       />
 
       {/* Playfield: a centred column that stays playable in landscape */}
       <div className="relative flex flex-1 justify-center overflow-hidden">
-        <div
+        {chart.fnf ? (
+          <FnfField chart={chart} mode={mode} notes={notes} songTime={songTime} scrollTime={scrollTime} activeLanes={activeLanes} middleScroll={settings.middleScroll} />
+        ) : <div
           className={`relative h-full w-full max-w-[520px] touch-none landscape:max-w-[min(60vh,520px)] ${
             mode.fieldClass ?? ""
           }`}
@@ -245,7 +251,11 @@ export function GameScreen({
               </span>
             )}
           </div>
-        </div>
+        </div>}
+        {chart.fnf && <div className="pointer-events-none absolute inset-x-0 top-[40%] z-20 text-center">
+          {play.combo > 1 && <p className="font-display text-4xl tabular-nums text-combo">{play.combo}</p>}
+          {showJudge && last && <p className="font-display text-xl" style={{ color: `var(--judge-${last.judgement.toLowerCase()})` }}>{last.judgement}</p>}
+        </div>}
 
         {/* Touch layer: the whole screen is split into 4 key areas */}
         <div className="absolute inset-0 z-20 flex touch-none">
@@ -286,7 +296,7 @@ export function GameScreen({
           <h2 className="font-display text-2xl text-foreground">
             {chart.title}
           </h2>
-          <ModePicker value={mode.id} onChange={onModeChange} />
+          {!chart.fnf && <ModePicker value={mode.id} onChange={onModeChange} />}
           <p className="text-sm text-muted-foreground">
             4レーンをタップ、または D / F / J / K キーで演奏します。横画面でもプレイできます。
           </p>
@@ -355,7 +365,7 @@ export function GameScreen({
               </dd>
             </div>
           </dl>
-          <ModePicker value={mode.id} onChange={onModeChange} />
+          {!chart.fnf && <ModePicker value={mode.id} onChange={onModeChange} />}
           <button
             onClick={() => void start()}
             className="rounded-full bg-primary px-8 py-3 font-display tracking-widest text-primary-foreground"
