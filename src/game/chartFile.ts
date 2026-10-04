@@ -1,4 +1,4 @@
-import type { ChartNote } from "./types";
+import type { Chart, ChartNote } from "./types";
 
 /**
  * Normalised result of parsing an uploaded chart file.
@@ -17,6 +17,7 @@ export interface ParsedChart {
   difficultyName?: string;
   /** "fnf-legacy" | "fnf-vslice" | "native" */
   format: string;
+  fnf?: Chart["fnf"];
 }
 
 type Json = Record<string, unknown>;
@@ -169,14 +170,19 @@ export function parseFnfJson(text: string, side: FnfSide): ParsedChart {
   }
   if (!root || typeof root !== "object") throw new Error("FNF譜面の形式が読み取れませんでした");
   const obj = root as Json;
-  if (obj["song"] && typeof obj["song"] === "object") {
-    const r = parseFnfLegacy(obj["song"] as Json, side);
-    if (r.notes.length > 0) return r;
-  }
-  const v = parseFnfVslice(obj, side);
-  if (v && v.notes.length > 0) return v;
-  const l = parseFnfLegacy(obj, side);
-  if (l.notes.length > 0) return l;
+  const parseSide = (s: FnfSide) => {
+    if (obj["song"] && typeof obj["song"] === "object") {
+      return parseFnfLegacy(obj["song"] as Json, s);
+    }
+    return parseFnfVslice(obj, s) ?? parseFnfLegacy(obj, s);
+  };
+  const left = parseSide("left");
+  const right = parseSide("right");
+  const selected = side === "left" ? left : right;
+  if (selected.notes.length > 0) return {
+    ...selected,
+    fnf: { playerSide: side, left: left.notes, right: right.notes },
+  };
   throw new Error(
     side === "right" ? "右サイド（プレイヤー側）の譜面がありません" : "左サイド（相手側）の譜面がありません",
   );

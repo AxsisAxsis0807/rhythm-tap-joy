@@ -95,6 +95,7 @@ function toChart(row: SongRow, chart: ReturnType<typeof parseChartByType>, audio
     laneCount: chart.laneCount || row.lane_count || 4,
     difficultyName: row.difficulty_name || chart.difficultyName || "NORMAL",
     notes: chart.notes,
+    fnf: chart.fnf,
   };
 }
 

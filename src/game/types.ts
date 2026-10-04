@@ -32,6 +32,12 @@ export interface Chart {
   laneCount: number;
   difficultyName: string;
   notes: ChartNote[];
+  /** Present only for charts authored in FNF format, independent of selected skin. */
+  fnf?: {
+    playerSide: "left" | "right";
+    left: ChartNote[];
+    right: ChartNote[];
+  };
 }
 
 /** A note prepared for gameplay: absolute seconds + runtime state. */
