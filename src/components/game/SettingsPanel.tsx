@@ -1,14 +1,9 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
-
-export interface GameSettings {
-  /** Show borders around the 4 touch-panel areas so players can see their hit zones. */
-  showTouchBorders: boolean;
-}
-
-export const DEFAULT_SETTINGS: GameSettings = {
-  showTouchBorders: false,
-};
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import type { GameSettings } from "@/game/settings";
 
 /**
  * Placeholder settings sheet. New toggles get added as rows here; the game
@@ -19,11 +14,15 @@ export function SettingsPanel({
   settings,
   onChange,
   onClose,
+  fnf = false,
+  saveError = false,
 }: {
   open: boolean;
   settings: GameSettings;
   onChange: (next: GameSettings) => void;
   onClose: () => void;
+  fnf?: boolean;
+  saveError?: boolean;
 }) {
   // Close on Escape for keyboard users.
   useEffect(() => {
@@ -39,17 +38,19 @@ export function SettingsPanel({
 
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-overlay px-6 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 text-foreground shadow-xl">
+      <div role="dialog" aria-modal="true" aria-label="プレイ設定" className="max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-lg border border-border bg-card p-5 text-foreground shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg tracking-[0.3em]">SETTINGS</h2>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             aria-label="設定を閉じる"
             className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             <X aria-hidden="true" className="size-4" />
-          </button>
+          </Button>
         </div>
 
         <ToggleRow
@@ -59,9 +60,15 @@ export function SettingsPanel({
           onChange={(v) => onChange({ ...settings, showTouchBorders: v })}
         />
 
-        <p className="mt-4 text-[10px] tracking-[0.3em] text-muted-foreground">
-          その他の設定は今後追加予定
-        </p>
+        {fnf && <ToggleRow label="ミドルスクロール" checked={settings.middleScroll} onChange={(v) => onChange({ ...settings, middleScroll: v })} />}
+        <div className="space-y-4 border-t border-border py-4">
+          <div className="flex items-center justify-between text-sm">
+            <span>スクロールスピード</span>
+            <output className="tabular-nums">{settings.scrollSpeed.toFixed(2)}×</output>
+          </div>
+          <Slider aria-label="スクロールスピード" min={0.5} max={3} step={0.05} value={[settings.scrollSpeed]} onValueChange={([v]) => { if (v !== undefined) onChange({ ...settings, scrollSpeed: v }); }} />
+        </div>
+        <p role="status" className="text-xs text-muted-foreground">{saveError ? "この端末に設定を保存できませんでした" : "設定はこの端末に自動保存されます"}</p>
       </div>
     </div>
   );
@@ -79,28 +86,14 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 py-2">
+    <div className="flex items-center justify-between gap-4 py-2">
       <span className="flex flex-col">
         <span className="text-sm text-foreground">{label}</span>
         {description && (
           <span className="text-xs text-muted-foreground">{description}</span>
         )}
       </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-primary" : "bg-secondary"
-        }`}
-      >
-        <span
-          className={`absolute top-1 size-4 rounded-full bg-foreground transition-transform ${
-            checked ? "left-6" : "left-1"
-          }`}
-        />
-      </button>
-    </label>
+      <Switch aria-label={label} checked={checked} onCheckedChange={onChange} />
+    </div>
   );
 }

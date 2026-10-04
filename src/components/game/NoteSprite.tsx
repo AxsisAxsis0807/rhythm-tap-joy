@@ -1,4 +1,4 @@
-import { ARROW_GLYPHS, laneColor, type GameMode } from "@/game/modes";
+import { laneColor, type GameMode } from "@/game/modes";
 
 /** Renders a single note (or a receptor outline) in the current mode's skin. */
 export function NoteSprite({
@@ -48,20 +48,13 @@ export function NoteSprite({
 
   // arrow
   return (
-    <div
-      className="flex items-center justify-center rounded-md font-display leading-none"
-      style={{
-        width: size,
-        height: size,
-        fontSize: size * 0.62,
-        color: receptor ? color : "var(--arrow-foreground)",
-        background: receptor ? "transparent" : color,
-        border: `3px solid ${color}`,
-        opacity: receptor ? (pressed ? 1 : 0.4) : 1,
-        boxShadow: receptor ? undefined : `0 0 14px ${color}`,
-      }}
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 64 64"
+      className="block aspect-square w-full"
+      style={{ maxWidth: size * 1.5, color, opacity: receptor ? (pressed ? 1 : 0.4) : 1 }}
     >
-      {ARROW_GLYPHS[lane % ARROW_GLYPHS.length]}
-    </div>
+      <path transform={`rotate(${[180, 90, 270, 0][lane % 4] ?? 0} 32 32)`} d="M5 23 H32 V6 L59 32 L32 58 V41 H5 Z" fill={receptor && !pressed ? "var(--muted)" : "currentColor"} stroke="var(--arrow-foreground)" strokeWidth="3" strokeLinejoin="round" />
+    </svg>
   );
 }
