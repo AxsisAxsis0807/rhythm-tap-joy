@@ -1092,6 +1092,10 @@ function UploadScreen({
       const parsed = parseChartByType(text, type, useSide);
       if (parsed.difficultyName && (!difficulty || difficulty === "NORMAL"))
         setDifficulty(parsed.difficultyName);
+      if (type === "mania" && !charter) {
+        const creator = text.match(/^Creator:\s*(.+?)\s*$/m);
+        if (creator) setCharter(creator[1]!);
+      }
       setChartInfo({
         bpm: parsed.bpm,
         laneCount: parsed.laneCount,
@@ -1138,6 +1142,7 @@ function UploadScreen({
           user_id: user.id,
           title: title.trim(),
           artist: artist.trim(),
+          chart_author: charter.trim(),
           difficulty_name: difficulty.trim() || "NORMAL",
           bpm: parsed.bpm,
           offset_sec: parsed.offset,
@@ -1232,12 +1237,21 @@ function UploadScreen({
               />
             </label>
             <label className="label">
-              アーティスト
+              楽曲作成者
               <input
                 value={artist}
                 onChange={(e) => setArtist(e.target.value)}
                 className="field"
-                placeholder="あなたの名前"
+                placeholder="曲を作った人"
+              />
+            </label>
+            <label className="label">
+              譜面作成者
+              <input
+                value={charter}
+                onChange={(e) => setCharter(e.target.value)}
+                className="field"
+                placeholder="譜面を作った人"
               />
             </label>
             <label className="label">
@@ -1460,8 +1474,9 @@ function PublishScreen({
                   <span className="block text-xs text-white/45">
                     {song.is_official ? "正規版 · " : ""}
                     {song.chart_type === "fnf" ? `FNF(${song.fnf_side === "left" ? "左" : "右"})` : "osu!mania"} ·{" "}
-                    {song.artist || "アーティスト未設定"} · {song.difficulty_name} ·{" "}
+                    {song.artist || "楽曲作成者未設定"} · {song.difficulty_name} ·{" "}
                     {song.note_count} notes
+                    {song.chart_author ? ` · 譜面: ${song.chart_author}` : ""}
                   </span>
                 </span>
                 {selected === song.id && <Check className="size-5 text-cyan-200" />}
