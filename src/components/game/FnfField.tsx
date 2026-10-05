@@ -51,15 +51,15 @@ export function FnfField({ chart, mode, notes, songTime, scrollTime, activeLanes
             {[0, 1, 2, 3].map((lane) => (
               <div key={lane} className="absolute inset-y-0 w-1/4" style={{ left: `${lane * 25}%` }}>
                 <div className="absolute left-1/2 top-[86%] w-[80%] max-w-[76px] -translate-x-1/2 -translate-y-1/2">
-                  <NoteSprite mode={mode} lane={lane} receptor pressed={player ? activeLanes.has(lane) : opponentVisible.some(n => n.lane === lane && Math.abs(n.time - songTime) < 0.06)} />
+                  <NoteSprite mode={mode} lane={lane} fluid receptor pressed={player ? activeLanes.has(lane) : opponentVisible.some(n => n.lane === lane && Math.abs(n.time - songTime) < 0.06)} />
                 </div>
                 {visible.map(note => {
                   if (note.lane !== lane || ("judged" in note && note.judged)) return null;
                   if (!player && songTime > note.time + 0.06) return null;
-                  const top = 86 + (note.time - songTime) / scrollTime * 86;
+                  const top = 86 - (note.time - songTime) / scrollTime * 86;
                   return (
                     <div key={note.id} className="absolute left-1/2 w-[80%] max-w-[76px] -translate-x-1/2 -translate-y-1/2" style={{ top: `${top}%` }}>
-                      <NoteSprite mode={mode} lane={lane} />
+                      <NoteSprite mode={mode} lane={lane} fluid />
                     </div>
                   );
                 })}
