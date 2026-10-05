@@ -26,6 +26,8 @@ import { useAuth } from "@/lib/useAuth";
 import type { SongEntry } from "@/components/menu/MusicSelect";
 import { GameScreen } from "@/components/game/GameScreen";
 import { UploadMiniBar, useUploadTask, type UploadJob } from "./UploadTask";
+import { SettingsDialog } from "@/components/game/SettingsDialog";
+import { Menu, Settings } from "lucide-react";
 
 type HubScreen =
   | "home"
@@ -535,9 +537,14 @@ function SelectScreen({
   onPlay: (song: SongEntry) => void;
 }) {
   const [selectedId, setSelectedId] = useState(songs[0]?.id ?? "");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const selected = songs.find((song) => song.id === selectedId) ?? songs[0];
   return (
-    <main className="flex-1 px-4 pb-28 md:px-8">
+    <main className="relative flex-1 px-4 pb-28 md:px-8">
+      <button type="button" onClick={() => setSettingsOpen(true)} aria-label="設定を開く" className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white md:right-8">
+        <Settings className="size-6" />
+      </button>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <PageHeading title="曲を探して遊ぶ" eyebrow="MUSIC SELECT" onBack={onBack} />
       <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
         <div className="rounded-3xl border border-cyan-200/20 bg-gradient-to-br from-cyan-200/10 to-violet-400/10 p-6">
@@ -855,6 +862,7 @@ function ProfileScreen({
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? "");
   const [busy, setBusy] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
   const save = async (event: React.FormEvent) => {
@@ -891,6 +899,12 @@ function ProfileScreen({
   };
   return (
     <main className="flex-1 px-4 pb-28 md:px-8">
+      <div className="pt-4">
+        <button type="button" onClick={() => setSettingsOpen(true)} aria-label="設定を開く" className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white">
+          <Menu className="size-6" />
+        </button>
+      </div>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <PageHeading title="プロフィール" eyebrow="YOUR SPACE" onBack={onBack} />
       <div className="grid gap-5 md:grid-cols-[0.75fr_1.25fr]">
         <form
