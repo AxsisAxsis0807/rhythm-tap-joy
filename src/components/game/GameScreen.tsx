@@ -68,15 +68,6 @@ export function GameScreen({
     }
   }, []);
 
-  /** Pointer events give us multi-touch (simultaneous lanes) for free. */
-  const onPointerDown = useCallback(
-    (lane: number) => (e: React.PointerEvent) => {
-      e.preventDefault();
-      pressLane(lane);
-    },
-    [pressLane],
-  );
-
   /** Vertical position (% from top) for a note at travel progress 0..1. */
   const notePct = (progress: number) =>
     mode.scroll === "down" ? progress * judge : 100 - progress * (100 - judge);
