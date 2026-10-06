@@ -84,7 +84,8 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const hitLane = useCallback(
     (lane: number) => {
       if (status !== "playing") return;
-      const time = timeRef.current;
+      // Read the clock at the exact moment of input instead of the last frame.
+      const time = clockRef.current?.now() ?? timeRef.current;
       const note = findHittableNote(notesRef.current, lane, time, windows);
       if (!note) return;
       const delta = time - note.time;
