@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RotateCw, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_KEY_LABELS } from "@/game/config";
@@ -44,6 +44,7 @@ export function GameScreen({
   const [isLandscape, setIsLandscape] = useState(false);
   const [orientationMessage, setOrientationMessage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const pointerLanes = useRef(new Map<number, number>());
 
   useEffect(() => {
     const media = window.matchMedia("(orientation: landscape)");
@@ -66,15 +67,6 @@ export function GameScreen({
       setOrientationMessage("端末を横向きにしてください");
     }
   }, []);
-
-  /** Pointer events give us multi-touch (simultaneous lanes) for free. */
-  const onPointerDown = useCallback(
-    (lane: number) => (e: React.PointerEvent) => {
-      e.preventDefault();
-      pressLane(lane);
-    },
-    [pressLane],
-  );
 
   /** Vertical position (% from top) for a note at travel progress 0..1. */
   const notePct = (progress: number) =>
@@ -257,21 +249,42 @@ export function GameScreen({
           {showJudge && last && <p className="font-display text-xl" style={{ color: `var(--judge-${last.judgement.toLowerCase()})` }}>{last.judgement}</p>}
         </div>}
 
-        {/* Touch layer: the whole screen is split into 4 key areas */}
-        <div className="absolute inset-0 z-20 flex touch-none">
+        {/* Touch layer: the whole screen is split into 4 key areas.
+            One container handles every finger and picks the lane from the
+            touch X position, so rapid / simultaneous taps are never dropped. */}
+        <div
+          className="absolute inset-0 z-20 flex touch-none"
+          style={{ touchAction: "none" }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            const rect = e.currentTarget.getBoundingClientRect();
+            const lane = Math.min(
+              chart.laneCount - 1,
+              Math.max(0, Math.floor(((e.clientX - rect.left) / rect.width) * chart.laneCount)),
+            );
+            pointerLanes.current.set(e.pointerId, lane);
+            pressLane(lane);
+          }}
+          onPointerUp={(e) => {
+            const lane = pointerLanes.current.get(e.pointerId);
+            pointerLanes.current.delete(e.pointerId);
+            if (lane !== undefined) releaseLane(lane);
+          }}
+          onPointerCancel={(e) => {
+            const lane = pointerLanes.current.get(e.pointerId);
+            pointerLanes.current.delete(e.pointerId);
+            if (lane !== undefined) releaseLane(lane);
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           {lanes.map((lane) => (
             <div
               key={lane}
-              onPointerDown={onPointerDown(lane)}
-              onPointerUp={() => releaseLane(lane)}
-              onPointerCancel={() => releaseLane(lane)}
-              onContextMenu={(e) => e.preventDefault()}
-              className={`flex-1 ${
+              className={`pointer-events-none flex-1 ${
                 settings.showTouchBorders
                   ? "border-r border-lane-border last:border-r-0"
                   : ""
               }`}
-              style={{ touchAction: "none" }}
             />
           ))}
         </div>
