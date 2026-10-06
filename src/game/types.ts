@@ -76,3 +76,10 @@ export interface PlayState {
   counts: Record<Judgement, number>;
   lastJudgement?: { judgement: Judgement; deltaMs: number; at: number };
 }
+
+/** Immutable snapshot taken only on normal completion. */
+export interface CompletedPlay {
+  id: string;
+  songId: string;
+  play: PlayState;
+}

@@ -16,6 +16,7 @@ import {
 } from "./engine";
 import type {
   Chart,
+  CompletedPlay,
   JudgementWindows,
   PlayState,
   RuntimeNote,
@@ -45,6 +46,9 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   /** Index of the first possibly-unjudged note; keeps auto-miss O(1) per tick. */
   const missCursorRef = useRef(0);
 
+  const runIdRef = useRef<string | null>(null);
+  const startingRef = useRef(false);
+  const [completedPlay, setCompletedPlay] = useState<CompletedPlay | null>(null);
   const [status, setStatus] = useState<GameStatus>("idle");
   const [, setFrame] = useState(0);
 
@@ -71,13 +75,20 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
 
   const start = useCallback(async () => {
     const clock = clockRef.current;
-    if (!clock) return;
-    notesRef.current = buildRuntimeNotes(chart);
-    playRef.current = createPlayState();
-    missCursorRef.current = 0;
-    await clock.start(START_DELAY);
-    timeRef.current = -START_DELAY;
-    setStatus("playing");
+    if (!clock || startingRef.current) return;
+    startingRef.current = true;
+    try {
+      await clock.start(START_DELAY);
+      notesRef.current = buildRuntimeNotes(chart);
+      playRef.current = createPlayState();
+      missCursorRef.current = 0;
+      runIdRef.current = crypto.randomUUID();
+      setCompletedPlay(null);
+      timeRef.current = -START_DELAY;
+      setStatus("playing");
+    } finally {
+      startingRef.current = false;
+    }
   }, [chart]);
 
   /** Single entry point for every input source (touch, keyboard, future pads). */
@@ -123,7 +134,15 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       }
       missCursorRef.current = cursor;
       const last = notesRef.current[notesRef.current.length - 1];
-      if (last && time > last.time + 2.5) {
+      // Wait for the entire audio and the last judgement window, including empty charts.
+      if (time > Math.max(clock?.duration ?? 0, (last?.time ?? 0) + 2.5)) {
+        if (runIdRef.current) {
+          setCompletedPlay({
+            id: runIdRef.current,
+            songId: chart.id,
+            play: { ...playRef.current, counts: { ...playRef.current.counts } },
+          });
+        }
         setStatus("finished");
         return;
       }
@@ -132,7 +151,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [status, windows.miss, scoreRules]);
+  }, [status, windows.miss, scoreRules, chart.id]);
 
   // Keyboard input (external keyboard on phones/tablets works the same way).
   useEffect(() => {
@@ -170,6 +189,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
 
   return {
     status,
+    completedPlay,
     start,
     pressLane,
     releaseLane,

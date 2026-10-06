@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import {
   ArrowLeft,
+  Trophy,
   AudioLines,
   Check,
   ChevronRight,
@@ -27,12 +28,14 @@ import type { SongEntry } from "@/components/menu/MusicSelect";
 import { GameScreen } from "@/components/game/GameScreen";
 import { UploadMiniBar, useUploadTask, type UploadJob } from "./UploadTask";
 import { SettingsDialog } from "@/components/game/SettingsDialog";
+import { RankingScreen, PlayerStats } from "./RankingScreen";
 import { Menu, Settings } from "lucide-react";
 
 type HubScreen =
   | "home"
   | "auth"
   | "authForm"
+  | "ranking"
   | "profile"
   | "upload"
   | "publish"
@@ -223,6 +226,7 @@ export function RhythmHub({
       <GameScreen
         key={selectedSong.id}
         chart={selectedSong.chart}
+        userId={user?.id ?? null}
         modeId={modeId}
         onModeChange={onModeChange}
         onExit={() => setScreen("select")}
@@ -287,6 +291,9 @@ export function RhythmHub({
             onBack={() => setScreen("auth")}
           />
         )}
+        {screen === "ranking" && (
+          <RankingScreen userId={user?.id ?? null} onBack={() => setScreen("home")} />
+        )}
         {screen === "profile" && user && (
           <ProfileScreen
             user={user}
@@ -344,6 +351,7 @@ export function RhythmHub({
         <BottomNav
           screen={screen}
           user={user}
+          onRanking={() => setScreen("ranking")}
           onHome={() => setScreen("home")}
           onUpload={() => (user ? setScreen("upload") : openAuth("signup"))}
           onProfile={() => (user ? setScreen("profile") : openAuth())}
@@ -906,6 +914,7 @@ function ProfileScreen({
       </div>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <PageHeading title="プロフィール" eyebrow="YOUR SPACE" onBack={onBack} />
+      <PlayerStats userId={user.id} />
       <div className="grid gap-5 md:grid-cols-[0.75fr_1.25fr]">
         <form
           onSubmit={(event) => void save(event)}
@@ -1543,12 +1552,14 @@ function BottomNav({
   screen,
   user,
   onHome,
+  onRanking,
   onUpload,
   onProfile,
 }: {
   screen: HubScreen;
   user: User | null;
   onHome: () => void;
+  onRanking: () => void;
   onUpload: () => void;
   onProfile: () => void;
 }) {
@@ -1556,6 +1567,12 @@ function BottomNav({
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#090a0f]/90 px-4 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-xl">
       <div className="mx-auto flex max-w-lg items-center justify-around">
         <NavButton active={screen === "home"} icon={<Music2 />} label="ホーム" onClick={onHome} />
+        <NavButton
+          active={screen === "ranking"}
+          icon={<Trophy />}
+          label="ランキング"
+          onClick={onRanking}
+        />
         <NavButton
           active={screen === "upload" || screen === "publish"}
           icon={<Upload />}
