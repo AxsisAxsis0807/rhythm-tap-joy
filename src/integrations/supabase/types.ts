@@ -1,3 +1,27 @@
+export type PlayerRanking = {
+  user_id: string;
+  display_name: string;
+  username: string;
+  avatar_url: string | null;
+  total_score: number;
+  play_count: number;
+  global_rank: number;
+};
+
+export type PlayResultRow = {
+  id: string;
+  user_id: string;
+  song_id: string;
+  score: number;
+  accuracy: number;
+  max_combo: number;
+  perfect_count: number;
+  great_count: number;
+  good_count: number;
+  miss_count: number;
+  played_at: string;
+};
+
 export type Json =
   | string
   | number
@@ -14,6 +38,34 @@ export type Database = {
   }
   public: {
     Tables: {
+      player_stats: {
+        Row: { user_id: string; total_score: number; play_count: number };
+        Insert: { user_id: string; total_score?: number; play_count?: number };
+        Update: { total_score?: number; play_count?: number };
+        Relationships: [
+          {
+            foreignKeyName: "player_stats_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      play_results: {
+        Row: PlayResultRow;
+        Insert: Omit<PlayResultRow, "played_at"> & { played_at?: string };
+        Update: Partial<PlayResultRow>;
+        Relationships: [
+          {
+            foreignKeyName: "play_results_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null
@@ -154,6 +206,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      record_play_result: {
+        Args: {
+          p_id: string;
+          p_song_id: string;
+          p_score: number;
+          p_accuracy: number;
+          p_max_combo: number;
+          p_perfect_count: number;
+          p_great_count: number;
+          p_good_count: number;
+          p_miss_count: number;
+        };
+        Returns: boolean;
+      };
+      get_global_leaderboard: { Args: Record<string, never>; Returns: PlayerRanking[] };
+      get_player_ranking: { Args: { p_user_id: string }; Returns: PlayerRanking[] };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -11,14 +11,17 @@ import { useGameSettings } from "@/game/settings";
 import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
+import { usePlayResult } from "@/lib/usePlayResult";
 
 export function GameScreen({
   chart,
+  userId = null,
   modeId,
   onModeChange,
   onExit,
 }: {
   chart: Chart;
+  userId?: string | null;
   modeId: string;
   onModeChange: (id: string) => void;
   onExit?: () => void;
@@ -38,6 +41,25 @@ export function GameScreen({
     activeLanes,
     duration,
   } = game;
+
+  const runOwner = useRef<string | null>(null);
+  const starting = useRef(false);
+  const [startError, setStartError] = useState("");
+  const { state: saveState, retrySave } = usePlayResult(game.completedPlay, runOwner.current);
+  const startPlay = async () => {
+    if (starting.current) return;
+    starting.current = true;
+    const owner = userId;
+    setStartError("");
+    try {
+      await start();
+      runOwner.current = owner;
+    } catch {
+      setStartError("再生を開始できませんでした。もう一度お試しください");
+    } finally {
+      starting.current = false;
+    }
+  };
 
   const lanes = Array.from({ length: chart.laneCount }, (_, i) => i);
   const judge = mode.judgeLinePct;
@@ -62,7 +84,11 @@ export function GameScreen({
       if (document.fullscreenEnabled && !document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
       }
-      await screen.orientation.lock("landscape");
+      const orientation = screen.orientation as ScreenOrientation & {
+        lock?: (orientation: string) => Promise<void>;
+      };
+      if (!orientation.lock) throw new Error("Orientation lock unavailable");
+      await orientation.lock("landscape");
     } catch {
       setOrientationMessage("端末を横向きにしてください");
     }
@@ -333,11 +359,16 @@ export function GameScreen({
           )}
           <button
             disabled={status !== "ready"}
-            onClick={() => void start()}
+            onClick={() => void startPlay()}
             className="rounded-full bg-primary px-8 py-3 font-display tracking-widest text-primary-foreground transition-opacity disabled:opacity-40"
           >
             {status === "ready" ? "START" : "LOADING…"}
           </button>
+          {startError && (
+            <p role="alert" className="text-xs text-rose-200">
+              {startError}
+            </p>
+          )}
           {onExit && (
             <button
               type="button"
@@ -378,9 +409,27 @@ export function GameScreen({
               </dd>
             </div>
           </dl>
+          <div className="text-xs text-muted-foreground" aria-live="polite">
+            {!runOwner.current && "ログインすると累計スコアを保存できます"}
+            {saveState?.status === "saving" && "スコアを保存中…"}
+            {saveState?.status === "saved" && "累計スコアに加算しました"}
+            {saveState?.status === "error" && (
+              <>
+                <p role="alert">スコアを保存できませんでした: {saveState.error}</p>
+                <button type="button" className="mt-2 underline" onClick={() => void retrySave()}>
+                  保存を再試行
+                </button>
+              </>
+            )}
+          </div>
+          {startError && (
+            <p role="alert" className="text-xs text-rose-200">
+              {startError}
+            </p>
+          )}
           {!chart.fnf && <ModePicker value={mode.id} onChange={onModeChange} />}
           <button
-            onClick={() => void start()}
+            onClick={() => void startPlay()}
             className="rounded-full bg-primary px-8 py-3 font-display tracking-widest text-primary-foreground"
           >
             RETRY
