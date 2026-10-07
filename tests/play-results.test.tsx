@@ -3,8 +3,9 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useRhythmGame } from "@/game/useRhythmGame";
-import { usePlayResult } from "@/lib/usePlayResult";
+import { usePendingPlayResults, usePlayResult } from "@/lib/usePlayResult";
 import { recordCompletedPlay } from "@/lib/playerRanking";
+import { __resetPlayResultQueueForTests } from "@/lib/playResultQueue";
 import type { Chart } from "@/game/types";
 
 const audio = vi.hoisted(() => ({ time: 0, duration: 5 }));
@@ -24,6 +25,10 @@ vi.mock("@/game/audio", () => ({
 vi.mock("@/lib/playerRanking", () => ({
   recordCompletedPlay: vi.fn(async () => {}),
   rankingKeys: { all: ["player-ranking"] },
+  PlayResultSaveError: class extends Error {
+    retryable = true;
+    kind = "network";
+  },
 }));
 let nextFrame: FrameRequestCallback | undefined;
 const chart: Chart = {
@@ -47,6 +52,7 @@ function setup(selected: Chart, userId: string | null = "user-a") {
   return renderHook(
     () => {
       const game = useRhythmGame(selected);
+      usePendingPlayResults(userId);
       const saving = usePlayResult(game.completedPlay, userId);
       return { game, saving };
     },
@@ -58,6 +64,7 @@ function tick(time: number) {
   act(() => nextFrame?.(time * 1000));
 }
 beforeEach(() => {
+  __resetPlayResultQueueForTests();
   vi.clearAllMocks();
   audio.time = 0;
   nextFrame = undefined;
@@ -141,6 +148,21 @@ it("failed save can be retried with the same idempotency key", async () => {
   expect(vi.mocked(recordCompletedPlay).mock.calls[0]?.[0].id).toBe(
     vi.mocked(recordCompletedPlay).mock.calls[1]?.[0].id,
   );
+});
+it("keeps a failed result across unmount and resends the original UUID", async () => {
+  vi.mocked(recordCompletedPlay).mockRejectedValueOnce(new Error("offline"));
+  const first = setup(chart);
+  await waitFor(() => expect(first.result.current.game.status).toBe("ready"));
+  await act(() => first.result.current.game.start());
+  tick(6);
+  await waitFor(() => expect(first.result.current.saving.state?.status).toBe("error"));
+  const playId = first.result.current.game.completedPlay!.id;
+  first.unmount();
+
+  const second = setup(chart);
+  await waitFor(() => expect(recordCompletedPlay).toHaveBeenCalledTimes(2));
+  expect(vi.mocked(recordCompletedPlay).mock.calls[1]?.[0].id).toBe(playId);
+  second.unmount();
 });
 it("empty chart completes after audio ends", async () => {
   const { result } = setup({ ...chart, notes: [] });

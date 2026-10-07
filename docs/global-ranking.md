@@ -14,7 +14,9 @@ permissions are unchanged.
 - `src/components/game/GameScreen.tsx`: capture the account that starts the play;
   save on completion; display saving, success, failure and retry controls.
 - `src/lib/playerRanking.ts`, `src/lib/usePlayResult.ts`: typed RPC calls,
-  in-flight/success deduplication and statistics cache invalidation.
+  user-bound persistence and statistics cache invalidation.
+- `src/lib/playResultQueue.ts`: a versioned, user-scoped localStorage queue which
+  survives RESULT navigation/reload and reuses the original play UUID.
 - `src/components/app/RankingScreen.tsx`: public Top 100, independent own-rank
   query and reusable profile statistics, including loading/error states.
 - `src/components/app/RhythmHub.tsx`: ranking navigation, account ID passed to
@@ -22,6 +24,8 @@ permissions are unchanged.
 - `src/integrations/supabase/types.ts`: new tables and RPC types following the
   repository's existing checked-in type management.
 - `supabase/migrations/20261006200000_global_score_ranking.sql`: schema and policies.
+- `supabase/migrations/20261007090000_global_score_ranking_hardening.sql`:
+  result invariants and exact text serialization for BIGINT ranking values.
 - `tests/*.test.ts*`, `vitest.config.ts`, `package.json`, `bun.lock`: test setup.
 
 ## Migration and activation
@@ -29,8 +33,10 @@ permissions are unchanged.
 Apply the new migration to the **existing Lovable/Supabase project** before
 publishing the frontend. Use its migration workflow or run the SQL file in that
 project's SQL editor. Do not apply the existing migrations again to a live DB.
-This development environment has no database administration connection, so the
-production migration has not been applied here.
+This environment has no database administration connection. Its publishable
+endpoint also failed DNS resolution in three bounded attempts, so production
+migration status and application remain unverified. Apply both ranking migrations
+in filename order through the existing project's migration workflow.
 
 `play_results` retains user ID, song ID, score, accuracy, max combo, all four
 judgement counts and a database-generated timestamp. `song_id` is text because
@@ -55,17 +61,21 @@ permissions. Direct profile upserts cannot change these statistics.
 3. The current session must match the account that started the run.
 4. `record_play_result` uses the authenticated DB user, preserves RLS, and inserts
    with `ON CONFLICT (id) DO NOTHING`. Only a newly inserted row runs the trigger.
-5. A repeated request, including a retry after an ambiguous network failure,
+5. The result is first written to a user-specific browser queue. A repeated
+   request, including a retry after an ambiguous network failure,
    cannot add the same play twice. RETRY has a new UUID and adds another play.
-6. Successful saves invalidate leaderboard and profile queries, even if the game
-   screen has already unmounted. Failed saves can be retried from RESULT.
+6. Successful saves remove the queue item and invalidate ranking queries even
+   after unmount. Transient failures remain queued for navigation, reload,
+   online-event or manual retry. Account mismatch pauses that owner's queue;
+   server-rejected invalid input is removed instead of looping.
 
 ## Rank calculation
 
 `get_global_leaderboard()` returns only 100 players, with PostgreSQL `rank()`
 computed by descending total score. Ties share a competition rank (1, 1, 3),
 with UUID providing stable display order within ties. All profiles participate,
-including zero-score profiles.
+including zero-score profiles. BIGINT totals, counts and ranks are returned as
+decimal text and formatted with JavaScript `BigInt` to avoid JSON precision loss.
 
 `get_player_ranking(user_id)` fetches one profile plus `1 + count(players with a
 strictly higher score)`. The score index supports this calculation without
@@ -76,11 +86,12 @@ the same tie semantics.
 
 Run `npm test`, `npm run typecheck`, and `npm run build`.
 
-14 automated tests cover mania/FNF completion with the actual game hook and
+20 automated tests cover mania/FNF completion with the actual game hook and
 mock audio clock, unchanged scoring and selected-side notes, full audio duration,
 RESULT rerenders, RETRY, guest play, abandonment, same-ID save retries, empty
-charts, Top 100 and own-rank/profile UI, loading/error recovery, and PostgreSQL
-integration through PGlite. Database tests run **all Supabase migrations** with
+charts, Top 100 and own-rank/profile UI, loading/error recovery, exact BIGINT
+display, persistent resend after unmount, and PostgreSQL integration through
+PGlite. Database tests run **all Supabase migrations** with
 an auth/storage fixture and real PostgreSQL grants, RLS, triggers and RPCs.
 They verify additive totals across songs, idempotency, security permissions,
 invalid-input rollback, sorting/ties and rank #107 outside Top 100.
@@ -98,9 +109,7 @@ pre-existing formatting errors and an existing `no-explicit-any` violation in
 - Browser screenshot verification could not run because Chromium download failed
   in this environment. Ranking/profile rendering is covered by React DOM tests;
   mobile layout still needs a real browser/device check.
-- Scores originate in the browser. RLS protects account ownership and aggregates;
-  this feature does not introduce server-authoritative anti-cheat/replay validation.
-- Failed network saves are retryable while RESULT remains open; there is no
-  persistent offline queue after a reload or leaving the result screen.
-- PostgreSQL BIGINT totals are returned as JavaScript numbers by the existing
-  Supabase client. Exact display is bounded by JavaScript's safe integer range.
+- Scores still originate in the browser. The hardening migration rejects range
+  errors and inconsistencies among score, accuracy, combo and judgement counts
+  under the current rules. It cannot prove chart note count, timing or genuine
+  play; that requires a server-authoritative chart/replay verifier.

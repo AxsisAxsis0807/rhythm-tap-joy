@@ -7,6 +7,17 @@ export const rankingKeys = {
   player: (id: string) => ["player-ranking", "player", id] as const,
 };
 
+export class PlayResultSaveError extends Error {
+  constructor(
+    message: string,
+    readonly retryable: boolean,
+    readonly kind: "auth" | "invalid" | "network" | "unknown",
+  ) {
+    super(message);
+    this.name = "PlayResultSaveError";
+  }
+}
+
 export async function fetchLeaderboard() {
   const { data, error } = await supabase.rpc("get_global_leaderboard");
   if (error) throw new Error(error.message);
@@ -25,9 +36,13 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
     data: { session },
     error: authError,
   } = await supabase.auth.getSession();
-  if (authError) throw new Error(authError.message);
+  if (authError) throw new PlayResultSaveError(authError.message, true, "network");
   if (session?.user.id !== ownerId)
-    throw new Error("プレイ時のアカウントでログインして保存してください");
+    throw new PlayResultSaveError(
+      "プレイ時のアカウントでログインすると保存を再開します",
+      false,
+      "auth",
+    );
   const { play } = result;
   const c = play.counts;
   const judged = c.PERFECT + c.GREAT + c.GOOD + c.MISS;
@@ -42,5 +57,13 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
     p_good_count: c.GOOD,
     p_miss_count: c.MISS,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    const invalid = error.code === "22023" || error.code === "23514" || error.code === "22P02";
+    const auth = error.code === "42501" || error.code === "PGRST301";
+    throw new PlayResultSaveError(
+      error.message,
+      !invalid && !auth,
+      invalid ? "invalid" : auth ? "auth" : error.code ? "unknown" : "network",
+    );
+  }
 }

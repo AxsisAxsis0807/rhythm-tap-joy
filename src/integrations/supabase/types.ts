@@ -3,9 +3,9 @@ export type PlayerRanking = {
   display_name: string;
   username: string;
   avatar_url: string | null;
-  total_score: number;
-  play_count: number;
-  global_rank: number;
+  total_score: string;
+  play_count: string;
+  global_rank: string;
 };
 
 export type PlayResultRow = {
