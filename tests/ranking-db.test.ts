@@ -39,10 +39,10 @@ async function asUser<T>(id: string, action: () => Promise<T>) {
     await db.exec("RESET ROLE");
   }
 }
-async function record(id: string, score: number, song = "local-test") {
+async function record(id: string, score: number, song = "local-test", perfect = 1, maxCombo = 1) {
   return db.query<{ saved: boolean }>(
-    "SELECT public.record_play_result($1, $2, $3, 100, 1, 1, 0, 0, 0) AS saved",
-    [id, song, score],
+    "SELECT public.record_play_result($1, $2, $3, 100, $4, $5, 0, 0, 0) AS saved",
+    [id, song, score, maxCombo, perfect],
   );
 }
 it("one and two completions aggregate; duplicate requests do not increment; RETRY increments", async () => {
@@ -57,13 +57,13 @@ it("one and two completions aggregate; duplicate requests do not increment; RETR
       ).rows[0]?.total_score,
     ).toBe(1002);
     expect((await record(id, 1002)).rows[0]?.saved).toBe(false);
-    await record(randomUUID(), 702, "second-song");
+    await record(randomUUID(), 1002, "second-song");
     let stats = (
       await db.query<{ total_score: number; play_count: number }>(
         "SELECT * FROM public.player_stats WHERE user_id = auth.uid()",
       )
     ).rows[0]!;
-    expect(Number(stats.total_score)).toBe(1704);
+    expect(Number(stats.total_score)).toBe(2004);
     expect(Number(stats.play_count)).toBe(2);
     await record(randomUUID(), 1002);
     stats = (
@@ -71,7 +71,7 @@ it("one and two completions aggregate; duplicate requests do not increment; RETR
         "SELECT * FROM public.player_stats WHERE user_id = auth.uid()",
       )
     ).rows[0]!;
-    expect(Number(stats.total_score)).toBe(2706);
+    expect(Number(stats.total_score)).toBe(3006);
     expect(Number(stats.play_count)).toBe(3);
   });
 });
@@ -103,7 +103,7 @@ it("RLS rejects another user's result; aggregate/history mutation and anonymous 
   }
 });
 it("ranks all users in the DB including users outside Top 100, with consistent ties", async () => {
-  await asUser(users[1]!, () => record(randomUUID(), 5000));
+  await asUser(users[1]!, () => record(randomUUID(), 4020, "rank-song", 4, 4));
   const top = (
     await db.query<{ user_id: string; total_score: number; global_rank: number }>(
       "SELECT * FROM public.get_global_leaderboard()",
@@ -114,7 +114,7 @@ it("ranks all users in the DB including users outside Top 100, with consistent t
   for (let i = 0; i < 105; i++) {
     const id = randomUUID();
     await db.query("INSERT INTO auth.users VALUES ($1,$2,'{}')", [id, `extra${i}@test.invalid`]);
-    await asUser(id, () => record(randomUUID(), 10000));
+    await asUser(id, () => record(randomUUID(), 10110, "rank-song", 10, 10));
   }
   const leaders = (
     await db.query<{ global_rank: number }>("SELECT * FROM public.get_global_leaderboard()")
@@ -128,13 +128,19 @@ it("ranks all users in the DB including users outside Top 100, with consistent t
     )
   ).rows[0]!;
   expect(Number(mine.global_rank)).toBe(107);
-  expect(Number(mine.total_score)).toBe(2706);
+  expect(Number(mine.total_score)).toBe(3006);
 });
 it("invalid scores are rejected without changing statistics", async () => {
   await asUser(users[0]!, async () => {
     await expect(record(randomUUID(), -1)).rejects.toThrow();
     await expect(
       db.query("SELECT public.record_play_result($1,'song',1,101,1,1,0,0,0)", [randomUUID()]),
+    ).rejects.toThrow();
+    await expect(
+      db.query("SELECT public.record_play_result($1,'song',999999,100,1,1,0,0,0)", [randomUUID()]),
+    ).rejects.toThrow();
+    await expect(
+      db.query("SELECT public.record_play_result($1,'song',1002,70,1,1,0,0,0)", [randomUUID()]),
     ).rejects.toThrow();
     expect(
       Number(
@@ -144,6 +150,21 @@ it("invalid scores are rejected without changing statistics", async () => {
           )
         ).rows[0]?.total_score,
       ),
-    ).toBe(2706);
+    ).toBe(3006);
   });
+});
+
+it("returns exact decimal strings for BIGINT leaderboard values", async () => {
+  await db.query(
+    "UPDATE public.player_stats SET total_score = $1, play_count = $2 WHERE user_id = $3",
+    ["9007199254740993", "9007199254740992", users[0]],
+  );
+  const row = (
+    await db.query<{ total_score: string; play_count: string }>(
+      "SELECT total_score, play_count FROM public.get_player_ranking($1)",
+      [users[0]],
+    )
+  ).rows[0]!;
+  expect(row.total_score).toBe("9007199254740993");
+  expect(row.play_count).toBe("9007199254740992");
 });

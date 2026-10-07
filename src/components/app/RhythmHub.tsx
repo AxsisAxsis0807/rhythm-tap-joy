@@ -29,18 +29,11 @@ import { GameScreen } from "@/components/game/GameScreen";
 import { UploadMiniBar, useUploadTask, type UploadJob } from "./UploadTask";
 import { SettingsDialog } from "@/components/game/SettingsDialog";
 import { RankingScreen, PlayerStats } from "./RankingScreen";
+import { usePendingPlayResults } from "@/lib/usePlayResult";
 import { Menu, Settings } from "lucide-react";
 
 type HubScreen =
-  | "home"
-  | "auth"
-  | "authForm"
-  | "ranking"
-  | "profile"
-  | "upload"
-  | "publish"
-  | "select"
-  | "play";
+  "home" | "auth" | "authForm" | "ranking" | "profile" | "upload" | "publish" | "select" | "play";
 type AuthMode = "login" | "signup";
 
 type SongRow = {
@@ -79,7 +72,7 @@ function displayName(user: User | null, profile: Profile | null) {
   return (
     profile?.display_name ||
     profile?.username ||
-    user?.user_metadata?.['display_name'] ||
+    user?.user_metadata?.["display_name"] ||
     user?.email?.split("@")[0] ||
     "Player"
   );
@@ -89,7 +82,11 @@ function fileLabel(file: File | null) {
   return file ? file.name : "ファイルを選択";
 }
 
-function toChart(row: SongRow, chart: ReturnType<typeof parseChartByType>, audioUrl: string): Chart {
+function toChart(
+  row: SongRow,
+  chart: ReturnType<typeof parseChartByType>,
+  audioUrl: string,
+): Chart {
   return {
     id: row.id,
     title: row.title,
@@ -114,6 +111,7 @@ export function RhythmHub({
   onModeChange: (id: string) => void;
 }) {
   const { user, loading: authLoading } = useAuth();
+  const pendingResults = usePendingPlayResults(user?.id ?? null);
   const [screen, setScreen] = useState<HubScreen>("home");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -243,6 +241,21 @@ export function RhythmHub({
           onAuth={() => openAuth()}
           onProfile={() => setScreen("profile")}
         />
+        {pendingResults.pending > 0 && (
+          <div className="mx-4 mt-3 flex min-w-0 items-center justify-between gap-3 rounded-xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100 md:mx-8">
+            <span className="min-w-0 break-words">
+              未送信のプレイ結果が {pendingResults.pending}{" "}
+              件あります。オンライン時に自動再送します。
+            </span>
+            <button
+              type="button"
+              className="shrink-0 underline"
+              onClick={() => void pendingResults.flush()}
+            >
+              再送
+            </button>
+          </div>
+        )}
         {notice && (
           <div className="mx-4 mt-3 flex items-center justify-between rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100 md:mx-8">
             <span>{notice}</span>
@@ -278,10 +291,7 @@ export function RhythmHub({
           />
         )}
         {screen === "auth" && (
-          <AuthEntryScreen
-            onSelect={openAuthForm}
-            onBack={() => setScreen("home")}
-          />
+          <AuthEntryScreen onSelect={openAuthForm} onBack={() => setScreen("home")} />
         )}
         {screen === "authForm" && (
           <AuthScreen
@@ -549,7 +559,12 @@ function SelectScreen({
   const selected = songs.find((song) => song.id === selectedId) ?? songs[0];
   return (
     <main className="relative flex-1 px-4 pb-28 md:px-8">
-      <button type="button" onClick={() => setSettingsOpen(true)} aria-label="設定を開く" className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white md:right-8">
+      <button
+        type="button"
+        onClick={() => setSettingsOpen(true)}
+        aria-label="設定を開く"
+        className="absolute right-4 top-4 z-10 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white md:right-8"
+      >
         <Settings className="size-6" />
       </button>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -721,7 +736,8 @@ function AuthScreen({
     if (result.error) {
       const msg = result.error.message;
       if (/invalid login/i.test(msg)) setError("プレイヤーIDまたはパスワードが違います。");
-      else if (/already registered/i.test(msg)) setError(`@${normalizedId} はすでに使われています。`);
+      else if (/already registered/i.test(msg))
+        setError(`@${normalizedId} はすでに使われています。`);
       else if (/pwned|weak|compromised/i.test(msg))
         setError("このパスワードは流出済みのため使えません。別のパスワードにしてください。");
       else setError(msg);
@@ -817,7 +833,9 @@ function AuthScreen({
               className="field"
             />
             {mode === "signup" && password && (
-              <p className={`mt-1 text-xs ${pwIssues.length ? "text-rose-300" : "text-emerald-300"}`}>
+              <p
+                className={`mt-1 text-xs ${pwIssues.length ? "text-rose-300" : "text-emerald-300"}`}
+              >
                 {pwIssues.length ? `弱いパスワード：${pwIssues.join("、")}` : "強度OK"}
               </p>
             )}
@@ -908,7 +926,12 @@ function ProfileScreen({
   return (
     <main className="flex-1 px-4 pb-28 md:px-8">
       <div className="pt-4">
-        <button type="button" onClick={() => setSettingsOpen(true)} aria-label="設定を開く" className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white">
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="設定を開く"
+          className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white"
+        >
           <Menu className="size-6" />
         </button>
       </div>
@@ -1011,7 +1034,11 @@ function ProfileScreen({
                           supabase.storage.from(BUCKET).download(song.chart_path!),
                         ]);
                         if (audio.data && chartFile.data) {
-                          const parsed = parseChartByType(await chartFile.data.text(), song.chart_type, song.fnf_side);
+                          const parsed = parseChartByType(
+                            await chartFile.data.text(),
+                            song.chart_type,
+                            song.fnf_side,
+                          );
                           onPlay({
                             id: song.id,
                             title: song.title,
@@ -1241,7 +1268,11 @@ function UploadScreen({
                     >
                       {name}
                       <span className="block text-[11px] text-white/45">
-                        {sides === null ? "譜面を選ぶと確認します" : missing ? "譜面なし" : `${count} notes`}
+                        {sides === null
+                          ? "譜面を選ぶと確認します"
+                          : missing
+                            ? "譜面なし"
+                            : `${count} notes`}
                       </span>
                     </button>
                   );
@@ -1291,7 +1322,11 @@ function UploadScreen({
           <div className="mt-6 space-y-3">
             <UploadField
               icon={<AudioLines className="size-5" />}
-              label={chartType === "fnf" ? "音源（MP3 / OGG / WAV・両サイド共通）" : "音源（MP3 / OGG / WAV）"}
+              label={
+                chartType === "fnf"
+                  ? "音源（MP3 / OGG / WAV・両サイド共通）"
+                  : "音源（MP3 / OGG / WAV）"
+              }
               file={audio}
               accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac"
               onChange={setAudio}
@@ -1332,22 +1367,24 @@ function UploadScreen({
               accept="image/*"
               onChange={setBackground}
             />
-            {chartType === "fnf" && (<>
-            <UploadField
-              icon={<ImagePlus className="size-5" />}
-              label="レフトサイドのキャラ画像（任意）"
-              file={opponent}
-              accept="image/*"
-              onChange={setOpponent}
-            />
-            <UploadField
-              icon={<ImagePlus className="size-5" />}
-              label="ライトサイドのキャラ画像（任意）"
-              file={player}
-              accept="image/*"
-              onChange={setPlayer}
-            />
-            </>)}
+            {chartType === "fnf" && (
+              <>
+                <UploadField
+                  icon={<ImagePlus className="size-5" />}
+                  label="レフトサイドのキャラ画像（任意）"
+                  file={opponent}
+                  accept="image/*"
+                  onChange={setOpponent}
+                />
+                <UploadField
+                  icon={<ImagePlus className="size-5" />}
+                  label="ライトサイドのキャラ画像（任意）"
+                  file={player}
+                  accept="image/*"
+                  onChange={setPlayer}
+                />
+              </>
+            )}
           </div>
           <div className="mt-6 rounded-xl border border-amber-200/20 bg-amber-200/5 p-4">
             <p className="text-sm font-semibold text-amber-100">正規版として投稿</p>
@@ -1381,7 +1418,9 @@ function UploadScreen({
             )}
             {adminMsg && <p className="mt-2 text-xs text-amber-100/80">{adminMsg}</p>}
             {!isAdmin && (
-              <p className="mt-2 text-[11px] text-white/40">コードが無くても通常版として投稿できます。</p>
+              <p className="mt-2 text-[11px] text-white/40">
+                コードが無くても通常版として投稿できます。
+              </p>
             )}
           </div>
           <div className="mt-4 rounded-xl bg-cyan-200/10 p-4 text-xs leading-5 text-cyan-100/80">
@@ -1497,8 +1536,10 @@ function PublishScreen({
                   <span className="block truncate font-semibold">{song.title}</span>
                   <span className="block text-xs text-white/45">
                     {song.is_official ? "正規版 · " : ""}
-                    {song.chart_type === "fnf" ? `FNF(${song.fnf_side === "left" ? "左" : "右"})` : "osu!mania"} ·{" "}
-                    {song.artist || "楽曲作成者未設定"} · {song.difficulty_name} ·{" "}
+                    {song.chart_type === "fnf"
+                      ? `FNF(${song.fnf_side === "left" ? "左" : "右"})`
+                      : "osu!mania"}{" "}
+                    · {song.artist || "楽曲作成者未設定"} · {song.difficulty_name} ·{" "}
                     {song.note_count} notes
                     {song.chart_author ? ` · 譜面: ${song.chart_author}` : ""}
                   </span>

@@ -134,9 +134,7 @@ export function GameScreen({
     <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none">
       {/* Top HUD */}
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center gap-3 px-3 py-1.5 text-[11px] tracking-widest text-foreground sm:text-sm">
-        <span className="tabular-nums">
-          SCORE {play.score.toLocaleString()}
-        </span>
+        <span className="tabular-nums">SCORE {play.score.toLocaleString()}</span>
         <span className="text-muted-foreground">|</span>
         <span className="tabular-nums">MISS {c.MISS}</span>
         <span className="text-muted-foreground">|</span>
@@ -169,111 +167,127 @@ export function GameScreen({
       {/* Playfield: a centred column that stays playable in landscape */}
       <div className="relative flex flex-1 justify-center overflow-hidden">
         {chart.fnf ? (
-          <FnfField chart={chart} mode={mode} notes={notes} songTime={songTime} scrollTime={scrollTime} activeLanes={activeLanes} middleScroll={settings.middleScroll} />
-        ) : <div
-          className={`relative h-full w-full max-w-[520px] touch-none landscape:max-w-[min(60vh,520px)] ${
-            mode.fieldClass ?? ""
-          }`}
-        >
-          <div className="absolute inset-0 flex">
-            {lanes.map((lane) => (
-              <div
-                key={lane}
-                className="relative flex-1 border-r border-lane-border last:border-r-0 bg-lane"
-              >
-
-                {activeLanes.has(lane) && (
-                  <div className="absolute inset-0 bg-lane-active" />
-                )}
-
-                {/* Judgement line + receptor */}
-                <div
-                  className="absolute inset-x-0 z-10 h-[3px] bg-judge-line shadow-glow"
-                  style={{
-                    top: `${judge}%`,
-                    opacity: mode.receptors ? 0.35 : 1,
-                  }}
-                />
-                {mode.receptors && (
-                  <div
-                    className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
-                    style={{ top: `${judge}%` }}
-                  >
-                    <NoteSprite
-                      mode={mode}
-                      lane={lane}
-                      receptor
-                      pressed={activeLanes.has(lane)}
-                    />
-                  </div>
-                )}
-
-                {mode.showKeyLabels && (
-                  <div
-                    className="absolute inset-x-0 bottom-0 flex items-center justify-center text-xs tracking-widest text-muted-foreground"
-                    style={{ height: `${100 - judge}%` }}
-                  >
-                    {DEFAULT_KEY_LABELS[lane] ?? lane + 1}
-                  </div>
-                )}
-
-                {visibleNotes.map((note) => {
-                  if (note.lane !== lane || note.judged) return null;
-                  const remaining = note.time - songTime;
-                  if (remaining > scrollTime || remaining < -0.25) return null;
-                  const p = 1 - remaining / scrollTime;
-                  const top = notePct(p);
-                  return mode.noteShape === "bar" ? (
-                    <div
-                      key={note.id}
-                      className="absolute inset-x-1"
-                      style={{ top: `calc(${top}% - ${mode.noteSize / 2}px)` }}
-                    >
-                      <NoteSprite mode={mode} lane={lane} />
-                    </div>
-                  ) : (
-                    <div
-                      key={note.id}
-                      className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
-                      style={{ top: `${top}%` }}
-                    >
-                      <NoteSprite mode={mode} lane={lane} />
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-
-          {/* Combo + judgement */}
+          <FnfField
+            chart={chart}
+            mode={mode}
+            notes={notes}
+            songTime={songTime}
+            scrollTime={scrollTime}
+            activeLanes={activeLanes}
+            middleScroll={settings.middleScroll}
+          />
+        ) : (
           <div
-            className="pointer-events-none absolute inset-x-0 z-20 flex flex-col items-center gap-1"
-            style={{ top: `${mode.popupPct}%` }}
+            className={`relative h-full w-full max-w-[520px] touch-none landscape:max-w-[min(60vh,520px)] ${
+              mode.fieldClass ?? ""
+            }`}
           >
+            <div className="absolute inset-0 flex">
+              {lanes.map((lane) => (
+                <div
+                  key={lane}
+                  className="relative flex-1 border-r border-lane-border last:border-r-0 bg-lane"
+                >
+                  {activeLanes.has(lane) && <div className="absolute inset-0 bg-lane-active" />}
+
+                  {/* Judgement line + receptor */}
+                  <div
+                    className="absolute inset-x-0 z-10 h-[3px] bg-judge-line shadow-glow"
+                    style={{
+                      top: `${judge}%`,
+                      opacity: mode.receptors ? 0.35 : 1,
+                    }}
+                  />
+                  {mode.receptors && (
+                    <div
+                      className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
+                      style={{ top: `${judge}%` }}
+                    >
+                      <NoteSprite
+                        mode={mode}
+                        lane={lane}
+                        receptor
+                        pressed={activeLanes.has(lane)}
+                      />
+                    </div>
+                  )}
+
+                  {mode.showKeyLabels && (
+                    <div
+                      className="absolute inset-x-0 bottom-0 flex items-center justify-center text-xs tracking-widest text-muted-foreground"
+                      style={{ height: `${100 - judge}%` }}
+                    >
+                      {DEFAULT_KEY_LABELS[lane] ?? lane + 1}
+                    </div>
+                  )}
+
+                  {visibleNotes.map((note) => {
+                    if (note.lane !== lane || note.judged) return null;
+                    const remaining = note.time - songTime;
+                    if (remaining > scrollTime || remaining < -0.25) return null;
+                    const p = 1 - remaining / scrollTime;
+                    const top = notePct(p);
+                    return mode.noteShape === "bar" ? (
+                      <div
+                        key={note.id}
+                        className="absolute inset-x-1"
+                        style={{ top: `calc(${top}% - ${mode.noteSize / 2}px)` }}
+                      >
+                        <NoteSprite mode={mode} lane={lane} />
+                      </div>
+                    ) : (
+                      <div
+                        key={note.id}
+                        className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        style={{ top: `${top}%` }}
+                      >
+                        <NoteSprite mode={mode} lane={lane} />
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            {/* Combo + judgement */}
+            <div
+              className="pointer-events-none absolute inset-x-0 z-20 flex flex-col items-center gap-1"
+              style={{ top: `${mode.popupPct}%` }}
+            >
+              {play.combo > 1 && (
+                <>
+                  <span className="font-display text-4xl tabular-nums text-combo drop-shadow sm:text-5xl">
+                    {play.combo}
+                  </span>
+                  <span className="text-[10px] tracking-[0.4em] text-muted-foreground">COMBO</span>
+                </>
+              )}
+              {showJudge && last && (
+                <span
+                  className="mt-2 font-display text-xl tracking-[0.2em] sm:text-2xl"
+                  style={{ color: `var(--judge-${last.judgement.toLowerCase()})` }}
+                >
+                  {last.judgement}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+        {chart.fnf && (
+          <div className="pointer-events-none absolute inset-x-0 top-[40%] z-20 text-center">
             {play.combo > 1 && (
-              <>
-                <span className="font-display text-4xl tabular-nums text-combo drop-shadow sm:text-5xl">
-                  {play.combo}
-                </span>
-                <span className="text-[10px] tracking-[0.4em] text-muted-foreground">
-                  COMBO
-                </span>
-              </>
+              <p className="font-display text-4xl tabular-nums text-combo">{play.combo}</p>
             )}
             {showJudge && last && (
-              <span
-                className="mt-2 font-display text-xl tracking-[0.2em] sm:text-2xl"
+              <p
+                className="font-display text-xl"
                 style={{ color: `var(--judge-${last.judgement.toLowerCase()})` }}
               >
                 {last.judgement}
-              </span>
+              </p>
             )}
           </div>
-        </div>}
-        {chart.fnf && <div className="pointer-events-none absolute inset-x-0 top-[40%] z-20 text-center">
-          {play.combo > 1 && <p className="font-display text-4xl tabular-nums text-combo">{play.combo}</p>}
-          {showJudge && last && <p className="font-display text-xl" style={{ color: `var(--judge-${last.judgement.toLowerCase()})` }}>{last.judgement}</p>}
-        </div>}
+        )}
 
         {/* Touch layer: the whole screen is split into 4 key areas.
             One container handles every finger and picks the lane from the
@@ -307,15 +321,12 @@ export function GameScreen({
             <div
               key={lane}
               className={`pointer-events-none flex-1 ${
-                settings.showTouchBorders
-                  ? "border-r border-lane-border last:border-r-0"
-                  : ""
+                settings.showTouchBorders ? "border-r border-lane-border last:border-r-0" : ""
               }`}
             />
           ))}
         </div>
       </div>
-
 
       {/* Song progress bar */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-center gap-3 px-4 pb-2">
@@ -332,9 +343,7 @@ export function GameScreen({
 
       {(status === "ready" || status === "loading" || status === "idle") && (
         <Overlay>
-          <h2 className="font-display text-2xl text-foreground">
-            {chart.title}
-          </h2>
+          <h2 className="font-display text-2xl text-foreground">{chart.title}</h2>
           {!chart.fnf && <ModePicker value={mode.id} onChange={onModeChange} />}
           <p className="text-sm text-muted-foreground">
             4レーンをタップ、または D / F / J / K キーで演奏します。横画面でもプレイできます。
@@ -383,9 +392,7 @@ export function GameScreen({
 
       {status === "finished" && (
         <Overlay>
-          <h2 className="font-display text-xl tracking-[0.3em] text-muted-foreground">
-            RESULT
-          </h2>
+          <h2 className="font-display text-xl tracking-[0.3em] text-muted-foreground">RESULT</h2>
           <p className="font-display text-4xl tabular-nums text-foreground">
             {play.score.toLocaleString()}
           </p>
@@ -393,9 +400,7 @@ export function GameScreen({
             {(["PERFECT", "GREAT", "GOOD", "MISS"] as const).map((k) => (
               <div key={k} className="flex justify-between gap-6">
                 <dt style={{ color: `var(--judge-${k.toLowerCase()})` }}>{k}</dt>
-                <dd className="tabular-nums text-foreground">
-                  {play.counts[k]}
-                </dd>
+                <dd className="tabular-nums text-foreground">{play.counts[k]}</dd>
               </div>
             ))}
             <div className="col-span-2 flex justify-between gap-6 border-t border-border pt-1">
@@ -404,14 +409,13 @@ export function GameScreen({
             </div>
             <div className="col-span-2 flex justify-between gap-6">
               <dt className="text-muted-foreground">ACCURACY</dt>
-              <dd className="tabular-nums text-foreground">
-                {accuracy.toFixed(2)}%
-              </dd>
+              <dd className="tabular-nums text-foreground">{accuracy.toFixed(2)}%</dd>
             </div>
           </dl>
           <div className="text-xs text-muted-foreground" aria-live="polite">
             {!runOwner.current && "ログインすると累計スコアを保存できます"}
             {saveState?.status === "saving" && "スコアを保存中…"}
+            {saveState?.status === "queued" && "スコアを保存待ちに追加しました"}
             {saveState?.status === "saved" && "累計スコアに加算しました"}
             {saveState?.status === "error" && (
               <>
@@ -453,8 +457,10 @@ export type { GameMode };
 
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 overflow-y-auto bg-overlay px-8 py-6 text-center backdrop-blur-sm">
-      {children}
+    <div className="absolute inset-0 z-30 overflow-y-auto bg-overlay px-4 py-4 text-center backdrop-blur-sm sm:px-8 sm:py-6">
+      <div className="flex min-h-full flex-col items-center justify-center gap-3 sm:gap-4">
+        {children}
+      </div>
     </div>
   );
 }

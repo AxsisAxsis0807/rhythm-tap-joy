@@ -15,18 +15,18 @@ const first: PlayerRanking = {
   display_name: "First",
   username: "first",
   avatar_url: null,
-  total_score: 1234567890,
-  play_count: 352,
-  global_rank: 1,
+  total_score: "1234567890",
+  play_count: "352",
+  global_rank: "1",
 };
 const mine: PlayerRanking = {
   ...first,
   user_id: "me",
   display_name: "My Player",
   username: "me",
-  total_score: 1002,
-  play_count: 1,
-  global_rank: 1284,
+  total_score: "1002",
+  play_count: "1",
+  global_rank: "1284",
 };
 function show(element: React.ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -47,11 +47,19 @@ it("shows own rank outside Top 100 and public leaderboard", async () => {
   expect(screen.getByText("352 PLAYS")).toBeTruthy();
 });
 it("profile displays total score, rank and plays", async () => {
-  vi.mocked(fetchPlayerRanking).mockResolvedValue({ ...first, global_rank: 1284 });
+  vi.mocked(fetchPlayerRanking).mockResolvedValue({ ...first, global_rank: "1284" });
   show(<PlayerStats userId="first" />);
   await screen.findByText("1,234,567,890");
   expect(screen.getByText("#1,284")).toBeTruthy();
   expect(screen.getByText("352")).toBeTruthy();
+});
+it("formats BIGINT values beyond JavaScript's safe integer range exactly", async () => {
+  vi.mocked(fetchLeaderboard).mockResolvedValue([
+    { ...first, total_score: "9223372036854775807", play_count: "9007199254740993" },
+  ]);
+  show(<RankingScreen userId={null} onBack={() => {}} />);
+  await screen.findByText("9,223,372,036,854,775,807");
+  expect(screen.getByText("9,007,199,254,740,993 PLAYS")).toBeTruthy();
 });
 it("guest sees Top 100 without fetching an own rank", async () => {
   show(<RankingScreen userId={null} onBack={() => {}} />);

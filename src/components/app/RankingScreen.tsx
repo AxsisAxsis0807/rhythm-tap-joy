@@ -3,6 +3,14 @@ import { ArrowLeft, CircleUserRound, Trophy } from "lucide-react";
 import type { PlayerRanking } from "@/integrations/supabase/types";
 import { fetchLeaderboard, fetchPlayerRanking, rankingKeys } from "@/lib/playerRanking";
 
+function formatInteger(value: string) {
+  try {
+    return BigInt(value).toLocaleString();
+  } catch {
+    return value;
+  }
+}
+
 function ErrorNotice({ retry }: { retry: () => void }) {
   return (
     <div
@@ -38,9 +46,9 @@ export function PlayerStats({ userId }: { userId: string }) {
   return (
     <dl className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
       {[
-        ["TOTAL SCORE", (player?.total_score ?? 0).toLocaleString()],
-        ["GLOBAL RANK", player ? `#${player.global_rank.toLocaleString()}` : "—"],
-        ["PLAYS", (player?.play_count ?? 0).toLocaleString()],
+        ["TOTAL SCORE", formatInteger(player?.total_score ?? "0")],
+        ["GLOBAL RANK", player ? `#${formatInteger(player.global_rank)}` : "—"],
+        ["PLAYS", formatInteger(player?.play_count ?? "0")],
       ].map(([label, value]) => (
         <div
           key={label}
@@ -62,7 +70,7 @@ function RankingRow({ player, own }: { player: PlayerRanking; own: boolean }) {
       className={`flex min-w-0 items-center gap-3 rounded-2xl border p-3 sm:p-4 ${own ? "border-cyan-200/40 bg-cyan-200/10" : "border-white/10 bg-white/[0.03]"}`}
     >
       <span className="w-12 shrink-0 text-center font-display text-sm tabular-nums text-cyan-100">
-        #{player.global_rank.toLocaleString()}
+        #{formatInteger(player.global_rank)}
       </span>
       {player.avatar_url ? (
         <img
@@ -80,12 +88,12 @@ function RankingRow({ player, own }: { player: PlayerRanking; own: boolean }) {
         </p>
         <p className="truncate text-xs text-white/40">@{player.username}</p>
         <p className="mt-1 text-[10px] tracking-widest text-white/40">
-          {player.play_count.toLocaleString()} PLAYS
+          {formatInteger(player.play_count)} PLAYS
         </p>
       </div>
       <div className="min-w-0 max-w-[40%] text-right">
         <p className="break-words font-display text-sm tabular-nums text-cyan-100 sm:text-lg">
-          {player.total_score.toLocaleString()}
+          {formatInteger(player.total_score)}
         </p>
         <p className="text-[9px] tracking-widest text-white/35">TOTAL SCORE</p>
       </div>
