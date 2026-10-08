@@ -47,6 +47,9 @@ export interface RuntimeNote {
   time: number;
   lane: number;
   kind: NoteKind;
+  /** Absolute release time for hold notes. */
+  endTime?: number;
+  holding?: boolean;
   judged: boolean;
   judgement?: Judgement;
 }
@@ -75,6 +78,7 @@ export interface PlayState {
   maxCombo: number;
   counts: Record<Judgement, number>;
   lastJudgement?: { judgement: Judgement; deltaMs: number; at: number };
+  timingErrorsMs: number[];
 }
 
 /** Immutable snapshot taken only on normal completion. */
@@ -82,4 +86,6 @@ export interface CompletedPlay {
   id: string;
   songId: string;
   play: PlayState;
+  /** Practice/modifier runs must never enter competitive persistence. */
+  competitive?: boolean;
 }

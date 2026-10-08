@@ -2,7 +2,6 @@
 @source "../src";
 @import "tw-animate-css";
 
-
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -189,8 +188,55 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    overscroll-behavior: none;
-    -webkit-user-select: none;
-    user-select: none;
+    overscroll-behavior-y: auto;
+  }
+}
+
+@keyframes preview-down {
+  from {
+    top: -12%;
+  }
+  to {
+    top: 90%;
+  }
+}
+@keyframes preview-up {
+  from {
+    top: 100%;
+  }
+  to {
+    top: 4%;
+  }
+}
+@keyframes game-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(-3px);
+  }
+  70% {
+    transform: translateX(3px);
+  }
+}
+.animate-preview-down {
+  animation: preview-down 1.1s linear infinite;
+}
+.animate-preview-up {
+  animation: preview-up 1.1s linear infinite;
+}
+.animate-game-shake {
+  animation: game-shake 120ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

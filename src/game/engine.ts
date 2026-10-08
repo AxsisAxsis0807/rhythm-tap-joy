@@ -16,6 +16,9 @@ export function buildRuntimeNotes(chart: Chart): RuntimeNote[] {
       time: chart.offset + n.beat * secondsPerBeat,
       lane: n.lane,
       kind: n.kind,
+      ...(n.kind === "hold" && n.lengthBeats
+        ? { endTime: chart.offset + (n.beat + n.lengthBeats) * secondsPerBeat }
+        : {}),
       judged: false,
     }))
     .sort((a, b) => a.time - b.time);
@@ -27,13 +30,11 @@ export function createPlayState(): PlayState {
     combo: 0,
     maxCombo: 0,
     counts: { PERFECT: 0, GREAT: 0, GOOD: 0, MISS: 0 },
+    timingErrorsMs: [],
   };
 }
 
-export function judgeDelta(
-  delta: number,
-  w: JudgementWindows,
-): Judgement | null {
+export function judgeDelta(delta: number, w: JudgementWindows): Judgement | null {
   const d = Math.abs(delta);
   if (d <= w.perfect) return "PERFECT";
   if (d <= w.great) return "GREAT";
@@ -84,6 +85,7 @@ export function applyJudgement(
   at: number,
 ): void {
   state.counts[judgement] += 1;
+  if (judgement !== "MISS") state.timingErrorsMs.push(deltaMs);
   if (judgement === "MISS") {
     state.combo = 0;
   } else {

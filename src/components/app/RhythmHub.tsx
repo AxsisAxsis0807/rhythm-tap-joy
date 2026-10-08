@@ -14,6 +14,7 @@ import {
   Music2,
   Plus,
   Send,
+  Search,
   Upload,
   UserPlus,
   X,
@@ -556,7 +557,21 @@ function SelectScreen({
 }) {
   const [selectedId, setSelectedId] = useState(songs[0]?.id ?? "");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const selected = songs.find((song) => song.id === selectedId) ?? songs[0];
+  const [query, setQuery] = useState("");
+  const [difficulty, setDifficulty] = useState("all");
+  const difficulties = Array.from(
+    new Set(
+      songs.flatMap((song) => (song.chart?.difficultyName ? [song.chart.difficultyName] : [])),
+    ),
+  );
+  const filteredSongs = songs.filter((song) => {
+    const text = `${song.title} ${song.artist}`.toLowerCase();
+    return (
+      text.includes(query.trim().toLowerCase()) &&
+      (difficulty === "all" || song.chart?.difficultyName === difficulty)
+    );
+  });
+  const selected = songs.find((song) => song.id === selectedId) ?? filteredSongs[0] ?? songs[0];
   return (
     <main className="relative flex-1 px-4 pb-28 md:px-8">
       <button
@@ -578,6 +593,22 @@ function SelectScreen({
             <>
               <h2 className="mt-5 text-2xl font-bold">{selected.title}</h2>
               <p className="mt-1 text-white/50">{selected.artist}</p>
+              {selected.chart && (
+                <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-black/20 p-2">
+                    <dt className="text-[10px] text-white/35">難易度</dt>
+                    <dd className="mt-1 text-xs text-cyan-100">{selected.chart.difficultyName}</dd>
+                  </div>
+                  <div className="rounded-xl bg-black/20 p-2">
+                    <dt className="text-[10px] text-white/35">BPM</dt>
+                    <dd className="mt-1 text-xs text-cyan-100">{selected.chart.bpm}</dd>
+                  </div>
+                  <div className="rounded-xl bg-black/20 p-2">
+                    <dt className="text-[10px] text-white/35">NOTES</dt>
+                    <dd className="mt-1 text-xs text-cyan-100">{selected.chart.notes.length}</dd>
+                  </div>
+                </dl>
+              )}
               <button
                 type="button"
                 disabled={!selected.chart}
@@ -590,12 +621,39 @@ function SelectScreen({
           )}
         </div>
         <div className="space-y-2">
+          <div className="mb-3 flex gap-2">
+            <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3">
+              <Search className="size-4 text-white/35" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="曲名・アーティストを検索"
+                className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none"
+              />
+            </label>
+            <select
+              aria-label="難易度で絞り込み"
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+              className="rounded-xl border border-white/10 bg-[#111521] px-3 text-sm"
+            >
+              <option value="all">すべて</option>
+              {difficulties.map((name) => (
+                <option key={name}>{name}</option>
+              ))}
+            </select>
+          </div>
           {songs.length === 0 && (
             <div className="rounded-2xl border border-dashed border-white/15 p-8 text-center text-white/40">
               曲がありません
             </div>
           )}
-          {songs.map((song) => (
+          {songs.length > 0 && filteredSongs.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-white/15 p-8 text-center text-white/40">
+              条件に合う曲がありません
+            </div>
+          )}
+          {filteredSongs.map((song) => (
             <button
               type="button"
               key={song.id}

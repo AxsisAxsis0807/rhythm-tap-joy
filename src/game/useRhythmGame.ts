@@ -23,13 +23,17 @@ import type {
   ScoreRules,
 } from "./types";
 
-export type GameStatus = "idle" | "loading" | "ready" | "playing" | "finished";
+export type GameStatus = "idle" | "loading" | "ready" | "playing" | "paused" | "finished";
 
 export interface RhythmGameOptions {
   windows?: JudgementWindows;
   scoreRules?: ScoreRules;
   keyMap?: string[][];
   scrollTime?: number;
+  timingOffsetMs?: number;
+  volume?: number;
+  hitSoundVolume?: number;
+  competitive?: boolean;
 }
 
 export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
@@ -37,12 +41,16 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const scoreRules = options.scoreRules ?? DEFAULT_SCORE_RULES;
   const keyMap = options.keyMap ?? DEFAULT_KEY_MAP;
   const scrollTime = options.scrollTime ?? DEFAULT_SCROLL_TIME;
+  const timingOffset = (options.timingOffsetMs ?? 0) / 1000;
 
   const clockRef = useRef<AudioClock | null>(null);
   const notesRef = useRef<RuntimeNote[]>(buildRuntimeNotes(chart));
   const playRef = useRef<PlayState>(createPlayState());
   const timeRef = useRef(0);
   const activeLanesRef = useRef<Set<number>>(new Set());
+  const inputSourcesRef = useRef<Map<string, number>>(new Map());
+  const heldNotesRef = useRef<Map<number, RuntimeNote>>(new Map());
+  const pausedAtRef = useRef(0);
   /** Index of the first possibly-unjudged note; keeps auto-miss O(1) per tick. */
   const missCursorRef = useRef(0);
 
@@ -73,6 +81,17 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     };
   }, [chart.audioUrl]);
 
+  useEffect(() => {
+    (
+      clockRef.current as (AudioClock & { setVolume?: (value: number) => void }) | null
+    )?.setVolume?.(options.volume ?? 1);
+  }, [options.volume]);
+
+  const clearInputs = useCallback(() => {
+    inputSourcesRef.current.clear();
+    activeLanesRef.current.clear();
+  }, []);
+
   const start = useCallback(async () => {
     const clock = clockRef.current;
     if (!clock || startingRef.current) return;
@@ -81,6 +100,8 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       await clock.start(START_DELAY);
       notesRef.current = buildRuntimeNotes(chart);
       playRef.current = createPlayState();
+      heldNotesRef.current.clear();
+      clearInputs();
       missCursorRef.current = 0;
       runIdRef.current = crypto.randomUUID();
       setCompletedPlay(null);
@@ -89,14 +110,14 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     } finally {
       startingRef.current = false;
     }
-  }, [chart]);
+  }, [chart, clearInputs]);
 
   /** Single entry point for every input source (touch, keyboard, future pads). */
   const hitLane = useCallback(
     (lane: number) => {
       if (status !== "playing") return;
       // Read the clock at the exact moment of input instead of the last frame.
-      const time = clockRef.current?.now() ?? timeRef.current;
+      const time = (clockRef.current?.now() ?? timeRef.current) + timingOffset;
       const note = findHittableNote(notesRef.current, lane, time, windows);
       if (!note) return;
       const delta = time - note.time;
@@ -104,9 +125,51 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       if (!judgement) return;
       note.judged = true;
       note.judgement = judgement;
+      if (note.kind === "hold") {
+        note.holding = true;
+        heldNotesRef.current.set(lane, note);
+      }
       applyJudgement(playRef.current, judgement, delta * 1000, scoreRules, time);
+      if ((options.hitSoundVolume ?? 0) > 0) {
+        (
+          clockRef.current as (AudioClock & { playHit?: (value: number) => void }) | null
+        )?.playHit?.(options.hitSoundVolume ?? 0);
+      }
     },
-    [status, windows, scoreRules],
+    [status, windows, scoreRules, timingOffset, options.hitSoundVolume],
+  );
+
+  const pressSource = useCallback(
+    (source: string, lane: number) => {
+      if (inputSourcesRef.current.has(source)) return;
+      const alreadyPressed = Array.from(inputSourcesRef.current.values()).includes(lane);
+      inputSourcesRef.current.set(source, lane);
+      activeLanesRef.current.add(lane);
+      if (!alreadyPressed) hitLane(lane);
+    },
+    [hitLane],
+  );
+
+  const releaseSource = useCallback(
+    (source: string) => {
+      const lane = inputSourcesRef.current.get(source);
+      if (lane === undefined) return;
+      inputSourcesRef.current.delete(source);
+      if (!Array.from(inputSourcesRef.current.values()).includes(lane)) {
+        activeLanesRef.current.delete(lane);
+        const held = heldNotesRef.current.get(lane);
+        if (held) {
+          const time = clockRef.current?.now() ?? timeRef.current;
+          if (held.endTime !== undefined && time < held.endTime - windows.good) {
+            held.judgement = "MISS";
+            applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
+          }
+          held.holding = false;
+          heldNotesRef.current.delete(lane);
+        }
+      }
+    },
+    [scoreRules, windows.good],
   );
 
   // Main loop: read the audio clock, auto-miss passed notes, redraw.
@@ -118,6 +181,12 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       if (clock) timeRef.current = clock.now();
       const time = timeRef.current;
       const all = notesRef.current;
+      heldNotesRef.current.forEach((note, lane) => {
+        if (note.endTime !== undefined && time >= note.endTime) {
+          note.holding = false;
+          heldNotesRef.current.delete(lane);
+        }
+      });
       let cursor = missCursorRef.current;
       while (cursor < all.length) {
         const note = all[cursor]!;
@@ -140,7 +209,12 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
           setCompletedPlay({
             id: runIdRef.current,
             songId: chart.id,
-            play: { ...playRef.current, counts: { ...playRef.current.counts } },
+            play: {
+              ...playRef.current,
+              counts: { ...playRef.current.counts },
+              timingErrorsMs: [...playRef.current.timingErrorsMs],
+            },
+            competitive: options.competitive !== false,
           });
         }
         setStatus("finished");
@@ -151,7 +225,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [status, windows.miss, scoreRules, chart.id]);
+  }, [status, windows.miss, scoreRules, chart.id, options.competitive]);
 
   // Keyboard input (external keyboard on phones/tablets works the same way).
   useEffect(() => {
@@ -160,12 +234,11 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       const lane = keyToLane.get(e.code);
       if (lane === undefined) return;
       e.preventDefault();
-      activeLanesRef.current.add(lane);
-      hitLane(lane);
+      pressSource(`key:${e.code}`, lane);
     };
     const up = (e: KeyboardEvent) => {
       const lane = keyToLane.get(e.code);
-      if (lane !== undefined) activeLanesRef.current.delete(lane);
+      if (lane !== undefined) releaseSource(`key:${e.code}`);
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
@@ -173,24 +246,61 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [keyToLane, hitLane]);
+  }, [keyToLane, pressSource, releaseSource]);
 
   const pressLane = useCallback(
-    (lane: number) => {
-      activeLanesRef.current.add(lane);
-      hitLane(lane);
+    (lane: number, source = `touch:lane:${lane}`) => pressSource(source, lane),
+    [pressSource],
+  );
+  const releaseLane = useCallback(
+    (lane: number, source = `touch:lane:${lane}`) => {
+      void lane;
+      releaseSource(source);
     },
-    [hitLane],
+    [releaseSource],
   );
 
-  const releaseLane = useCallback((lane: number) => {
-    activeLanesRef.current.delete(lane);
-  }, []);
+  const pause = useCallback(async () => {
+    if (status !== "playing") return;
+    const clock = clockRef.current as (AudioClock & { pause?: () => Promise<number> }) | null;
+    pausedAtRef.current = clock?.pause ? await clock.pause() : timeRef.current;
+    timeRef.current = pausedAtRef.current;
+    clearInputs();
+    setStatus("paused");
+  }, [clearInputs, status]);
+
+  const resume = useCallback(async () => {
+    if (status !== "paused" || !clockRef.current) return;
+    const clock = clockRef.current as AudioClock & {
+      resume?: (position: number, delay?: number) => Promise<void>;
+    };
+    if (clock.resume) await clock.resume(pausedAtRef.current, 0.75);
+    setStatus("playing");
+  }, [status]);
+
+  useEffect(() => {
+    const deactivate = () => {
+      clearInputs();
+      if (status === "playing") void pause();
+    };
+    const visibility = () => {
+      if (document.hidden) deactivate();
+    };
+    window.addEventListener("blur", deactivate);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      window.removeEventListener("blur", deactivate);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, [clearInputs, pause, status]);
 
   return {
     status,
     completedPlay,
     start,
+    pause,
+    resume,
+    clearInputs,
     pressLane,
     releaseLane,
     scrollTime,

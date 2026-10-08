@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RotateCw, Settings } from "lucide-react";
+import { Pause, Play, RotateCw, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_KEY_LABELS } from "@/game/config";
 import { useRhythmGame } from "@/game/useRhythmGame";
 import type { Chart } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
@@ -28,10 +27,19 @@ export function GameScreen({
 }) {
   const { settings, setSettings, saveError } = useGameSettings();
   const mode = getMode(chart.fnf ? "fnf" : modeId);
-  const game = useRhythmGame(chart, { scrollTime: DEFAULT_SCROLL_TIME / settings.scrollSpeed });
+  const game = useRhythmGame(chart, {
+    scrollTime: DEFAULT_SCROLL_TIME / settings.scrollSpeed,
+    timingOffsetMs: settings.timingOffsetMs,
+    volume: settings.masterVolume * settings.musicVolume,
+    hitSoundVolume: settings.hitSoundEnabled ? settings.masterVolume * settings.hitSoundVolume : 0,
+    keyMap: settings.keyBindings.map((code) => [code]),
+  });
   const {
     status,
     start,
+    pause,
+    resume,
+    clearInputs,
     pressLane,
     releaseLane,
     scrollTime,
@@ -62,11 +70,18 @@ export function GameScreen({
   };
 
   const lanes = Array.from({ length: chart.laneCount }, (_, i) => i);
-  const judge = mode.judgeLinePct;
+  const judge = settings.judgeLinePct;
+  const scrollDirection =
+    settings.scrollDirection === "mode" ? mode.scroll : settings.scrollDirection;
+  const noteShape = settings.noteShape === "mode" ? mode.noteShape : settings.noteShape;
+  const renderMode = { ...mode, noteShape, scroll: scrollDirection, judgeLinePct: judge };
   const [isLandscape, setIsLandscape] = useState(false);
   const [orientationMessage, setOrientationMessage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const pointerLanes = useRef(new Map<number, number>());
+  useEffect(() => {
+    if (status !== "playing") pointerLanes.current.clear();
+  }, [status]);
 
   useEffect(() => {
     const media = window.matchMedia("(orientation: landscape)");
@@ -96,23 +111,24 @@ export function GameScreen({
 
   /** Vertical position (% from top) for a note at travel progress 0..1. */
   const notePct = (progress: number) =>
-    mode.scroll === "down" ? progress * judge : 100 - progress * (100 - judge);
+    scrollDirection === "down" ? progress * judge : 100 - progress * (100 - judge);
 
   // Only notes inside the visible time window are rendered. Notes are
   // time-sorted, so binary-search the window instead of scanning all of
   // them every frame (dense charts have tens of thousands).
+  const visualSongTime = songTime + settings.visualOffsetMs / 1000;
   let lo = 0;
   let hi = notes.length;
   while (lo < hi) {
     const mid = (lo + hi) >> 1;
-    if ((notes[mid]?.time ?? Infinity) < songTime - 0.25) lo = mid + 1;
+    if ((notes[mid]?.time ?? Infinity) < visualSongTime - 0.25) lo = mid + 1;
     else hi = mid;
   }
   const visibleNotes: typeof notes = [];
   for (let i = lo; i < notes.length; i++) {
     const note = notes[i];
     if (!note) break;
-    if (note.time - songTime > scrollTime) break;
+    if (note.time - visualSongTime > scrollTime) break;
     visibleNotes.push(note);
   }
 
@@ -126,12 +142,29 @@ export function GameScreen({
     ? ((c.PERFECT + c.GREAT * 0.7 + c.GOOD * 0.4) / totalJudged) * 100
     : 100;
   const progress = duration ? Math.min(1, Math.max(0, songTime / duration)) : 0;
+  const timingErrors = play.timingErrorsMs;
+  const averageError = timingErrors.length
+    ? timingErrors.reduce((sum, value) => sum + value, 0) / timingErrors.length
+    : null;
 
-  const showOverlay =
-    status === "ready" || status === "loading" || status === "idle" || status === "finished";
+  const showOverlay = status !== "playing";
 
   return (
-    <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none">
+    <div
+      className={`relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none ${settings.reducedMotion ? "[&_*]:!animate-none [&_*]:!transition-none" : ""} ${settings.screenShake && showJudge && last?.judgement === "MISS" ? "animate-game-shake" : ""}`}
+      style={{ overscrollBehavior: "none" }}
+    >
+      {settings.backgroundEffects && !settings.lightweightMode && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,oklch(0.62_0.12_205/.12),transparent_55%)]"
+        />
+      )}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-10 bg-black"
+        style={{ opacity: settings.backgroundDim / 200 }}
+      />
       {/* Top HUD */}
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center gap-3 px-3 py-1.5 text-[11px] tracking-widest text-foreground sm:text-sm">
         <span className="tabular-nums">SCORE {play.score.toLocaleString()}</span>
@@ -154,6 +187,18 @@ export function GameScreen({
           <Settings aria-hidden="true" className="size-5" />
         </Button>
       )}
+      {status === "playing" && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => void pause()}
+          aria-label="一時停止"
+          className="absolute right-[max(.75rem,env(safe-area-inset-right))] top-[max(.5rem,env(safe-area-inset-top))] z-40 bg-black/30 text-white"
+        >
+          <Pause className="size-5" />
+        </Button>
+      )}
 
       <SettingsPanel
         open={settingsOpen}
@@ -169,7 +214,7 @@ export function GameScreen({
         {chart.fnf ? (
           <FnfField
             chart={chart}
-            mode={mode}
+            mode={renderMode}
             notes={notes}
             songTime={songTime}
             scrollTime={scrollTime}
@@ -181,6 +226,10 @@ export function GameScreen({
             className={`relative h-full w-full max-w-[520px] touch-none landscape:max-w-[min(60vh,520px)] ${
               mode.fieldClass ?? ""
             }`}
+            style={{
+              maxWidth: `${(520 * settings.laneWidth) / 100}px`,
+              opacity: settings.laneOpacity / 100,
+            }}
           >
             <div className="absolute inset-0 flex">
               {lanes.map((lane) => (
@@ -192,7 +241,7 @@ export function GameScreen({
 
                   {/* Judgement line + receptor */}
                   <div
-                    className="absolute inset-x-0 z-10 h-[3px] bg-judge-line shadow-glow"
+                    className={`absolute inset-x-0 z-10 h-[3px] bg-judge-line ${settings.glowEffects && !settings.lightweightMode ? "shadow-glow" : ""}`}
                     style={{
                       top: `${judge}%`,
                       opacity: mode.receptors ? 0.35 : 1,
@@ -204,7 +253,7 @@ export function GameScreen({
                       style={{ top: `${judge}%` }}
                     >
                       <NoteSprite
-                        mode={mode}
+                        mode={renderMode}
                         lane={lane}
                         receptor
                         pressed={activeLanes.has(lane)}
@@ -217,31 +266,37 @@ export function GameScreen({
                       className="absolute inset-x-0 bottom-0 flex items-center justify-center text-xs tracking-widest text-muted-foreground"
                       style={{ height: `${100 - judge}%` }}
                     >
-                      {DEFAULT_KEY_LABELS[lane] ?? lane + 1}
+                      {settings.keyBindings[lane]?.replace(/^Key/, "") ?? lane + 1}
                     </div>
                   )}
 
                   {visibleNotes.map((note) => {
                     if (note.lane !== lane || note.judged) return null;
-                    const remaining = note.time - songTime;
+                    const remaining = note.time - visualSongTime;
                     if (remaining > scrollTime || remaining < -0.25) return null;
                     const p = 1 - remaining / scrollTime;
                     const top = notePct(p);
-                    return mode.noteShape === "bar" ? (
+                    return noteShape === "bar" ? (
                       <div
                         key={note.id}
                         className="absolute inset-x-1"
-                        style={{ top: `calc(${top}% - ${mode.noteSize / 2}px)` }}
+                        style={{
+                          top: `calc(${top}% - ${mode.noteSize / 2}px)`,
+                          transform: `scale(${settings.noteScale / 100})`,
+                        }}
                       >
-                        <NoteSprite mode={mode} lane={lane} />
+                        <NoteSprite mode={renderMode} lane={lane} />
                       </div>
                     ) : (
                       <div
                         key={note.id}
                         className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
-                        style={{ top: `${top}%` }}
+                        style={{
+                          top: `${top}%`,
+                          transform: `translate(-50%, -50%) scale(${settings.noteScale / 100})`,
+                        }}
                       >
-                        <NoteSprite mode={mode} lane={lane} />
+                        <NoteSprite mode={renderMode} lane={lane} />
                       </div>
                     );
                   })}
@@ -254,6 +309,15 @@ export function GameScreen({
               className="pointer-events-none absolute inset-x-0 z-20 flex flex-col items-center gap-1"
               style={{ top: `${mode.popupPct}%` }}
             >
+              {showJudge &&
+                settings.hitEffects &&
+                !settings.lightweightMode &&
+                last?.judgement !== "MISS" && (
+                  <i
+                    aria-hidden="true"
+                    className="absolute size-24 animate-ping rounded-full border border-cyan-200/30"
+                  />
+                )}
               {play.combo > 1 && (
                 <>
                   <span className="font-display text-4xl tabular-nums text-combo drop-shadow sm:text-5xl">
@@ -269,6 +333,21 @@ export function GameScreen({
                 >
                   {last.judgement}
                 </span>
+              )}
+              {showJudge && last && settings.showFastLate && last.judgement !== "MISS" && (
+                <span className="text-[10px] tracking-[.2em] text-white/65">
+                  {last.deltaMs < 0 ? "FAST" : "LATE"} {Math.abs(Math.round(last.deltaMs))}ms
+                </span>
+              )}
+              {settings.showErrorMeter && (
+                <div className="relative mt-1 h-1 w-28 rounded bg-white/10">
+                  <i
+                    className="absolute top-1/2 size-2 -translate-y-1/2 rounded-full bg-cyan-200 transition-[left]"
+                    style={{
+                      left: `${50 + Math.max(-45, Math.min(45, (last?.deltaMs ?? 0) / 3))}%`,
+                    }}
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -293,8 +372,8 @@ export function GameScreen({
             One container handles every finger and picks the lane from the
             touch X position, so rapid / simultaneous taps are never dropped. */}
         <div
-          className="absolute inset-0 z-20 flex touch-none"
-          style={{ touchAction: "none" }}
+          className="absolute inset-x-0 bottom-0 z-20 flex touch-none"
+          style={{ touchAction: "none", height: `${settings.touchAreaHeight}%` }}
           onPointerDown={(e) => {
             e.preventDefault();
             const rect = e.currentTarget.getBoundingClientRect();
@@ -302,18 +381,19 @@ export function GameScreen({
               chart.laneCount - 1,
               Math.max(0, Math.floor(((e.clientX - rect.left) / rect.width) * chart.laneCount)),
             );
+            e.currentTarget.setPointerCapture?.(e.pointerId);
             pointerLanes.current.set(e.pointerId, lane);
-            pressLane(lane);
+            pressLane(lane, `pointer:${e.pointerId}`);
           }}
           onPointerUp={(e) => {
             const lane = pointerLanes.current.get(e.pointerId);
             pointerLanes.current.delete(e.pointerId);
-            if (lane !== undefined) releaseLane(lane);
+            if (lane !== undefined) releaseLane(lane, `pointer:${e.pointerId}`);
           }}
           onPointerCancel={(e) => {
             const lane = pointerLanes.current.get(e.pointerId);
             pointerLanes.current.delete(e.pointerId);
-            if (lane !== undefined) releaseLane(lane);
+            if (lane !== undefined) releaseLane(lane, `pointer:${e.pointerId}`);
           }}
           onContextMenu={(e) => e.preventDefault()}
         >
@@ -329,24 +409,65 @@ export function GameScreen({
       </div>
 
       {/* Song progress bar */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-center gap-3 px-4 pb-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full bg-primary transition-[width] duration-150"
-            style={{ width: `${progress * 100}%` }}
-          />
+      {settings.showProgress && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-center gap-3 px-4 pb-[max(.5rem,env(safe-area-inset-bottom))]">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+            <div
+              className="h-full bg-primary transition-[width] duration-150"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+          <span className="max-w-[45%] truncate font-display text-[11px] tracking-widest text-muted-foreground">
+            {chart.title} · {chart.difficultyName}
+          </span>
         </div>
-        <span className="max-w-[45%] truncate font-display text-[11px] tracking-widest text-muted-foreground">
-          {chart.title} · {chart.difficultyName}
-        </span>
-      </div>
+      )}
+      {settings.showFps && <FpsCounter />}
+
+      {status === "paused" && (
+        <Overlay>
+          <h2 className="font-display text-2xl tracking-[.25em]">PAUSED</h2>
+          <p className="text-sm text-white/55">
+            入力状態を解除し、音声と譜面を同じ位置で停止しました。
+          </p>
+          <button
+            type="button"
+            onClick={() => void resume()}
+            className="flex items-center gap-2 rounded-full bg-primary px-8 py-3 font-display text-primary-foreground"
+          >
+            <Play className="size-4" />
+            カウントして再開
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="text-sm text-cyan-100"
+          >
+            設定を開く
+          </button>
+          {onExit && (
+            <button
+              type="button"
+              onClick={() => {
+                clearInputs();
+                onExit();
+              }}
+              className="text-xs text-white/45"
+            >
+              選曲へ戻る
+            </button>
+          )}
+        </Overlay>
+      )}
 
       {(status === "ready" || status === "loading" || status === "idle") && (
         <Overlay>
           <h2 className="font-display text-2xl text-foreground">{chart.title}</h2>
           {!chart.fnf && <ModePicker value={mode.id} onChange={onModeChange} />}
           <p className="text-sm text-muted-foreground">
-            4レーンをタップ、または D / F / J / K キーで演奏します。横画面でもプレイできます。
+            4レーンをタップ、または{" "}
+            {settings.keyBindings.map((k) => k.replace(/^Key/, "")).join(" / ")}{" "}
+            キーで演奏します。3モードは表示と流れる方向が異なり、判定・スコア規則は共通です。
           </p>
           {!isLandscape && (
             <div className="flex flex-col items-center gap-2">
@@ -412,6 +533,32 @@ export function GameScreen({
               <dd className="tabular-nums text-foreground">{accuracy.toFixed(2)}%</dd>
             </div>
           </dl>
+          {timingErrors.length > 0 && averageError !== null && (
+            <div className="w-full max-w-sm rounded-xl border border-white/10 bg-black/15 p-3 text-left">
+              <div className="mb-2 flex items-center justify-between text-xs">
+                <span className="text-white/50">
+                  タイミング傾向（実測 {timingErrors.length}打）
+                </span>
+                <span className="tabular-nums text-cyan-100">
+                  平均 {averageError < 0 ? "FAST" : "LATE"} {Math.abs(averageError).toFixed(1)}ms
+                </span>
+              </div>
+              <div className="relative h-12 overflow-hidden rounded bg-white/5">
+                <i className="absolute inset-y-0 left-1/2 w-px bg-white/30" />
+                {timingErrors.slice(-80).map((error, index) => (
+                  <i
+                    key={index}
+                    className="absolute size-1.5 rounded-full bg-cyan-200/70"
+                    style={{
+                      left: `${50 + Math.max(-48, Math.min(48, error / 3))}%`,
+                      top: `${8 + (index % 4) * 10}px`,
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="mt-1 text-center text-[10px] text-white/30">FAST ← 0ms → LATE</p>
+            </div>
+          )}
           <div className="text-xs text-muted-foreground" aria-live="polite">
             {!runOwner.current && "ログインすると累計スコアを保存できます"}
             {saveState?.status === "saving" && "スコアを保存中…"}
@@ -462,5 +609,30 @@ function Overlay({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </div>
+  );
+}
+
+function FpsCounter() {
+  const [fps, setFps] = useState(0);
+  useEffect(() => {
+    let frame = 0,
+      count = 0,
+      start = performance.now();
+    const tick = (now: number) => {
+      count += 1;
+      if (now - start >= 500) {
+        setFps(Math.round((count * 1000) / (now - start)));
+        count = 0;
+        start = now;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return (
+    <output className="pointer-events-none absolute left-2 top-2 z-30 rounded bg-black/50 px-2 py-1 font-mono text-[10px] text-cyan-100">
+      {fps} FPS
+    </output>
   );
 }

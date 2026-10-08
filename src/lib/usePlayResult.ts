@@ -47,7 +47,7 @@ export function usePlayResult(result: CompletedPlay | null, ownerId: string | nu
   const [state, setState] = useState<SaveState | null>(null);
 
   useEffect(() => {
-    if (!result || !ownerId) return;
+    if (!result || !ownerId || result.competitive === false) return;
     const update = (event: QueueEvent) => {
       if (event.ownerId !== ownerId || event.playId !== result.id) return;
       if (event.status === "saved") {
