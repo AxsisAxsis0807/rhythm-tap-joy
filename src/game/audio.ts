@@ -1,3 +1,4 @@
+import { inputTime } from "./input";
 /**
  * Audio clock built on the Web Audio API.
  * The song position is derived from AudioContext.currentTime (sample-accurate),
@@ -98,6 +99,12 @@ export class AudioClock {
   now(): number {
     if (!this.ctx) return 0;
     return (this.ctx.currentTime - this.startedAt) * this.rate + this.startOffset;
+  }
+
+  /** Map the DOM edge time to the existing audio timeline, independent of paint delay. */
+  nowAt(stamp?: number): number {
+    const now = performance.now();
+    return this.now() - ((now - inputTime(stamp, now)) / 1000) * this.rate;
   }
 
   dispose(): void {

@@ -3,6 +3,7 @@ import { RotateCcw, Search, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { InputTest } from "./InputOverlay";
 import { applyPreset, DEFAULT_SETTINGS, type GameSettings } from "@/game/settings";
 
 type Category = "play" | "controls" | "audio" | "visual" | "comfort";
@@ -232,6 +233,57 @@ export function SettingsPanel({
                     />
                   ))}
                 </div>
+              </Group>
+            )}
+            {show("controls", "入力 オーバーレイ 履歴 テスト") && (
+              <Group title="入力オーバーレイ">
+                <ToggleRow
+                  label="入力表示"
+                  checked={settings.inputOverlayEnabled}
+                  onChange={(v) => set("inputOverlayEnabled", v)}
+                />
+                <SelectRow
+                  label="PCの位置"
+                  value={settings.inputOverlayPosition}
+                  options={[
+                    ["left", "左"],
+                    ["right", "右"],
+                  ]}
+                  onChange={(v) =>
+                    set("inputOverlayPosition", v as GameSettings["inputOverlayPosition"])
+                  }
+                />
+                <RangeRow
+                  label="サイズ"
+                  value={settings.inputOverlaySize}
+                  min={70}
+                  max={140}
+                  step={5}
+                  suffix="%"
+                  onChange={(v) => set("inputOverlaySize", v)}
+                />
+                <RangeRow
+                  label="不透明度"
+                  value={settings.inputOverlayOpacity}
+                  min={0.2}
+                  max={1}
+                  step={0.05}
+                  percent
+                  onChange={(v) => set("inputOverlayOpacity", v)}
+                />
+                <RangeRow
+                  label="履歴の表示時間"
+                  value={settings.inputOverlayDuration}
+                  min={0.5}
+                  max={5}
+                  step={0.1}
+                  suffix="秒"
+                  onChange={(v) => set("inputOverlayDuration", v)}
+                />
+                <p className="py-2 text-xs text-white/45">
+                  スマホはHUD下の専用領域に表示。保持時間を棒の長さで示します。判定時間外の入力も表示します。
+                </p>
+                <InputTest settings={settings} />
               </Group>
             )}
             {show("controls", "タッチ エリア 枠") && (

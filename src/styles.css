@@ -240,3 +240,20 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Reserve a dedicated strip on narrow screens; never cover playable notes. */
+.input-overlay-slot { flex-shrink: 0; padding: 2px 8px 5px; }
+@media (min-width: 1000px) {
+  .input-overlay-slot { position: absolute; top: max(64px, env(safe-area-inset-top)); width: min(22vw, 260px); }
+  .input-overlay-left { left: max(12px, env(safe-area-inset-left)); }
+  .input-overlay-right { right: max(12px, env(safe-area-inset-right)); }
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 999px) {
+  .input-overlay-slot [data-testid="input-overlay"] { max-width: 240px; }
+  .input-overlay-slot [data-testid="input-overlay"] > div:nth-child(2) { height: 22px !important; }
+}
+
+@media (min-width: 1000px) {
+  .fnf-overlay-left { margin-left: min(24vw, 284px); }
+  .fnf-overlay-right { margin-right: min(24vw, 284px); }
+}
