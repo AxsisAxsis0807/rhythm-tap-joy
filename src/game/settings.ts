@@ -35,6 +35,11 @@ export interface GameSettings {
   lightweightMode: boolean;
   showFps: boolean;
   touchAreaHeight: number;
+  inputOverlayEnabled: boolean;
+  inputOverlayPosition: "left" | "right";
+  inputOverlaySize: number;
+  inputOverlayOpacity: number;
+  inputOverlayDuration: number;
   preset: SettingsPreset;
 }
 
@@ -69,6 +74,11 @@ export const DEFAULT_SETTINGS: GameSettings = {
   lightweightMode: false,
   showFps: false,
   touchAreaHeight: 100,
+  inputOverlayEnabled: true,
+  inputOverlayPosition: "right",
+  inputOverlaySize: 100,
+  inputOverlayOpacity: 0.8,
+  inputOverlayDuration: 2,
   preset: "simple",
 };
 
@@ -118,6 +128,11 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     lightweightMode: bool(s.lightweightMode, false),
     showFps: bool(s.showFps, false),
     touchAreaHeight: clamp(d.touchAreaHeight, 45, 100, 100),
+    inputOverlayEnabled: bool(s.inputOverlayEnabled, true),
+    inputOverlayPosition: pick(s.inputOverlayPosition, ["left", "right"], "right"),
+    inputOverlaySize: clamp(s.inputOverlaySize, 70, 140, 100),
+    inputOverlayOpacity: clamp(s.inputOverlayOpacity, 0.2, 1, 0.8),
+    inputOverlayDuration: clamp(s.inputOverlayDuration, 0.5, 5, 2),
     preset: pick(s.preset, ["simple", "readable", "effects", "custom"], "custom"),
   };
 }

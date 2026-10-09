@@ -19,6 +19,9 @@ vi.mock("@/game/audio", () => ({
     now() {
       return audio.time;
     }
+    nowAt() {
+      return audio.time;
+    }
     dispose() {}
   },
 }));

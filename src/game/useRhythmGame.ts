@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { InputLedger } from "./input";
 import { AudioClock } from "./audio";
 import {
   DEFAULT_KEY_MAP,
@@ -47,8 +48,8 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const notesRef = useRef<RuntimeNote[]>(buildRuntimeNotes(chart));
   const playRef = useRef<PlayState>(createPlayState());
   const timeRef = useRef(0);
-  const activeLanesRef = useRef<Set<number>>(new Set());
-  const inputSourcesRef = useRef<Map<string, number>>(new Map());
+  const [inputs] = useState(() => new InputLedger());
+  const activeLanesRef = useRef(inputs.activeLanes);
   const heldNotesRef = useRef<Map<number, RuntimeNote>>(new Map());
   const pausedAtRef = useRef(0);
   /** Index of the first possibly-unjudged note; keeps auto-miss O(1) per tick. */
@@ -60,26 +61,46 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const [status, setStatus] = useState<GameStatus>("idle");
   const [, setFrame] = useState(0);
 
+  const statusRef = useRef(status);
+  const changeStatus = useCallback((next: GameStatus) => {
+    statusRef.current = next;
+    setStatus(next);
+  }, []);
+  const keySignature = JSON.stringify(keyMap);
+
   /** lane index by key code, rebuilt when the mapping changes. */
   const keyToLane = useMemo(() => {
     const map = new Map<string, number>();
-    keyMap.forEach((codes, lane) => codes.forEach((c) => map.set(c, lane)));
+    (JSON.parse(keySignature) as string[][]).forEach((codes, lane) =>
+      codes.forEach((c) => map.set(c, lane)),
+    );
     return map;
-  }, [keyMap]);
+  }, [keySignature]);
 
   useEffect(() => {
     const clock = new AudioClock();
+    const heldNotes = heldNotesRef.current;
     clockRef.current = clock;
-    setStatus("loading");
+    changeStatus("loading");
     clock
       .load(chart.audioUrl)
-      .then(() => setStatus("ready"))
-      .catch(() => setStatus("idle"));
+      .then(() => {
+        if (clockRef.current === clock) changeStatus("ready");
+      })
+      .catch(() => {
+        if (clockRef.current === clock) changeStatus("idle");
+      });
     return () => {
+      statusRef.current = "idle";
+      inputs.clear();
+      heldNotes.forEach((n) => {
+        n.holding = false;
+      });
+      heldNotes.clear();
       clock.dispose();
       clockRef.current = null;
     };
-  }, [chart.audioUrl]);
+  }, [chart.audioUrl, inputs, changeStatus]);
 
   useEffect(() => {
     (
@@ -88,9 +109,14 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   }, [options.volume]);
 
   const clearInputs = useCallback(() => {
-    inputSourcesRef.current.clear();
-    activeLanesRef.current.clear();
-  }, []);
+    inputs.clear();
+    heldNotesRef.current.forEach((held) => {
+      held.holding = false;
+      held.judgement = "MISS";
+      applyJudgement(playRef.current, "MISS", 0, scoreRules, timeRef.current);
+    });
+    heldNotesRef.current.clear();
+  }, [inputs, scoreRules]);
 
   const start = useCallback(async () => {
     const clock = clockRef.current;
@@ -98,34 +124,39 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     startingRef.current = true;
     try {
       await clock.start(START_DELAY);
+      if (clockRef.current !== clock) return;
       notesRef.current = buildRuntimeNotes(chart);
       playRef.current = createPlayState();
+      heldNotesRef.current.forEach((note) => {
+        note.holding = false;
+      });
       heldNotesRef.current.clear();
       clearInputs();
       missCursorRef.current = 0;
       runIdRef.current = crypto.randomUUID();
       setCompletedPlay(null);
       timeRef.current = -START_DELAY;
-      setStatus("playing");
+      statusRef.current = "playing";
+      changeStatus("playing");
     } finally {
       startingRef.current = false;
     }
-  }, [chart, clearInputs]);
+  }, [chart, clearInputs, changeStatus]);
 
   /** Single entry point for every input source (touch, keyboard, future pads). */
   const hitLane = useCallback(
-    (lane: number) => {
-      if (status !== "playing") return;
+    (lane: number, stamp?: number) => {
+      if (statusRef.current !== "playing") return "inactive";
       // Read the clock at the exact moment of input instead of the last frame.
-      const time = (clockRef.current?.now() ?? timeRef.current) + timingOffset;
+      const time = (clockRef.current?.nowAt(stamp) ?? timeRef.current) + timingOffset;
       const note = findHittableNote(notesRef.current, lane, time, windows);
-      if (!note) return;
+      if (!note) return "outside-window";
       const delta = time - note.time;
       const judgement = judgeDelta(delta, windows);
-      if (!judgement) return;
+      if (!judgement) return "outside-window";
       note.judged = true;
       note.judgement = judgement;
-      if (note.kind === "hold") {
+      if (note.kind === "hold" && judgement !== "MISS") {
         note.holding = true;
         heldNotesRef.current.set(lane, note);
       }
@@ -135,41 +166,35 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
           clockRef.current as (AudioClock & { playHit?: (value: number) => void }) | null
         )?.playHit?.(options.hitSoundVolume ?? 0);
       }
+      return judgement;
     },
-    [status, windows, scoreRules, timingOffset, options.hitSoundVolume],
+    [windows, scoreRules, timingOffset, options.hitSoundVolume],
   );
 
   const pressSource = useCallback(
-    (source: string, lane: number) => {
-      if (inputSourcesRef.current.has(source)) return;
-      const alreadyPressed = Array.from(inputSourcesRef.current.values()).includes(lane);
-      inputSourcesRef.current.set(source, lane);
-      activeLanesRef.current.add(lane);
-      if (!alreadyPressed) hitLane(lane);
+    (source: string, lane: number, stamp?: number) => {
+      if (statusRef.current !== "playing") return;
+      const bar = inputs.press(source, lane, stamp);
+      if (bar) bar.outcome = hitLane(lane, bar.start);
     },
-    [hitLane],
+    [hitLane, inputs],
   );
 
   const releaseSource = useCallback(
-    (source: string) => {
-      const lane = inputSourcesRef.current.get(source);
-      if (lane === undefined) return;
-      inputSourcesRef.current.delete(source);
-      if (!Array.from(inputSourcesRef.current.values()).includes(lane)) {
-        activeLanesRef.current.delete(lane);
-        const held = heldNotesRef.current.get(lane);
-        if (held) {
-          const time = clockRef.current?.now() ?? timeRef.current;
-          if (held.endTime !== undefined && time < held.endTime - windows.good) {
-            held.judgement = "MISS";
-            applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
-          }
-          held.holding = false;
-          heldNotesRef.current.delete(lane);
-        }
+    (source: string, stamp?: number, cancelled = false) => {
+      const bar = inputs.release(source, stamp, cancelled);
+      if (!bar || inputs.activeLanes.has(bar.lane)) return;
+      const held = heldNotesRef.current.get(bar.lane);
+      if (!held) return;
+      const time = (clockRef.current?.nowAt(bar.end) ?? timeRef.current) + timingOffset;
+      if (cancelled || (held.endTime !== undefined && time < held.endTime - windows.good)) {
+        held.judgement = "MISS";
+        applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
       }
+      held.holding = false;
+      heldNotesRef.current.delete(bar.lane);
     },
-    [scoreRules, windows.good],
+    [inputs, scoreRules, timingOffset, windows.good],
   );
 
   // Main loop: read the audio clock, auto-miss passed notes, redraw.
@@ -177,6 +202,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     if (status !== "playing") return;
     let raf = 0;
     const tick = () => {
+      if (statusRef.current !== "playing") return;
       const clock = clockRef.current;
       if (clock) timeRef.current = clock.now();
       const time = timeRef.current;
@@ -217,7 +243,9 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
             competitive: options.competitive !== false,
           });
         }
-        setStatus("finished");
+        statusRef.current = "finished";
+        clearInputs();
+        changeStatus("finished");
         return;
       }
       setFrame((f) => f + 1);
@@ -225,20 +253,22 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [status, windows.miss, scoreRules, chart.id, options.competitive]);
+  }, [status, windows.miss, scoreRules, chart.id, options.competitive, clearInputs, changeStatus]);
+
+  const latestInput = useRef({ pressSource, releaseSource });
+  latestInput.current = { pressSource, releaseSource };
 
   // Keyboard input (external keyboard on phones/tablets works the same way).
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.repeat) return;
+      if (e.repeat || e.defaultPrevented || statusRef.current !== "playing") return;
       const lane = keyToLane.get(e.code);
       if (lane === undefined) return;
       e.preventDefault();
-      pressSource(`key:${e.code}`, lane);
+      latestInput.current.pressSource(`key:${e.code}`, lane, e.timeStamp);
     };
     const up = (e: KeyboardEvent) => {
-      const lane = keyToLane.get(e.code);
-      if (lane !== undefined) releaseSource(`key:${e.code}`);
+      latestInput.current.releaseSource(`key:${e.code}`, e.timeStamp);
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
@@ -246,42 +276,48 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [keyToLane, pressSource, releaseSource]);
+  }, [keyToLane]);
 
   const pressLane = useCallback(
-    (lane: number, source = `touch:lane:${lane}`) => pressSource(source, lane),
+    (lane: number, source = `touch:lane:${lane}`, stamp?: number) =>
+      pressSource(source, lane, stamp),
     [pressSource],
   );
   const releaseLane = useCallback(
-    (lane: number, source = `touch:lane:${lane}`) => {
+    (lane: number, source = `touch:lane:${lane}`, stamp?: number, cancelled = false) => {
       void lane;
-      releaseSource(source);
+      releaseSource(source, stamp, cancelled);
     },
     [releaseSource],
   );
 
   const pause = useCallback(async () => {
-    if (status !== "playing") return;
+    if (statusRef.current !== "playing") return;
+    changeStatus("paused");
     const clock = clockRef.current as (AudioClock & { pause?: () => Promise<number> }) | null;
+    clearInputs();
     pausedAtRef.current = clock?.pause ? await clock.pause() : timeRef.current;
     timeRef.current = pausedAtRef.current;
-    clearInputs();
-    setStatus("paused");
-  }, [clearInputs, status]);
+  }, [clearInputs, changeStatus]);
 
   const resume = useCallback(async () => {
-    if (status !== "paused" || !clockRef.current) return;
+    if (statusRef.current !== "paused" || !clockRef.current || startingRef.current) return;
     const clock = clockRef.current as AudioClock & {
       resume?: (position: number, delay?: number) => Promise<void>;
     };
-    if (clock.resume) await clock.resume(pausedAtRef.current, 0.75);
-    setStatus("playing");
-  }, [status]);
+    startingRef.current = true;
+    try {
+      if (clock.resume) await clock.resume(pausedAtRef.current, 0.75);
+      if (clockRef.current === clock && statusRef.current === "paused") changeStatus("playing");
+    } finally {
+      startingRef.current = false;
+    }
+  }, [changeStatus]);
 
   useEffect(() => {
     const deactivate = () => {
       clearInputs();
-      if (status === "playing") void pause();
+      if (statusRef.current === "playing") void pause();
     };
     const visibility = () => {
       if (document.hidden) deactivate();
@@ -292,10 +328,11 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       window.removeEventListener("blur", deactivate);
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, [clearInputs, pause, status]);
+  }, [clearInputs, pause]);
 
   return {
     status,
+    inputs,
     completedPlay,
     start,
     pause,

@@ -10,6 +10,8 @@ import { useGameSettings } from "@/game/settings";
 import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
+import { InputOverlay } from "./InputOverlay";
+import { TouchInput } from "./TouchInput";
 import { usePlayResult } from "@/lib/usePlayResult";
 
 export function GameScreen({
@@ -78,10 +80,6 @@ export function GameScreen({
   const [isLandscape, setIsLandscape] = useState(false);
   const [orientationMessage, setOrientationMessage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const pointerLanes = useRef(new Map<number, number>());
-  useEffect(() => {
-    if (status !== "playing") pointerLanes.current.clear();
-  }, [status]);
 
   useEffect(() => {
     const media = window.matchMedia("(orientation: landscape)");
@@ -152,7 +150,7 @@ export function GameScreen({
   return (
     <div
       className={`relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none ${settings.reducedMotion ? "[&_*]:!animate-none [&_*]:!transition-none" : ""} ${settings.screenShake && showJudge && last?.judgement === "MISS" ? "animate-game-shake" : ""}`}
-      style={{ overscrollBehavior: "none" }}
+      style={{ overscrollBehavior: "none", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {settings.backgroundEffects && !settings.lightweightMode && (
         <div
@@ -166,7 +164,7 @@ export function GameScreen({
         style={{ opacity: settings.backgroundDim / 200 }}
       />
       {/* Top HUD */}
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center gap-3 px-3 py-1.5 text-[11px] tracking-widest text-foreground sm:text-sm">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center gap-3 px-3 py-1.5 pt-[max(.375rem,env(safe-area-inset-top))] text-[10px] tracking-widest text-foreground sm:text-sm">
         <span className="tabular-nums">SCORE {play.score.toLocaleString()}</span>
         <span className="text-muted-foreground">|</span>
         <span className="tabular-nums">MISS {c.MISS}</span>
@@ -209,8 +207,19 @@ export function GameScreen({
         saveError={saveError}
       />
 
+      <div className="shrink-0" style={{ height: "calc(36px + env(safe-area-inset-top))" }} />
+      {settings.inputOverlayEnabled && (
+        <div
+          className={`input-overlay-slot pointer-events-none z-30 ${settings.inputOverlayPosition === "left" ? "input-overlay-left" : "input-overlay-right"}`}
+        >
+          <InputOverlay inputs={game.inputs} settings={settings} />
+        </div>
+      )}
+
       {/* Playfield: a centred column that stays playable in landscape */}
-      <div className="relative flex flex-1 justify-center overflow-hidden">
+      <div
+        className={`relative flex min-h-0 flex-1 justify-center overflow-hidden ${chart.fnf && settings.inputOverlayEnabled ? `fnf-overlay-${settings.inputOverlayPosition}` : ""}`}
+      >
         {chart.fnf ? (
           <FnfField
             chart={chart}
@@ -368,44 +377,13 @@ export function GameScreen({
           </div>
         )}
 
-        {/* Touch layer: the whole screen is split into 4 key areas.
-            One container handles every finger and picks the lane from the
-            touch X position, so rapid / simultaneous taps are never dropped. */}
-        <div
-          className="absolute inset-x-0 bottom-0 z-20 flex touch-none"
-          style={{ touchAction: "none", height: `${settings.touchAreaHeight}%` }}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            const rect = e.currentTarget.getBoundingClientRect();
-            const lane = Math.min(
-              chart.laneCount - 1,
-              Math.max(0, Math.floor(((e.clientX - rect.left) / rect.width) * chart.laneCount)),
-            );
-            e.currentTarget.setPointerCapture?.(e.pointerId);
-            pointerLanes.current.set(e.pointerId, lane);
-            pressLane(lane, `pointer:${e.pointerId}`);
-          }}
-          onPointerUp={(e) => {
-            const lane = pointerLanes.current.get(e.pointerId);
-            pointerLanes.current.delete(e.pointerId);
-            if (lane !== undefined) releaseLane(lane, `pointer:${e.pointerId}`);
-          }}
-          onPointerCancel={(e) => {
-            const lane = pointerLanes.current.get(e.pointerId);
-            pointerLanes.current.delete(e.pointerId);
-            if (lane !== undefined) releaseLane(lane, `pointer:${e.pointerId}`);
-          }}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          {lanes.map((lane) => (
-            <div
-              key={lane}
-              className={`pointer-events-none flex-1 ${
-                settings.showTouchBorders ? "border-r border-lane-border last:border-r-0" : ""
-              }`}
-            />
-          ))}
-        </div>
+        <TouchInput
+          disabled={status !== "playing" || settingsOpen}
+          borders={settings.showTouchBorders}
+          height={settings.touchAreaHeight}
+          onPress={pressLane}
+          onRelease={(source, stamp, cancel) => releaseLane(0, source, stamp, cancel)}
+        />
       </div>
 
       {/* Song progress bar */}
