@@ -163,6 +163,19 @@ export function ProfileGrowth({ userId, own = true }: { userId: string; own?: bo
         <GrowthInfo data={data} />
       </div>
       <ProgressDetails growth={data.growth} />
+      {data.error && (
+        <p role="alert" className="mt-3 text-xs text-white/65">
+          更新を確認できませんでした。表示は前回取得した情報です。
+          <button className="min-h-11 underline" onClick={() => data.refresh?.()}>
+            再読み込み
+          </button>
+        </p>
+      )}
+      {!!data.pendingXp && (
+        <p role="status" className="mt-3 text-xs text-cyan-100">
+          XPの反映待ちです（{data.pendingXp}件）。通常プレイを続けられます。
+        </p>
+      )}
     </section>
   );
 }
@@ -252,6 +265,60 @@ export function ResultXpCard({ userId, playId }: { userId: string | null; playId
           )}
           <ProgressDetails growth={reward.growth} />
         </>
+      )}
+    </section>
+  );
+}
+
+/** Owner settings remain available when server publication is OFF. Public API
+ * enforces these same settings; hiding the card is not the security boundary. */
+export function AccountVisibilitySettings({ userId }: { userId: string }) {
+  const data = useContext(GrowthContext);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (!data || data.ownerId !== userId || !data.visibility || !data.updateVisibility) return null;
+  const fields = [
+    ["levelPublic", "Levelを公開"],
+    ["xpPublic", "XPと進捗を公開"],
+    ["supporterPublic", "Supporterを公開"],
+  ] as const;
+  return (
+    <section
+      className="mb-5 rounded-2xl border border-white/10 p-4"
+      aria-label="成長情報の公開設定"
+    >
+      <h2 className="mb-2 text-sm">公開設定</h2>
+      <p className="mb-2 text-xs text-white/60">
+        非公開でも本人は成長を確認できます。保存後、他の人向けAPIにも反映します。XP公開はLevel公開中だけ有効です。
+      </p>
+      {fields.map(([field, label]) => (
+        <label key={field} className="flex min-h-11 items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            disabled={busy}
+            checked={data.visibility![field]}
+            onChange={async (e) => {
+              setBusy(true);
+              setError("");
+              try {
+                await data.updateVisibility!({ ...data.visibility!, [field]: e.target.checked });
+              } catch {
+                setError("公開設定を保存できませんでした。再試行してください。");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          />
+          {label}
+        </label>
+      ))}
+      <p role="status" className="text-xs text-cyan-100">
+        {busy ? "保存中…" : "設定はアカウントに保存されます。"}
+      </p>
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-rose-200">
+          {error}
+        </p>
       )}
     </section>
   );

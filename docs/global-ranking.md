@@ -29,8 +29,7 @@ permissions are unchanged.
 - `supabase/migrations/20261010120000_play_result_validation.sql`: enforce
   validation for direct table inserts too, tighten combo/score bounds and
   acknowledge UUIDs only for the same owner and immutable result.
-- `src/components/app/AccountGrowth.tsx`, `src/lib/accountGrowth.ts`: disabled-by-default
-  display contract for server-confirmed growth; no XP backend/rules are invented.
+- `src/components/app/AccountGrowth.tsx`, `src/lib/accountGrowth.ts`: display server-confirmed growth independently of score. [Verified XP backend](verified-xp.md) adds trusted Revision/Session/replay verification, ledger/RLS, owner settings and real-data provider; publication remains OFF until deployment checks.
 - `tests/*.test.ts*`, `vitest.config.ts`, `package.json`, `bun.lock`: test setup.
 
 ## Migration and activation
@@ -126,12 +125,12 @@ and seven requests. Full details and screenshots are in the dated record.
 - Production migration and real authenticated end-to-end testing require access
   to the deployed project. Automated audio-clock tests do not replace device
   checks on iPhone and external keyboards.
-- XP/Supporter have no backend, reward rules, entitlement synchronization or
-  persisted public-Level setting in this repository. The display components use
-  server snapshots only, and are absent from production without an enabled
-  provider. The fixture screenshots are not proof of live XP awards. Connect an
-  idempotent server ledger and actual rules/settings before enabling them.
+- XP backend, replay verification and persisted privacy settings are now implemented.
+  Production migration/authenticated end-to-end and real iPhone/Safari verification
+  remain pending. See [deployment instructions](verified-xp.md) and
+  [the new verification report](verification/verified-xp-2026-10-11.md).
 - Scores still originate in the browser. The hardening migration rejects range
   errors and inconsistencies among score, accuracy, combo and judgement counts
   under the current rules, including direct table inserts. It cannot prove chart note count, timing or genuine
-  play; that requires a server-authoritative chart/replay verifier.
+  play. The new verifier gates XP, while the existing ranking preserves its score
+  semantics. Browser replay does not prove human input.

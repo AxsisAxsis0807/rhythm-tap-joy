@@ -1,6 +1,4 @@
-/** Display contract only: levels, thresholds, rewards and rules come from the server.
- * This repository currently has no XP backend. With no enabled provider, render nothing.
- */
+/** Levels, thresholds, rewards and rules come from the server. Without an enabled provider, render nothing. */
 export type GrowthSnapshot = {
   level: string;
   nextLevel: string;
@@ -30,7 +28,10 @@ export type AccountGrowthState = {
   selectedTitle?: string;
   supporter?: { badge: string; tier: string; syncState: string };
   boostEnabled?: boolean;
+  pendingXp?: number;
   refresh?: (playId?: string) => void;
+  visibility?: import("./xpTypes").AccountVisibility;
+  updateVisibility?: (value: import("./xpTypes").AccountVisibility) => Promise<void>;
 };
 export function formatXp(value: string) {
   return BigInt(value).toLocaleString();

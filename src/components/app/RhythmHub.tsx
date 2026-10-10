@@ -30,9 +30,12 @@ import { GameScreen } from "@/components/game/GameScreen";
 import { UploadMiniBar, useUploadTask, type UploadJob } from "./UploadTask";
 import { SettingsDialog } from "@/components/game/SettingsDialog";
 import { RankingScreen, PlayerStats } from "./RankingScreen";
+import { useAccountGrowth } from "@/lib/useAccountGrowth";
 import { usePendingPlayResults } from "@/lib/usePlayResult";
 import {
   ProfileGrowth,
+  AccountGrowthProvider,
+  AccountVisibilitySettings,
   HomeLevel,
   SelectedTitle,
   SupporterBadge,
@@ -119,6 +122,7 @@ export function RhythmHub({
   onModeChange: (id: string) => void;
 }) {
   const { user, loading: authLoading } = useAuth();
+  const growth = useAccountGrowth(user?.id ?? null);
   const pendingResults = usePendingPlayResults(user?.id ?? null);
   const [screen, setScreen] = useState<HubScreen>("home");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -229,153 +233,158 @@ export function RhythmHub({
 
   if (screen === "play" && selectedSong?.chart) {
     return (
-      <GameScreen
-        key={selectedSong.id}
-        chart={selectedSong.chart}
-        userId={user?.id ?? null}
-        modeId={modeId}
-        onModeChange={onModeChange}
-        onExit={() => setScreen("select")}
-      />
+      <AccountGrowthProvider value={growth}>
+        <GameScreen
+          key={selectedSong.id}
+          chart={selectedSong.chart}
+          userId={user?.id ?? null}
+          xpEnabled={growth?.enabled ?? false}
+          modeId={modeId}
+          onModeChange={onModeChange}
+          onExit={() => setScreen("select")}
+        />
+      </AccountGrowthProvider>
     );
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#090a0f] text-white">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col">
-        <HubHeader
-          user={user}
-          profile={profile}
-          onAuth={() => openAuth()}
-          onProfile={() => setScreen("profile")}
-        />
-        {pendingResults.pending > 0 && (
-          <div className="mx-4 mt-3 flex min-w-0 items-center justify-between gap-3 rounded-xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100 md:mx-8">
-            <span className="min-w-0 break-words">
-              未送信のプレイ結果が {pendingResults.pending}{" "}
-              件あります。オンライン時に自動再送します。
-            </span>
-            <button
-              type="button"
-              className="shrink-0 underline"
-              onClick={() => void pendingResults.flush()}
-            >
-              再送
-            </button>
-          </div>
-        )}
-        {notice && (
-          <div className="mx-4 mt-3 flex items-center justify-between rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100 md:mx-8">
-            <span>{notice}</span>
-            <button type="button" onClick={() => setNotice("")} aria-label="閉じる">
-              <X className="size-4" />
-            </button>
-          </div>
-        )}
-        {screen === "home" && (
-          <HomeScreen
+    <AccountGrowthProvider value={growth}>
+      <div className="min-h-[100dvh] bg-[#090a0f] text-white">
+        <div className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col">
+          <HubHeader
             user={user}
             profile={profile}
-            songs={publishedSongs}
-            loadingSongs={loadingSongs}
-            localSongs={localSongs}
-            onAuth={openAuth}
-            onPlay={(song) => {
-              setSelectedSong(song);
-              setScreen("play");
-            }}
-            onSelect={() => setScreen("select")}
+            onAuth={() => openAuth()}
+            onProfile={() => setScreen("profile")}
+          />
+          {pendingResults.pending > 0 && (
+            <div className="mx-4 mt-3 flex min-w-0 items-center justify-between gap-3 rounded-xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100 md:mx-8">
+              <span className="min-w-0 break-words">
+                未送信のプレイ結果が {pendingResults.pending}{" "}
+                件あります。オンライン時に自動再送します。
+              </span>
+              <button
+                type="button"
+                className="shrink-0 underline"
+                onClick={() => void pendingResults.flush()}
+              >
+                再送
+              </button>
+            </div>
+          )}
+          {notice && (
+            <div className="mx-4 mt-3 flex items-center justify-between rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100 md:mx-8">
+              <span>{notice}</span>
+              <button type="button" onClick={() => setNotice("")} aria-label="閉じる">
+                <X className="size-4" />
+              </button>
+            </div>
+          )}
+          {screen === "home" && (
+            <HomeScreen
+              user={user}
+              profile={profile}
+              songs={publishedSongs}
+              loadingSongs={loadingSongs}
+              localSongs={localSongs}
+              onAuth={openAuth}
+              onPlay={(song) => {
+                setSelectedSong(song);
+                setScreen("play");
+              }}
+              onSelect={() => setScreen("select")}
+              onUpload={() => (user ? setScreen("upload") : openAuth("signup"))}
+            />
+          )}
+          {screen === "select" && (
+            <SelectScreen
+              songs={songsForSelect}
+              onBack={() => setScreen("home")}
+              onPlay={(song) => {
+                setSelectedSong(song);
+                setScreen("play");
+              }}
+            />
+          )}
+          {screen === "auth" && (
+            <AuthEntryScreen onSelect={openAuthForm} onBack={() => setScreen("home")} />
+          )}
+          {screen === "authForm" && (
+            <AuthScreen
+              mode={authMode}
+              onModeChange={setAuthMode}
+              onDone={afterAuth}
+              onBack={() => setScreen("auth")}
+            />
+          )}
+          {screen === "ranking" && (
+            <RankingScreen userId={user?.id ?? null} onBack={() => setScreen("home")} />
+          )}
+          {screen === "profile" && user && (
+            <ProfileScreen
+              user={user}
+              profile={profile}
+              songs={mySongs}
+              onBack={() => setScreen("home")}
+              onSaved={(next) => {
+                setProfile(next);
+                setNotice("プロフィールを保存しました");
+              }}
+              onPlay={(song) => {
+                setSelectedSong(song);
+                setScreen("play");
+              }}
+            />
+          )}
+          {screen === "upload" && user && (
+            <UploadScreen
+              user={user}
+              onBack={() => setScreen("home")}
+              onUploaded={(job) => {
+                if (uploadTask.busy) {
+                  setNotice("別のアップロードが進行中です");
+                  return;
+                }
+                uploadTask.start(job);
+                setScreen("publish");
+              }}
+              onError={setNotice}
+            />
+          )}
+          {screen === "publish" && user && (
+            <PublishScreen
+              songs={mySongs}
+              onBack={() => setScreen("home")}
+              onPublished={async () => {
+                await loadAccount(user);
+                await loadPublicSongs();
+                setScreen("home");
+                setNotice("曲を公開しました");
+              }}
+              onError={setNotice}
+            />
+          )}
+        </div>
+        {uploadTask.task && screen !== "play" && (
+          <UploadMiniBar
+            task={uploadTask.task}
+            onPause={uploadTask.pause}
+            onResume={uploadTask.resume}
+            onDismiss={uploadTask.dismiss}
+          />
+        )}
+        {screen !== "auth" && screen !== "authForm" && screen !== "play" && (
+          <BottomNav
+            screen={screen}
+            user={user}
+            onRanking={() => setScreen("ranking")}
+            onHome={() => setScreen("home")}
             onUpload={() => (user ? setScreen("upload") : openAuth("signup"))}
-          />
-        )}
-        {screen === "select" && (
-          <SelectScreen
-            songs={songsForSelect}
-            onBack={() => setScreen("home")}
-            onPlay={(song) => {
-              setSelectedSong(song);
-              setScreen("play");
-            }}
-          />
-        )}
-        {screen === "auth" && (
-          <AuthEntryScreen onSelect={openAuthForm} onBack={() => setScreen("home")} />
-        )}
-        {screen === "authForm" && (
-          <AuthScreen
-            mode={authMode}
-            onModeChange={setAuthMode}
-            onDone={afterAuth}
-            onBack={() => setScreen("auth")}
-          />
-        )}
-        {screen === "ranking" && (
-          <RankingScreen userId={user?.id ?? null} onBack={() => setScreen("home")} />
-        )}
-        {screen === "profile" && user && (
-          <ProfileScreen
-            user={user}
-            profile={profile}
-            songs={mySongs}
-            onBack={() => setScreen("home")}
-            onSaved={(next) => {
-              setProfile(next);
-              setNotice("プロフィールを保存しました");
-            }}
-            onPlay={(song) => {
-              setSelectedSong(song);
-              setScreen("play");
-            }}
-          />
-        )}
-        {screen === "upload" && user && (
-          <UploadScreen
-            user={user}
-            onBack={() => setScreen("home")}
-            onUploaded={(job) => {
-              if (uploadTask.busy) {
-                setNotice("別のアップロードが進行中です");
-                return;
-              }
-              uploadTask.start(job);
-              setScreen("publish");
-            }}
-            onError={setNotice}
-          />
-        )}
-        {screen === "publish" && user && (
-          <PublishScreen
-            songs={mySongs}
-            onBack={() => setScreen("home")}
-            onPublished={async () => {
-              await loadAccount(user);
-              await loadPublicSongs();
-              setScreen("home");
-              setNotice("曲を公開しました");
-            }}
-            onError={setNotice}
+            onProfile={() => (user ? setScreen("profile") : openAuth())}
           />
         )}
       </div>
-      {uploadTask.task && screen !== "play" && (
-        <UploadMiniBar
-          task={uploadTask.task}
-          onPause={uploadTask.pause}
-          onResume={uploadTask.resume}
-          onDismiss={uploadTask.dismiss}
-        />
-      )}
-      {screen !== "auth" && screen !== "authForm" && screen !== "play" && (
-        <BottomNav
-          screen={screen}
-          user={user}
-          onRanking={() => setScreen("ranking")}
-          onHome={() => setScreen("home")}
-          onUpload={() => (user ? setScreen("upload") : openAuth("signup"))}
-          onProfile={() => (user ? setScreen("profile") : openAuth())}
-        />
-      )}
-    </div>
+    </AccountGrowthProvider>
   );
 }
 
@@ -1049,6 +1058,7 @@ function ProfileScreen({
       <ProfileGrowth userId={user.id} />
       <PlayerStats userId={user.id} />
       <SupporterStatus userId={user.id} />
+      <AccountVisibilitySettings userId={user.id} />
       <div className="grid gap-5 md:grid-cols-[0.75fr_1.25fr]">
         <form
           onSubmit={(event) => void save(event)}

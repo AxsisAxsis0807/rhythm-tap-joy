@@ -14,17 +14,21 @@ import { InputOverlay } from "./InputOverlay";
 import { TouchInput } from "./TouchInput";
 import { ResultXpCard } from "@/components/app/AccountGrowth";
 import { enqueuePlayResult, flushPlayResultQueue } from "@/lib/playResultQueue";
+import { prepareXpSession } from "@/lib/xpClient";
+import { enqueueXp } from "@/lib/xpQueue";
 import { usePlayResult } from "@/lib/usePlayResult";
 
 export function GameScreen({
   chart,
   userId = null,
+  xpEnabled = false,
   modeId,
   onModeChange,
   onExit,
 }: {
   chart: Chart;
   userId?: string | null;
+  xpEnabled?: boolean;
   modeId: string;
   onModeChange: (id: string) => void;
   onExit?: () => void;
@@ -60,10 +64,14 @@ export function GameScreen({
   const { state: saveState, retrySave } = usePlayResult(game.completedPlay, runOwner.current);
   const persistCompleted = () => {
     if (runOwner.current && game.completedPlay) {
+      enqueueXp(runOwner.current, game.completedPlay);
       enqueuePlayResult(runOwner.current, game.completedPlay);
       void flushPlayResultQueue(runOwner.current);
     }
   };
+  useEffect(() => {
+    if (runOwner.current && game.completedPlay) enqueueXp(runOwner.current, game.completedPlay);
+  }, [game.completedPlay]);
   const startPlay = async () => {
     if (starting.current) return;
     starting.current = true;
@@ -71,7 +79,14 @@ export function GameScreen({
     const owner = userId;
     setStartError("");
     try {
-      await start();
+      // iOS Web Audio must resume during the START gesture, before Session I/O.
+      if (owner && xpEnabled) await game.activateAudio();
+      const id = crypto.randomUUID();
+      const verification =
+        owner && xpEnabled
+          ? await prepareXpSession(owner, chart, id, settings.timingOffsetMs)
+          : undefined;
+      await start({ id, ...(verification ? { verification } : {}) });
       runOwner.current = owner;
     } catch {
       setStartError("再生を開始できませんでした。もう一度お試しください");
