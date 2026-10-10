@@ -12,6 +12,8 @@ import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
 import { InputOverlay } from "./InputOverlay";
 import { TouchInput } from "./TouchInput";
+import { ResultXpCard } from "@/components/app/AccountGrowth";
+import { enqueuePlayResult, flushPlayResultQueue } from "@/lib/playResultQueue";
 import { usePlayResult } from "@/lib/usePlayResult";
 
 export function GameScreen({
@@ -56,9 +58,16 @@ export function GameScreen({
   const starting = useRef(false);
   const [startError, setStartError] = useState("");
   const { state: saveState, retrySave } = usePlayResult(game.completedPlay, runOwner.current);
+  const persistCompleted = () => {
+    if (runOwner.current && game.completedPlay) {
+      enqueuePlayResult(runOwner.current, game.completedPlay);
+      void flushPlayResultQueue(runOwner.current);
+    }
+  };
   const startPlay = async () => {
     if (starting.current) return;
     starting.current = true;
+    persistCompleted();
     const owner = userId;
     setStartError("");
     try {
@@ -480,8 +489,11 @@ export function GameScreen({
           {onExit && (
             <button
               type="button"
-              onClick={onExit}
-              className="text-xs tracking-[0.3em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              onClick={() => {
+                persistCompleted();
+                onExit();
+              }}
+              className="min-h-11 px-4 text-xs tracking-[0.3em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               BACK
             </button>
@@ -537,17 +549,38 @@ export function GameScreen({
               <p className="mt-1 text-center text-[10px] text-white/30">FAST ← 0ms → LATE</p>
             </div>
           )}
-          <div className="text-xs text-muted-foreground" aria-live="polite">
+          <ResultXpCard userId={runOwner.current} playId={game.completedPlay?.id ?? null} />
+          <div
+            className="w-full max-w-sm break-words text-xs text-muted-foreground"
+            aria-live="polite"
+          >
             {!runOwner.current && "ログインすると累計スコアを保存できます"}
             {saveState?.status === "saving" && "スコアを保存中…"}
-            {saveState?.status === "queued" && "スコアを保存待ちに追加しました"}
+            {saveState?.status === "queued" &&
+              (saveState.durable === false
+                ? "このブラウザに保存待ちを保持できません。再読み込み前に保存を再試行してください。"
+                : "スコアを保存待ちに追加しました")}
             {saveState?.status === "saved" && "累計スコアに加算しました"}
             {saveState?.status === "error" && (
               <>
                 <p role="alert">スコアを保存できませんでした: {saveState.error}</p>
-                <button type="button" className="mt-2 underline" onClick={() => void retrySave()}>
-                  保存を再試行
-                </button>
+                <p className="mt-2">
+                  通常プレイを続けられます。
+                  {saveState.retryable === false
+                    ? "この結果は再送できません。"
+                    : saveState.durable === false
+                      ? "再読み込みで保存待ちが失われるため、この画面で再試行してください。"
+                      : "保存待ちは画面移動後も保持されます。"}
+                </p>
+                {saveState.retryable !== false && (
+                  <button
+                    type="button"
+                    className="mt-2 min-h-11 px-3 underline"
+                    onClick={() => void retrySave()}
+                  >
+                    保存を再試行
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -566,8 +599,11 @@ export function GameScreen({
           {onExit && (
             <button
               type="button"
-              onClick={onExit}
-              className="text-xs tracking-[0.3em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              onClick={() => {
+                persistCompleted();
+                onExit();
+              }}
+              className="min-h-11 px-4 text-xs tracking-[0.3em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               BACK
             </button>
@@ -582,8 +618,8 @@ export type { GameMode };
 
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute inset-0 z-30 overflow-y-auto bg-overlay px-4 py-4 text-center backdrop-blur-sm sm:px-8 sm:py-6">
-      <div className="flex min-h-full flex-col items-center justify-center gap-3 sm:gap-4">
+    <div className="absolute inset-0 z-30 overflow-y-auto bg-overlay px-[max(1rem,env(safe-area-inset-left))] py-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center backdrop-blur-sm sm:px-8 sm:py-6">
+      <div className="flex min-h-full min-w-0 flex-col items-center justify-center gap-3 [&>*]:shrink-0 sm:gap-4">
         {children}
       </div>
     </div>

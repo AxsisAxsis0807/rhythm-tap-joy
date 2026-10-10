@@ -168,3 +168,95 @@ it("returns exact decimal strings for BIGINT leaderboard values", async () => {
   expect(row.total_score).toBe("9007199254740993");
   expect(row.play_count).toBe("9007199254740992");
 });
+
+it("validates direct own-user INSERTs, timestamps, nulls, NaN, impossible combos and scores", async () => {
+  await asUser(users[1]!, async () => {
+    const before = (await db.query("SELECT * FROM public.player_stats WHERE user_id = auth.uid()"))
+      .rows;
+    await expect(
+      db.query(
+        "INSERT INTO public.play_results (id,user_id,song_id,score,accuracy,max_combo,perfect_count,great_count,good_count,miss_count) VALUES ($1,auth.uid(),'song',99999,100,1,1,0,0,0)",
+        [randomUUID()],
+      ),
+    ).rejects.toThrow();
+    for (const args of [
+      [null, "song", 1002, 100, 1, 1, 0, 0, 0],
+      [randomUUID(), "song", 1002, "NaN", 1, 1, 0, 0, 0],
+      [randomUUID(), "song", 4008, 100, 1, 4, 0, 0, 0],
+      [randomUUID(), "song", 4008, 100, 4, 4, 0, 0, 0], // combo bonus must be 20
+      [randomUUID(), "song", 1002, 100, 2147483647, 1, 0, 0, 0],
+    ])
+      await expect(
+        db.query("SELECT public.record_play_result($1,$2,$3,$4,$5,$6,$7,$8,$9)", args),
+      ).rejects.toThrow();
+    await expect(
+      db.query(
+        "INSERT INTO public.play_results (id,user_id,song_id,score,accuracy,max_combo,perfect_count,great_count,good_count,miss_count,played_at) VALUES ($1,auth.uid(),'song',1002,100,1,1,0,0,0,now())",
+        [randomUUID()],
+      ),
+    ).rejects.toThrow();
+    expect(
+      (await db.query("SELECT * FROM public.player_stats WHERE user_id = auth.uid()")).rows,
+    ).toEqual(before);
+  });
+});
+
+it("acknowledges only the same immutable result and rejects UUID collisions across owners", async () => {
+  const id = randomUUID();
+  await asUser(users[1]!, async () => {
+    await record(id, 1002);
+    expect((await record(id, 1002)).rows[0]?.saved).toBe(false);
+    await expect(record(id, 1002, "changed-song")).rejects.toThrow(/conflicts/);
+  });
+  await asUser(users[0]!, async () => {
+    await expect(record(id, 1002)).rejects.toThrow(/conflicts/);
+  });
+});
+
+it("accepts real engine results across misses, mixed judgements and capped long combos", async () => {
+  const { applyJudgement, createPlayState } = await import("@/game/engine");
+  const { DEFAULT_SCORE_RULES } = await import("@/game/config");
+  const id = randomUUID();
+  await db.query("INSERT INTO auth.users VALUES ($1,'validation@test.invalid','{}')", [id]);
+  let seed = 73;
+  const random = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed;
+  };
+  await asUser(id, async () => {
+    for (let run = 0; run < 120; run++) {
+      const play = createPlayState();
+      for (let i = 0; i < run * 3; i++) {
+        const judgement =
+          run % 10 === 0
+            ? "PERFECT"
+            : (["PERFECT", "GREAT", "GOOD", "MISS"] as const)[random() % 4]!;
+        applyJudgement(play, judgement, 0, DEFAULT_SCORE_RULES, i);
+      }
+      const c = play.counts;
+      const judged = c.PERFECT + c.GREAT + c.GOOD + c.MISS;
+      const accuracy = judged ? (100 * (c.PERFECT + c.GREAT * 0.7 + c.GOOD * 0.4)) / judged : 100;
+      const saved = await db.query<{ saved: boolean }>(
+        "SELECT public.record_play_result($1,'mania-or-selected-fnf',$2,$3,$4,$5,$6,$7,$8) AS saved",
+        [randomUUID(), play.score, accuracy, play.maxCombo, c.PERFECT, c.GREAT, c.GOOD, c.MISS],
+      );
+      expect(saved.rows[0]?.saved).toBe(true);
+    }
+  });
+});
+
+it("includes zero-score users with the same competition rank as each other", async () => {
+  const zero = [randomUUID(), randomUUID()];
+  for (const id of zero)
+    await db.query("INSERT INTO auth.users VALUES ($1,$2,'{}')", [id, `${id}@test.invalid`]);
+  const ranks = await Promise.all(
+    zero.map((id) =>
+      db.query<{ total_score: string; global_rank: string }>(
+        "SELECT * FROM public.get_player_ranking($1)",
+        [id],
+      ),
+    ),
+  );
+  expect(ranks[0]?.rows[0]?.total_score).toBe("0");
+  expect(ranks[0]?.rows[0]?.global_rank).toBe(ranks[1]?.rows[0]?.global_rank);
+});

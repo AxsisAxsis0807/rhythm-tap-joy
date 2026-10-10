@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useRhythmGame } from "@/game/useRhythmGame";
 import { usePendingPlayResults, usePlayResult } from "@/lib/usePlayResult";
 import { recordCompletedPlay } from "@/lib/playerRanking";
-import { __resetPlayResultQueueForTests } from "@/lib/playResultQueue";
+import { __resetPlayResultQueueForTests, enqueuePlayResult } from "@/lib/playResultQueue";
 import type { Chart } from "@/game/types";
 
 const audio = vi.hoisted(() => ({ time: 0, duration: 5 }));
@@ -174,4 +174,40 @@ it("empty chart completes after audio ends", async () => {
   tick(6);
   await waitFor(() => expect(result.current.saving.state?.status).toBe("saved"));
   expect(result.current.game.completedPlay!.play.score).toBe(0);
+});
+
+it("does not expose the previous owner's pending count after a late request failure", async () => {
+  let reject!: (error: Error) => void;
+  vi.mocked(recordCompletedPlay).mockImplementationOnce(
+    () =>
+      new Promise<void>((_, fail) => {
+        reject = fail;
+      }),
+  );
+  enqueuePlayResult("user-a", {
+    id: "stored",
+    songId: "chart",
+    play: {
+      score: 0,
+      combo: 0,
+      maxCombo: 0,
+      counts: { PERFECT: 0, GREAT: 0, GOOD: 0, MISS: 0 },
+      timingErrorsMs: [],
+    },
+  });
+  const client = new QueryClient();
+  const hook = renderHook(({ owner }) => usePendingPlayResults(owner), {
+    initialProps: { owner: "user-a" },
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
+  expect(hook.result.current.pending).toBe(1);
+  hook.rerender({ owner: "user-b" });
+  expect(hook.result.current.pending).toBe(0);
+  await act(async () => {
+    reject(new Error("late failure"));
+  });
+  expect(hook.result.current.pending).toBe(0);
+  hook.unmount();
 });

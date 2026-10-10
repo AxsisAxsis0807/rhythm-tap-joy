@@ -18,7 +18,7 @@ function ErrorNotice({ retry }: { retry: () => void }) {
       className="rounded-xl border border-rose-300/20 bg-rose-300/10 p-4 text-sm text-rose-100"
     >
       統計を読み込めませんでした。
-      <button type="button" onClick={retry} className="ml-3 underline">
+      <button type="button" onClick={retry} className="ml-3 min-h-11 px-2 underline">
         再読み込み
       </button>
     </div>
@@ -43,6 +43,8 @@ export function PlayerStats({ userId }: { userId: string }) {
       </div>
     );
   const player = query.data;
+  if (!player)
+    return <p className="mb-5 text-sm text-white/50">プロフィール作成後に実績が表示されます。</p>;
   return (
     <dl className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
       {[
@@ -67,9 +69,9 @@ export function PlayerStats({ userId }: { userId: string }) {
 function RankingRow({ player, own }: { player: PlayerRanking; own: boolean }) {
   return (
     <li
-      className={`flex min-w-0 items-center gap-3 rounded-2xl border p-3 sm:p-4 ${own ? "border-cyan-200/40 bg-cyan-200/10" : "border-white/10 bg-white/[0.03]"}`}
+      className={`grid min-w-0 grid-cols-[3rem_2.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-2xl border p-3 sm:flex sm:gap-3 sm:p-4 ${own ? "border-cyan-200/40 bg-cyan-200/10" : "border-white/10 bg-white/[0.03]"}`}
     >
-      <span className="w-12 shrink-0 text-center font-display text-sm tabular-nums text-cyan-100">
+      <span className="w-12 shrink-0 break-words text-center font-display text-sm tabular-nums text-cyan-100">
         #{formatInteger(player.global_rank)}
       </span>
       {player.avatar_url ? (
@@ -82,16 +84,16 @@ function RankingRow({ player, own }: { player: PlayerRanking; own: boolean }) {
         <CircleUserRound aria-hidden="true" className="size-10 shrink-0 text-white/35" />
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold">
-          {player.display_name || player.username}
-          {own && <span className="ml-2 text-[10px] text-cyan-200">YOU</span>}
+        <p className="flex min-w-0 items-center gap-2 text-sm font-bold">
+          <span className="min-w-0 truncate">{player.display_name || player.username}</span>
+          {own && <span className="shrink-0 text-[10px] text-cyan-200">YOU</span>}
         </p>
         <p className="truncate text-xs text-white/40">@{player.username}</p>
-        <p className="mt-1 text-[10px] tracking-widest text-white/40">
+        <p className="mt-1 break-words text-[10px] tracking-widest text-white/40 [overflow-wrap:anywhere]">
           {formatInteger(player.play_count)} PLAYS
         </p>
       </div>
-      <div className="min-w-0 max-w-[40%] text-right">
+      <div className="col-span-3 min-w-0 text-right sm:max-w-[40%]">
         <p className="break-words font-display text-sm tabular-nums text-cyan-100 sm:text-lg">
           {formatInteger(player.total_score)}
         </p>

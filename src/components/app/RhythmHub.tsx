@@ -31,6 +31,13 @@ import { UploadMiniBar, useUploadTask, type UploadJob } from "./UploadTask";
 import { SettingsDialog } from "@/components/game/SettingsDialog";
 import { RankingScreen, PlayerStats } from "./RankingScreen";
 import { usePendingPlayResults } from "@/lib/usePlayResult";
+import {
+  ProfileGrowth,
+  HomeLevel,
+  SelectedTitle,
+  SupporterBadge,
+  SupporterStatus,
+} from "./AccountGrowth";
 import { Menu, Settings } from "lucide-react";
 
 type HubScreen =
@@ -384,14 +391,16 @@ function HubHeader({
   onProfile: () => void;
 }) {
   return (
-    <header className="flex items-center justify-between px-4 py-4 md:px-8">
+    <header className="flex min-w-0 flex-wrap items-center justify-between gap-3 px-4 py-4 md:px-8">
       <div className="flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-violet-500 text-[#090a0f]">
           <Music2 className="size-5" />
         </div>
         <div>
-          <p className="font-display text-lg font-bold tracking-[0.18em]">PULSE LANE</p>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-white/40">
+          <p className="font-display text-sm font-bold tracking-[0.12em] sm:text-lg sm:tracking-[0.18em]">
+            PULSE LANE
+          </p>
+          <p className="hidden text-[10px] uppercase tracking-[0.28em] text-white/40 sm:block">
             rhythm creator community
           </p>
         </div>
@@ -407,7 +416,10 @@ function HubHeader({
           ) : (
             <CircleUserRound className="size-8 text-cyan-200" />
           )}
-          <span className="max-w-28 truncate">{displayName(user, profile)}</span>
+          <span className="min-w-0 max-w-20 truncate sm:max-w-28">
+            {displayName(user, profile)}
+          </span>
+          <HomeLevel userId={user.id} />
         </button>
       ) : (
         <button
@@ -995,42 +1007,53 @@ function ProfileScreen({
       </div>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <PageHeading title="プロフィール" eyebrow="YOUR SPACE" onBack={onBack} />
+      <div className="mb-6 flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => avatarInput.current?.click()}
+          className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-200/40 to-violet-400/50"
+        >
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <CircleUserRound className="size-10 text-white/70" />
+          )}
+          <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[10px]">
+            変更
+          </span>
+        </button>
+        <input
+          ref={avatarInput}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void uploadAvatar(file);
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p
+              className="min-w-0 line-clamp-2 break-words font-semibold [overflow-wrap:anywhere]"
+              title={displayName(user, profile)}
+            >
+              {displayName(user, profile)}
+            </p>
+            <SupporterBadge userId={user.id} />
+          </div>
+          <p className="break-words text-xs text-white/40 [overflow-wrap:anywhere]">@{username}</p>
+        </div>
+      </div>
+      <SelectedTitle userId={user.id} />
+      <ProfileGrowth userId={user.id} />
       <PlayerStats userId={user.id} />
+      <SupporterStatus userId={user.id} />
       <div className="grid gap-5 md:grid-cols-[0.75fr_1.25fr]">
         <form
           onSubmit={(event) => void save(event)}
           className="rounded-3xl border border-white/10 bg-white/[0.04] p-6"
         >
-          <div className="mb-6 flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => avatarInput.current?.click()}
-              className="relative flex size-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-200/40 to-violet-400/50"
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="size-full object-cover" />
-              ) : (
-                <CircleUserRound className="size-10 text-white/70" />
-              )}
-              <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[10px]">
-                変更
-              </span>
-            </button>
-            <input
-              ref={avatarInput}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void uploadAvatar(file);
-              }}
-            />
-            <div>
-              <p className="font-semibold">{displayName(user, profile)}</p>
-              <p className="text-xs text-white/40">@{username}</p>
-            </div>
-          </div>
           <div className="space-y-3">
             <label className="label">
               プレイヤーID（ログインに使うため変更不可）
