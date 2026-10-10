@@ -26,6 +26,11 @@ permissions are unchanged.
 - `supabase/migrations/20261006200000_global_score_ranking.sql`: schema and policies.
 - `supabase/migrations/20261007090000_global_score_ranking_hardening.sql`:
   result invariants and exact text serialization for BIGINT ranking values.
+- `supabase/migrations/20261010120000_play_result_validation.sql`: enforce
+  validation for direct table inserts too, tighten combo/score bounds and
+  acknowledge UUIDs only for the same owner and immutable result.
+- `src/components/app/AccountGrowth.tsx`, `src/lib/accountGrowth.ts`: disabled-by-default
+  display contract for server-confirmed growth; no XP backend/rules are invented.
 - `tests/*.test.ts*`, `vitest.config.ts`, `package.json`, `bun.lock`: test setup.
 
 ## Migration and activation
@@ -33,10 +38,14 @@ permissions are unchanged.
 Apply the new migration to the **existing Lovable/Supabase project** before
 publishing the frontend. Use its migration workflow or run the SQL file in that
 project's SQL editor. Do not apply the existing migrations again to a live DB.
-This environment has no database administration connection. Its publishable
-endpoint also failed DNS resolution in three bounded attempts, so production
-migration status and application remain unverified. Apply both ranking migrations
-in filename order through the existing project's migration workflow.
+The current environment has no database administration credentials or authenticated
+user session. Read-only requests to the existing publishable REST endpoint return
+HTTP 403 (edge error 1010), so live schema/migration status remains **unverified**.
+No production migration was applied. Check the existing project's migration
+history and schema first, then apply only missing files in filename order:
+`20261006200000`, `20261007090000`, `20261010120000`.
+See [the dated verification record](verification/global-ranking-2026-10-10.md)
+for exact filenames, preflight queries, screenshots and activation steps.
 
 `play_results` retains user ID, song ID, score, accuracy, max combo, all four
 judgement counts and a database-generated timestamp. `song_id` is text because
@@ -64,10 +73,17 @@ permissions. Direct profile upserts cannot change these statistics.
 5. The result is first written to a user-specific browser queue. A repeated
    request, including a retry after an ambiguous network failure,
    cannot add the same play twice. RETRY has a new UUID and adds another play.
-6. Successful saves remove the queue item and invalidate ranking queries even
+6. The RPC uses the access token of the captured owner and a 15-second request
+   timeout. Individual owner/UUID storage keys avoid whole-queue overwrites from
+   other tabs. Existing v1 pending items are migrated without changing UUIDs.
+7. Successful saves remove the queue item and invalidate ranking queries even
    after unmount. Transient failures remain queued for navigation, reload,
    online-event or manual retry. Account mismatch pauses that owner's queue;
-   server-rejected invalid input is removed instead of looping.
+   server-rejected invalid input is removed instead of looping. Retries use
+   2-second exponential backoff up to 60 seconds. Authentication/configuration
+   rejection pauses automatic retries until login or manual retry; invalid entries
+   do not block subsequent results. Storage failure falls back to current-tab memory
+   with a warning that reload persistence is unavailable.
 
 ## Rank calculation
 
@@ -86,30 +102,36 @@ the same tie semantics.
 
 Run `npm test`, `npm run typecheck`, and `npm run build`.
 
-20 automated tests cover mania/FNF completion with the actual game hook and
-mock audio clock, unchanged scoring and selected-side notes, full audio duration,
-RESULT rerenders, RETRY, guest play, abandonment, same-ID save retries, empty
-charts, Top 100 and own-rank/profile UI, loading/error recovery, exact BIGINT
-display, persistent resend after unmount, and PostgreSQL integration through
-PGlite. Database tests run **all Supabase migrations** with
-an auth/storage fixture and real PostgreSQL grants, RLS, triggers and RPCs.
-They verify additive totals across songs, idempotency, security permissions,
-invalid-input rollback, sorting/ties and rank #107 outside Top 100.
+68 automated tests cover the existing game/input/settings behavior plus completion,
+UUID idempotency, persistent reload/resend, storage failure, in-flight RETRY,
+backoff, account isolation/token pinning, direct INSERT validation, immutable UUID
+collisions, exact BIGINT, loading/error/empty states and disabled/confirmed growth
+UI. PGlite runs all migrations with real PostgreSQL grants, RLS, triggers and RPCs.
+A generated corpus of 120 real scoring-engine results is accepted, including
+empty charts, mixed judgements, misses and long combos with capped bonuses.
 
-Type checking and production build pass. New files pass ESLint; modified existing
-files pass code rules with formatting disabled. Whole-repository lint still has
-pre-existing formatting errors and an existing `no-explicit-any` violation in
-`previewAuthStorage.ts`. They were not mass-refactored.
+Type checking and production build pass. Every changed TS/TSX file passes ESLint
+without errors or warnings. Whole-repository lint has the same 349 errors and 7
+warnings as the untouched baseline: 348 formatting errors and one prefer-const
+error in `previewAuthStorage.ts`. Unrelated files were not reformatted.
+
+Chromium 151 verifies 360×780, 844×390 and 1440×900 layouts. Local components use
+mocked auth/DB responses and server-growth fixtures. Actual AudioClock/game engine,
+keyboard and browser touch input, short mania/selected-side FNF charts, normal
+completion, RETRY and BACK were exercised. Seven completed plays used seven UUIDs
+and seven requests. Full details and screenshots are in the dated record.
 
 ## Remaining limitations
 
 - Production migration and real authenticated end-to-end testing require access
   to the deployed project. Automated audio-clock tests do not replace device
   checks on iPhone and external keyboards.
-- Browser screenshot verification could not run because Chromium download failed
-  in this environment. Ranking/profile rendering is covered by React DOM tests;
-  mobile layout still needs a real browser/device check.
+- XP/Supporter have no backend, reward rules, entitlement synchronization or
+  persisted public-Level setting in this repository. The display components use
+  server snapshots only, and are absent from production without an enabled
+  provider. The fixture screenshots are not proof of live XP awards. Connect an
+  idempotent server ledger and actual rules/settings before enabling them.
 - Scores still originate in the browser. The hardening migration rejects range
   errors and inconsistencies among score, accuracy, combo and judgement counts
-  under the current rules. It cannot prove chart note count, timing or genuine
+  under the current rules, including direct table inserts. It cannot prove chart note count, timing or genuine
   play; that requires a server-authoritative chart/replay verifier.

@@ -76,3 +76,17 @@ it("shows loading then an actionable error state", async () => {
   await screen.findByText("First");
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
 });
+
+it("shows an empty leaderboard and unavailable profile without inventing zero statistics", async () => {
+  vi.mocked(fetchLeaderboard).mockResolvedValue([]);
+  vi.mocked(fetchPlayerRanking).mockResolvedValue(null);
+  show(
+    <>
+      <RankingScreen userId="me" onBack={() => {}} />
+      <PlayerStats userId="me" />
+    </>,
+  );
+  await screen.findByText("まだプレイヤーがいません。");
+  await screen.findByText("プロフィール作成後に実績が表示されます。");
+  expect(screen.queryByText("TOTAL SCORE")).toBeNull();
+});
