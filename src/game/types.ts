@@ -88,4 +88,6 @@ export interface CompletedPlay {
   play: PlayState;
   /** Practice/modifier runs must never enter competitive persistence. */
   competitive?: boolean;
+  /** XP is separately verified and committed; score persistence never depends on it. */
+  verification?: import("./replay").PlayVerification;
 }

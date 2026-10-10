@@ -104,7 +104,11 @@ export function enqueuePlayResult(ownerId: string, result: CompletedPlay) {
   const existing = readQueue().find(
     (item) => item.ownerId === ownerId && item.result.id === result.id,
   );
-  const durable = persist(existing ?? { ownerId, result, attempts: 0 });
+  // The independent XP queue owns the potentially large replay. Score saving
+  // needs only its existing result fields and must survive an XP storage quota failure.
+  const scoreResult = { ...result };
+  delete scoreResult.verification;
+  const durable = persist(existing ?? { ownerId, result: scoreResult, attempts: 0 });
   emit({ ownerId, playId: result.id, status: "queued", durable });
 }
 export function pendingPlayCount(ownerId: string) {

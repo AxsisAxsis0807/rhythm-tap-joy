@@ -34,6 +34,12 @@ export class AudioClock {
     this.buffer = await this.ctx.decodeAudioData(bytes);
   }
 
+  /** Unlock Web Audio in the trusted START gesture before any network await. */
+  async activate(): Promise<void> {
+    if (!this.ctx) throw new Error("Audio not loaded");
+    await this.ctx.resume();
+  }
+
   /** Start playback; `delay` seconds of lead-in before time 0 of the song. */
   async start(delay = 0, offset = 0, playbackRate = this.rate): Promise<void> {
     if (!this.ctx || !this.buffer) throw new Error("Audio not loaded");

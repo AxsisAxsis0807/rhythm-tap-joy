@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReplayRecorder, type PlayVerification } from "./replay";
 import { InputLedger } from "./input";
 import { AudioClock } from "./audio";
 import {
@@ -55,6 +56,9 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   /** Index of the first possibly-unjudged note; keeps auto-miss O(1) per tick. */
   const missCursorRef = useRef(0);
 
+  const replayCalibrationRef = useRef(timingOffset);
+  const replayRef = useRef<ReplayRecorder | null>(null);
+  const verificationRef = useRef<Omit<PlayVerification, "replay"> | null>(null);
   const runIdRef = useRef<string | null>(null);
   const startingRef = useRef(false);
   const [completedPlay, setCompletedPlay] = useState<CompletedPlay | null>(null);
@@ -109,6 +113,8 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   }, [options.volume]);
 
   const clearInputs = useCallback(() => {
+    if (statusRef.current === "playing" || statusRef.current === "paused")
+      replayRef.current?.record("clear", timeRef.current);
     inputs.clear();
     heldNotesRef.current.forEach((held) => {
       held.holding = false;
@@ -118,37 +124,61 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     heldNotesRef.current.clear();
   }, [inputs, scoreRules]);
 
-  const start = useCallback(async () => {
-    const clock = clockRef.current;
-    if (!clock || startingRef.current) return;
-    startingRef.current = true;
-    try {
-      await clock.start(START_DELAY);
-      if (clockRef.current !== clock) return;
-      notesRef.current = buildRuntimeNotes(chart);
-      playRef.current = createPlayState();
-      heldNotesRef.current.forEach((note) => {
-        note.holding = false;
-      });
-      heldNotesRef.current.clear();
-      clearInputs();
-      missCursorRef.current = 0;
-      runIdRef.current = crypto.randomUUID();
-      setCompletedPlay(null);
-      timeRef.current = -START_DELAY;
-      statusRef.current = "playing";
-      changeStatus("playing");
-    } finally {
-      startingRef.current = false;
-    }
-  }, [chart, clearInputs, changeStatus]);
+  const activateAudio = useCallback(async () => {
+    const clock = clockRef.current as (AudioClock & { activate?: () => Promise<void> }) | null;
+    if (clock?.activate) await clock.activate();
+  }, []);
+
+  const start = useCallback(
+    async (run?: { id: string; verification?: Omit<PlayVerification, "replay"> }) => {
+      const clock = clockRef.current;
+      if (!clock || startingRef.current) return;
+      startingRef.current = true;
+      try {
+        await clock.start(START_DELAY);
+        if (clockRef.current !== clock) return;
+        notesRef.current = buildRuntimeNotes(chart);
+        playRef.current = createPlayState();
+        heldNotesRef.current.forEach((note) => {
+          note.holding = false;
+        });
+        heldNotesRef.current.clear();
+        clearInputs();
+        missCursorRef.current = 0;
+        runIdRef.current = run?.id ?? crypto.randomUUID();
+        verificationRef.current = run?.verification ?? null;
+        replayRef.current = run?.verification ? new ReplayRecorder() : null;
+        replayCalibrationRef.current = timingOffset;
+        setCompletedPlay(null);
+        timeRef.current = -START_DELAY;
+        statusRef.current = "playing";
+        changeStatus("playing");
+      } finally {
+        startingRef.current = false;
+      }
+    },
+    [chart, clearInputs, changeStatus, timingOffset],
+  );
+
+  const recordCalibration = useCallback(
+    (time: number) => {
+      if (replayRef.current && replayCalibrationRef.current !== timingOffset) {
+        replayRef.current.record("calibration", time, { offsetMs: timingOffset * 1000 });
+        replayCalibrationRef.current = timingOffset;
+      }
+    },
+    [timingOffset],
+  );
 
   /** Single entry point for every input source (touch, keyboard, future pads). */
   const hitLane = useCallback(
-    (lane: number, stamp?: number) => {
+    (lane: number, stamp: number | undefined, source: string) => {
       if (statusRef.current !== "playing") return "inactive";
       // Read the clock at the exact moment of input instead of the last frame.
-      const time = (clockRef.current?.nowAt(stamp) ?? timeRef.current) + timingOffset;
+      const rawTime = clockRef.current?.nowAt(stamp) ?? timeRef.current;
+      recordCalibration(rawTime);
+      replayRef.current?.record("press", rawTime, { source, lane });
+      const time = rawTime + timingOffset;
       const note = findHittableNote(notesRef.current, lane, time, windows);
       if (!note) return "outside-window";
       const delta = time - note.time;
@@ -168,14 +198,14 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       }
       return judgement;
     },
-    [windows, scoreRules, timingOffset, options.hitSoundVolume],
+    [windows, scoreRules, timingOffset, options.hitSoundVolume, recordCalibration],
   );
 
   const pressSource = useCallback(
     (source: string, lane: number, stamp?: number) => {
       if (statusRef.current !== "playing") return;
       const bar = inputs.press(source, lane, stamp);
-      if (bar) bar.outcome = hitLane(lane, bar.start);
+      if (bar) bar.outcome = hitLane(lane, bar.start, source);
     },
     [hitLane, inputs],
   );
@@ -183,10 +213,17 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const releaseSource = useCallback(
     (source: string, stamp?: number, cancelled = false) => {
       const bar = inputs.release(source, stamp, cancelled);
-      if (!bar || inputs.activeLanes.has(bar.lane)) return;
+      if (!bar) return;
       const held = heldNotesRef.current.get(bar.lane);
-      if (!held) return;
-      const time = (clockRef.current?.nowAt(bar.end) ?? timeRef.current) + timingOffset;
+      // Replay and judgment share the SAME clock sample (including Web Audio's
+      // quantum boundaries), so valid edge-window hits cannot disagree on resend.
+      const rawTime = clockRef.current?.nowAt(bar.end) ?? timeRef.current;
+      if (statusRef.current === "playing") {
+        recordCalibration(rawTime);
+        replayRef.current?.record("release", rawTime, { source, cancelled });
+      }
+      if (inputs.activeLanes.has(bar.lane) || !held) return;
+      const time = rawTime + timingOffset;
       if (cancelled || (held.endTime !== undefined && time < held.endTime - windows.good)) {
         held.judgement = "MISS";
         applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
@@ -194,7 +231,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       held.holding = false;
       heldNotesRef.current.delete(bar.lane);
     },
-    [inputs, scoreRules, timingOffset, windows.good],
+    [inputs, scoreRules, timingOffset, windows.good, recordCalibration],
   );
 
   // Main loop: read the audio clock, auto-miss passed notes, redraw.
@@ -206,11 +243,13 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       const clock = clockRef.current;
       if (clock) timeRef.current = clock.now();
       const time = timeRef.current;
+      let replayTickChanged = false;
       const all = notesRef.current;
       heldNotesRef.current.forEach((note, lane) => {
         if (note.endTime !== undefined && time >= note.endTime) {
           note.holding = false;
           heldNotesRef.current.delete(lane);
+          replayTickChanged = true;
         }
       });
       let cursor = missCursorRef.current;
@@ -224,11 +263,16 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
           note.judged = true;
           note.judgement = "MISS";
           applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
+          replayTickChanged = true;
           cursor++;
         } else break;
       }
       missCursorRef.current = cursor;
       const last = notesRef.current[notesRef.current.length - 1];
+      // Record only frames that affect judgement/holds, plus completion. Empty frames
+      // do not affect replayed score and would needlessly fill durable browser storage.
+      if (replayTickChanged || time > Math.max(clock?.duration ?? 0, (last?.time ?? 0) + 2.5))
+        replayRef.current?.record("tick", time);
       // Wait for the entire audio and the last judgement window, including empty charts.
       if (time > Math.max(clock?.duration ?? 0, (last?.time ?? 0) + 2.5)) {
         if (runIdRef.current) {
@@ -241,6 +285,15 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
               timingErrorsMs: [...playRef.current.timingErrorsMs],
             },
             competitive: options.competitive !== false,
+            ...(verificationRef.current && replayRef.current
+              ? {
+                  verification: {
+                    ...verificationRef.current,
+                    ...(replayRef.current.overflow ? { reason: "replay_limit" } : {}),
+                    replay: { version: 1 as const, events: [...replayRef.current.replay.events] },
+                  },
+                }
+              : {}),
           });
         }
         statusRef.current = "finished";
@@ -298,6 +351,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     clearInputs();
     pausedAtRef.current = clock?.pause ? await clock.pause() : timeRef.current;
     timeRef.current = pausedAtRef.current;
+    replayRef.current?.record("pause", pausedAtRef.current);
   }, [clearInputs, changeStatus]);
 
   const resume = useCallback(async () => {
@@ -308,7 +362,10 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     startingRef.current = true;
     try {
       if (clock.resume) await clock.resume(pausedAtRef.current, 0.75);
-      if (clockRef.current === clock && statusRef.current === "paused") changeStatus("playing");
+      if (clockRef.current === clock && statusRef.current === "paused") {
+        replayRef.current?.record("resume", clock.now());
+        changeStatus("playing");
+      }
     } finally {
       startingRef.current = false;
     }
@@ -334,6 +391,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     status,
     inputs,
     completedPlay,
+    activateAudio,
     start,
     pause,
     resume,
