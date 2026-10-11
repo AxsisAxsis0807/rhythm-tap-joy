@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleUserRound, Trophy } from "lucide-react";
-import type { PlayerRanking } from "@/integrations/supabase/types";
+import type { PlayerRanking } from "@/lib/playerRanking";
 import { fetchLeaderboard, fetchPlayerRanking, rankingKeys } from "@/lib/playerRanking";
 
 function formatInteger(value: string) {

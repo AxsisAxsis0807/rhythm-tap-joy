@@ -1,6 +1,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CompletedPlay } from "@/game/types";
 
+export type PlayerRanking = {
+  user_id: string;
+  display_name: string;
+  username: string;
+  avatar_url: string | null;
+  total_score: string;
+  play_count: string;
+  global_rank: string;
+};
+
+// Ranking RPCs are not in the generated schema types yet; call them untyped.
+const rpc = supabase.rpc.bind(supabase) as unknown as (
+  fn: string,
+  args?: Record<string, unknown>,
+) => ReturnType<typeof supabase.rpc>;
+
 export const rankingKeys = {
   all: ["player-ranking"] as const,
   leaderboard: ["player-ranking", "top100"] as const,
@@ -18,16 +34,16 @@ export class PlayResultSaveError extends Error {
   }
 }
 
-export async function fetchLeaderboard() {
-  const { data, error } = await supabase.rpc("get_global_leaderboard");
+export async function fetchLeaderboard(): Promise<PlayerRanking[]> {
+  const { data, error } = await rpc("get_global_leaderboard");
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data as unknown as PlayerRanking[] | null) ?? [];
 }
 
-export async function fetchPlayerRanking(userId: string) {
-  const { data, error } = await supabase.rpc("get_player_ranking", { p_user_id: userId });
+export async function fetchPlayerRanking(userId: string): Promise<PlayerRanking | null> {
+  const { data, error } = await rpc("get_player_ranking", { p_user_id: userId });
   if (error) throw new Error(error.message);
-  return data?.[0] ?? null;
+  return (data as unknown as PlayerRanking[] | null)?.[0] ?? null;
 }
 
 export async function recordCompletedPlay(result: CompletedPlay, ownerId: string) {
@@ -56,8 +72,7 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
   )
     throw new PlayResultSaveError("保存待ちの結果データが不正です", false, "invalid");
   const judged = c.PERFECT + c.GREAT + c.GOOD + c.MISS;
-  const { error } = await supabase
-    .rpc("record_play_result", {
+  const { error } = await rpc("record_play_result", {
       p_id: result.id,
       p_song_id: result.songId,
       p_score: play.score,

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { RankingScreen, PlayerStats } from "@/components/app/RankingScreen";
 import { fetchLeaderboard, fetchPlayerRanking } from "@/lib/playerRanking";
-import type { PlayerRanking } from "@/integrations/supabase/types";
+import type { PlayerRanking } from "@/lib/playerRanking";
 vi.mock("@/lib/playerRanking", () => ({
   fetchLeaderboard: vi.fn(),
   fetchPlayerRanking: vi.fn(),

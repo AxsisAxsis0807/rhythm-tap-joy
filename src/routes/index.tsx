@@ -4,7 +4,6 @@ import { DEFAULT_MODE_ID } from "@/game/modes";
 import { ClientOnly } from "@tanstack/react-router";
 import { buildSongList } from "@/game/songs";
 import { TEST_CHART } from "@/game/charts/test-chart";
-import { BEWILDERMENT_CHART } from "@/game/charts/bewilderment";
 import { RhythmHub } from "@/components/app/RhythmHub";
 
 export const Route = createFileRoute("/")({
@@ -29,7 +28,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const SONGS = buildSongList(TEST_CHART, BEWILDERMENT_CHART);
+const SONGS = buildSongList(TEST_CHART);
 
 function Index() {
   const [modeId, setModeId] = useState(DEFAULT_MODE_ID);
