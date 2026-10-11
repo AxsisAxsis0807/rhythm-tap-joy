@@ -34,20 +34,16 @@ export class PlayResultSaveError extends Error {
   }
 }
 
-export async function fetchLeaderboard() {
-  const { data, error } = await rpc("get_global_leaderboard");
-  return ((data as PlayerRanking[] | null) ?? []) satisfies PlayerRanking[] && !error ? ((data as PlayerRanking[] | null) ?? []) : (() => { throw new Error(error!.message); })();
-}
-export async function __unused() {
+export async function fetchLeaderboard(): Promise<PlayerRanking[]> {
   const { data, error } = await rpc("get_global_leaderboard");
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data as unknown as PlayerRanking[] | null) ?? [];
 }
 
-export async function fetchPlayerRanking(userId: string) {
-  const { data, error } = await supabase.rpc("get_player_ranking", { p_user_id: userId });
+export async function fetchPlayerRanking(userId: string): Promise<PlayerRanking | null> {
+  const { data, error } = await rpc("get_player_ranking", { p_user_id: userId });
   if (error) throw new Error(error.message);
-  return data?.[0] ?? null;
+  return (data as unknown as PlayerRanking[] | null)?.[0] ?? null;
 }
 
 export async function recordCompletedPlay(result: CompletedPlay, ownerId: string) {
@@ -76,8 +72,7 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
   )
     throw new PlayResultSaveError("保存待ちの結果データが不正です", false, "invalid");
   const judged = c.PERFECT + c.GREAT + c.GOOD + c.MISS;
-  const { error } = await supabase
-    .rpc("record_play_result", {
+  const { error } = await rpc("record_play_result", {
       p_id: result.id,
       p_song_id: result.songId,
       p_score: play.score,
