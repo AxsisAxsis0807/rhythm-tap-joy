@@ -1,6 +1,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CompletedPlay } from "@/game/types";
 
+export type PlayerRanking = {
+  user_id: string;
+  display_name: string;
+  username: string;
+  avatar_url: string | null;
+  total_score: string;
+  play_count: string;
+  global_rank: string;
+};
+
+// Ranking RPCs are not in the generated schema types yet; call them untyped.
+const rpc = supabase.rpc.bind(supabase) as unknown as (
+  fn: string,
+  args?: Record<string, unknown>,
+) => ReturnType<typeof supabase.rpc>;
+
 export const rankingKeys = {
   all: ["player-ranking"] as const,
   leaderboard: ["player-ranking", "top100"] as const,
@@ -19,7 +35,11 @@ export class PlayResultSaveError extends Error {
 }
 
 export async function fetchLeaderboard() {
-  const { data, error } = await supabase.rpc("get_global_leaderboard");
+  const { data, error } = await rpc("get_global_leaderboard");
+  return ((data as PlayerRanking[] | null) ?? []) satisfies PlayerRanking[] && !error ? ((data as PlayerRanking[] | null) ?? []) : (() => { throw new Error(error!.message); })();
+}
+export async function __unused() {
+  const { data, error } = await rpc("get_global_leaderboard");
   if (error) throw new Error(error.message);
   return data ?? [];
 }
