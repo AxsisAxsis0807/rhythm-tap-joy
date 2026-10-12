@@ -52,6 +52,7 @@ export function findHittableNote(
   lane: number,
   time: number,
   w: JudgementWindows,
+  earlyWindow = w.miss,
 ): RuntimeNote | null {
   // Binary-search the first note inside the window so dense charts
   // (tens of thousands of notes) stay O(log n + hits) per input.
@@ -66,7 +67,7 @@ export function findHittableNote(
   let bestDelta = Infinity;
   for (let i = lo; i < notes.length; i++) {
     const note = notes[i]!;
-    if (note.time - time > w.miss) break; // notes are time-sorted
+    if (note.time - time > earlyWindow) break; // notes are time-sorted
     if (note.judged || note.lane !== lane) continue;
     const d = Math.abs(note.time - time);
     if (d < bestDelta) {

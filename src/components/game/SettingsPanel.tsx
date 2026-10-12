@@ -3,13 +3,15 @@ import { RotateCcw, Search, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { InputTest } from "./InputOverlay";
+import { InputTest, InputOverlayPreview } from "./InputOverlay";
+import { resetInputOverlay } from "@/game/inputOverlayLayout";
 import { applyPreset, DEFAULT_SETTINGS, type GameSettings } from "@/game/settings";
 
-type Category = "play" | "controls" | "audio" | "visual" | "comfort";
+type Category = "play" | "controls" | "input" | "audio" | "visual" | "comfort";
 const categories: { id: Category; label: string }[] = [
   { id: "play", label: "プレイ" },
   { id: "controls", label: "操作" },
+  { id: "input", label: "入力可視化" },
   { id: "audio", label: "音声・タイミング" },
   { id: "visual", label: "見た目" },
   { id: "comfort", label: "快適性" },
@@ -177,7 +179,7 @@ export function SettingsPanel({
                 {fnf && (
                   <ToggleRow
                     label="ミドルスクロール"
-                    description="自分側の4レーンを中央に寄せます。判定ルールは変わりません。"
+                    description="自分側は常に横中央です。ON時は相手レーンを薄く表示します。判定ルールは変わりません。"
                     checked={settings.middleScroll}
                     onChange={(v) => set("middleScroll", v)}
                   />
@@ -235,54 +237,125 @@ export function SettingsPanel({
                 </div>
               </Group>
             )}
-            {show("controls", "入力 オーバーレイ 履歴 テスト") && (
-              <Group title="入力オーバーレイ">
+            {show(
+              "input",
+              "入力可視化 オーバーレイ 横 縦 位置 サイズ キー 間隔 棒 履歴 不透明度 テスト",
+            ) && (
+              <Group title="入力可視化">
+                <p className="py-3 text-xs leading-relaxed text-white/55">
+                  キー・タッチ入力の表示です。操作するタッチボタンとは別です。
+                  <br />
+                  横・縦はゲームプレイ領域のsafe-area内を0〜100%、カードの中心が基準です。サイズはpx、全体の大きさと不透明度は%。画面外に出る部分は表示時に補正し、保存値は維持します。
+                </p>
                 <ToggleRow
-                  label="入力表示"
+                  label="入力可視化を表示"
                   checked={settings.inputOverlayEnabled}
                   onChange={(v) => set("inputOverlayEnabled", v)}
                 />
-                <SelectRow
-                  label="PCの位置"
-                  value={settings.inputOverlayPosition}
-                  options={[
-                    ["left", "左"],
-                    ["right", "右"],
-                  ]}
-                  onChange={(v) =>
-                    set("inputOverlayPosition", v as GameSettings["inputOverlayPosition"])
-                  }
+                <OverlayNumberRow
+                  label="横位置"
+                  value={settings.inputOverlayX}
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  unit="%"
+                  onChange={(v) => set("inputOverlayX", v)}
                 />
-                <RangeRow
-                  label="サイズ"
+                <OverlayNumberRow
+                  label="縦位置"
+                  value={settings.inputOverlayY}
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  unit="%"
+                  onChange={(v) => set("inputOverlayY", v)}
+                />
+                <OverlayNumberRow
+                  label="全体の大きさ"
                   value={settings.inputOverlaySize}
-                  min={70}
-                  max={140}
-                  step={5}
-                  suffix="%"
+                  min={30}
+                  max={200}
+                  step={1}
+                  unit="%"
                   onChange={(v) => set("inputOverlaySize", v)}
                 />
-                <RangeRow
-                  label="不透明度"
-                  value={settings.inputOverlayOpacity}
-                  min={0.2}
-                  max={1}
-                  step={0.05}
-                  percent
-                  onChange={(v) => set("inputOverlayOpacity", v)}
+                <OverlayNumberRow
+                  label="キー表示の幅"
+                  value={settings.inputOverlayKeyWidth}
+                  min={20}
+                  max={120}
+                  step={1}
+                  unit="px"
+                  onChange={(v) => set("inputOverlayKeyWidth", v)}
                 />
-                <RangeRow
+                <OverlayNumberRow
+                  label="キー表示の高さ"
+                  value={settings.inputOverlayKeyHeight}
+                  min={16}
+                  max={120}
+                  step={1}
+                  unit="px"
+                  onChange={(v) => set("inputOverlayKeyHeight", v)}
+                />
+                <OverlayNumberRow
+                  label="キー同士の間隔"
+                  value={settings.inputOverlayGap}
+                  min={0}
+                  max={24}
+                  step={1}
+                  unit="px"
+                  onChange={(v) => set("inputOverlayGap", v)}
+                />
+                <OverlayNumberRow
+                  label="棒の表示領域の高さ"
+                  value={settings.inputOverlayHistoryHeight}
+                  min={20}
+                  max={360}
+                  step={1}
+                  unit="px"
+                  onChange={(v) => set("inputOverlayHistoryHeight", v)}
+                />
+                <OverlayNumberRow
+                  label="不透明度"
+                  value={settings.inputOverlayOpacity * 100}
+                  min={0}
+                  max={100}
+                  step={1}
+                  unit="%"
+                  onChange={(v) => set("inputOverlayOpacity", v / 100)}
+                />
+                <OverlayNumberRow
                   label="履歴の表示時間"
                   value={settings.inputOverlayDuration}
                   min={0.5}
                   max={5}
                   step={0.1}
-                  suffix="秒"
+                  unit="秒"
                   onChange={(v) => set("inputOverlayDuration", v)}
                 />
-                <p className="py-2 text-xs text-white/45">
-                  スマホはHUD下の専用領域に表示。保持時間を棒の長さで示します。判定時間外の入力も表示します。
-                </p>
+                <div className="flex flex-wrap gap-2 py-3">
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-lg border border-cyan-200/25 px-3 text-xs"
+                    onClick={() =>
+                      onChange({
+                        ...settings,
+                        inputOverlayX: 50,
+                        inputOverlayY: 50,
+                        preset: "custom",
+                      })
+                    }
+                  >
+                    中央に戻す
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-lg border border-white/15 px-3 text-xs"
+                    onClick={() => onChange(resetInputOverlay(settings))}
+                  >
+                    初期設定に戻す
+                  </button>
+                </div>
                 <InputTest settings={settings} />
               </Group>
             )}
@@ -476,7 +549,11 @@ export function SettingsPanel({
             </button>
           </main>
           <aside className="order-first border-b border-white/10 p-3 md:order-none md:border-l md:border-b-0 md:p-5">
-            <Preview settings={settings} />
+            {category === "input" ? (
+              <InputOverlayPreview settings={settings} />
+            ) : (
+              <Preview settings={settings} />
+            )}
           </aside>
         </div>
         <footer
@@ -824,6 +901,70 @@ function Preview({ settings }: { settings: GameSettings }) {
       <p className="mt-2 text-[11px] leading-relaxed text-white/35">
         速度・方向・形状・サイズ・判定ラインを反映
       </p>
+    </div>
+  );
+}
+
+/** Numeric drafts allow decimals/empty editing; saved values remain finite and bounded. */
+function OverlayNumberRow({
+  label,
+  value,
+  min,
+  max,
+  step,
+  unit,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  onChange: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => {
+    setDraft((old) => (old.trim() !== "" && Number(old) === value ? old : String(value)));
+  }, [value]);
+  return (
+    <div className="py-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="min-w-0 text-sm">{label}</span>
+        <label className="flex shrink-0 items-center gap-1 text-xs text-cyan-100">
+          <input
+            type="number"
+            inputMode="decimal"
+            aria-label={`${label} 数値`}
+            min={min}
+            max={max}
+            step={step}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              const next = e.target.valueAsNumber;
+              if (Number.isFinite(next)) onChange(Math.max(min, Math.min(max, next)));
+            }}
+            onBlur={() => setDraft(String(value))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+            }}
+            className="min-h-11 w-20 min-w-0 rounded-md border border-white/15 bg-black/20 px-2 text-right tabular-nums"
+          />
+          {unit}
+        </label>
+      </div>
+      <Slider
+        aria-label={`${label} スライダー`}
+        min={min}
+        max={max}
+        step={step}
+        value={[value]}
+        onValueChange={([next]) => {
+          if (next !== undefined) onChange(next);
+        }}
+        className="min-h-6"
+      />
     </div>
   );
 }
