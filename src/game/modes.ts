@@ -1,10 +1,10 @@
 /**
  * Play modes (visual + input skins).
  *
- * A mode never touches judgement/score logic — it only describes how the
- * playfield is drawn and which direction notes travel. New modes (FNF,
- * osu!mania, custom skins) are added by appending to GAME_MODES; the engine,
- * charts and input layer stay untouched.
+ * These descriptors control drawing and default scroll direction. GameScreen
+ * separately selects FNF's early-input policy from the actual mode ID;
+ * changing a note skin or scroll direction does not change that policy.
+ * Judgement windows and score calculation remain shared.
  */
 
 export type NoteShape = "bar" | "circle" | "arrow";

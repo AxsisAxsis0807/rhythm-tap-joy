@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { INPUT_OVERLAY_DEFAULTS } from "./inputOverlayLayout";
 
 export type ScrollDirectionSetting = "mode" | "down" | "up";
 export type NoteShapeSetting = "mode" | "bar" | "circle" | "arrow";
 export type SettingsPreset = "simple" | "readable" | "effects" | "custom";
 
 export interface GameSettings {
-  version: 2;
+  version: 3;
   showTouchBorders: boolean;
   middleScroll: boolean;
   scrollSpeed: number;
@@ -36,7 +37,12 @@ export interface GameSettings {
   showFps: boolean;
   touchAreaHeight: number;
   inputOverlayEnabled: boolean;
-  inputOverlayPosition: "left" | "right";
+  inputOverlayX: number;
+  inputOverlayY: number;
+  inputOverlayKeyWidth: number;
+  inputOverlayKeyHeight: number;
+  inputOverlayGap: number;
+  inputOverlayHistoryHeight: number;
   inputOverlaySize: number;
   inputOverlayOpacity: number;
   inputOverlayDuration: number;
@@ -44,7 +50,7 @@ export interface GameSettings {
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  version: 2,
+  version: 3,
   showTouchBorders: false,
   middleScroll: false,
   scrollSpeed: 1,
@@ -74,11 +80,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   lightweightMode: false,
   showFps: false,
   touchAreaHeight: 100,
-  inputOverlayEnabled: true,
-  inputOverlayPosition: "right",
-  inputOverlaySize: 100,
-  inputOverlayOpacity: 0.8,
-  inputOverlayDuration: 2,
+  ...INPUT_OVERLAY_DEFAULTS,
   preset: "simple",
 };
 
@@ -89,7 +91,10 @@ const clamp = (v: unknown, min: number, max: number, fallback: number) =>
 const bool = (v: unknown, fallback: boolean) => (typeof v === "boolean" ? v : fallback);
 
 export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameSettings {
-  const s = typeof stored === "object" && stored ? (stored as Partial<GameSettings>) : {};
+  const s =
+    typeof stored === "object" && stored
+      ? (stored as Partial<GameSettings> & { inputOverlayPosition?: "left" | "right" })
+      : {};
   const d =
     typeof deviceStored === "object" && deviceStored ? (deviceStored as Partial<GameSettings>) : s;
   const keys = Array.isArray(s.keyBindings) ? s.keyBindings : [];
@@ -129,9 +134,34 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     showFps: bool(s.showFps, false),
     touchAreaHeight: clamp(d.touchAreaHeight, 45, 100, 100),
     inputOverlayEnabled: bool(s.inputOverlayEnabled, true),
-    inputOverlayPosition: pick(s.inputOverlayPosition, ["left", "right"], "right"),
-    inputOverlaySize: clamp(s.inputOverlaySize, 70, 140, 100),
-    inputOverlayOpacity: clamp(s.inputOverlayOpacity, 0.2, 1, 0.8),
+    inputOverlayX: clamp(
+      s.inputOverlayX,
+      0,
+      100,
+      s.inputOverlayPosition === "left" ? 15 : INPUT_OVERLAY_DEFAULTS.inputOverlayX,
+    ),
+    inputOverlayY: clamp(s.inputOverlayY, 0, 100, INPUT_OVERLAY_DEFAULTS.inputOverlayY),
+    inputOverlayKeyWidth: clamp(
+      s.inputOverlayKeyWidth,
+      20,
+      120,
+      INPUT_OVERLAY_DEFAULTS.inputOverlayKeyWidth,
+    ),
+    inputOverlayKeyHeight: clamp(
+      s.inputOverlayKeyHeight,
+      16,
+      120,
+      INPUT_OVERLAY_DEFAULTS.inputOverlayKeyHeight,
+    ),
+    inputOverlayGap: clamp(s.inputOverlayGap, 0, 24, INPUT_OVERLAY_DEFAULTS.inputOverlayGap),
+    inputOverlayHistoryHeight: clamp(
+      s.inputOverlayHistoryHeight,
+      20,
+      360,
+      INPUT_OVERLAY_DEFAULTS.inputOverlayHistoryHeight,
+    ),
+    inputOverlaySize: clamp(s.inputOverlaySize, 30, 200, 100),
+    inputOverlayOpacity: clamp(s.inputOverlayOpacity, 0, 1, 0.8),
     inputOverlayDuration: clamp(s.inputOverlayDuration, 0.5, 5, 2),
     preset: pick(s.preset, ["simple", "readable", "effects", "custom"], "custom"),
   };

@@ -35,6 +35,8 @@ export interface RhythmGameOptions {
   volume?: number;
   hitSoundVolume?: number;
   competitive?: boolean;
+  /** A visual style selects this policy; note shape/scroll direction never do. */
+  inputStyle?: "mania" | "fnf";
 }
 
 export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
@@ -42,6 +44,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const scoreRules = options.scoreRules ?? DEFAULT_SCORE_RULES;
   const keyMap = options.keyMap ?? DEFAULT_KEY_MAP;
   const scrollTime = options.scrollTime ?? DEFAULT_SCROLL_TIME;
+  const inputStyle = options.inputStyle ?? (chart.fnf ? "fnf" : "mania");
   const timingOffset = (options.timingOffsetMs ?? 0) / 1000;
 
   const clockRef = useRef<AudioClock | null>(null);
@@ -149,7 +152,13 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       if (statusRef.current !== "playing") return "inactive";
       // Read the clock at the exact moment of input instead of the last frame.
       const time = (clockRef.current?.nowAt(stamp) ?? timeRef.current) + timingOffset;
-      const note = findHittableNote(notesRef.current, lane, time, windows);
+      const note = findHittableNote(
+        notesRef.current,
+        lane,
+        time,
+        windows,
+        inputStyle === "fnf" ? windows.good : windows.miss,
+      );
       if (!note) return "outside-window";
       const delta = time - note.time;
       const judgement = judgeDelta(delta, windows);
@@ -168,7 +177,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       }
       return judgement;
     },
-    [windows, scoreRules, timingOffset, options.hitSoundVolume],
+    [windows, scoreRules, timingOffset, options.hitSoundVolume, inputStyle],
   );
 
   const pressSource = useCallback(
