@@ -19,7 +19,19 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import type { Chart } from "@/game/types";
+import type { PlayStyleId, VisualModeId } from "@/game/types";
+import { useGameSettings } from "@/game/settings";
+import { getAudioSession } from "@/game/audioSession";
+import {
+  listPublicSongs,
+  loadPlayableChart,
+  songToEntry,
+  normalizeSong,
+  type SongRow,
+} from "@/lib/chartRepository";
+import { SongDetail } from "./SongDetail";
+import { SongMetadataEditor } from "./SongMetadataEditor";
+import { SongMetadataFields, type SongMetadataForm } from "./SongMetadataFields";
 import { detectFnfSides, parseChartByType, type ChartType, type FnfSide } from "@/game/chartFile";
 import { useServerFn } from "@tanstack/react-start";
 import { redeemAdminCode } from "@/lib/admin.functions";
@@ -27,7 +39,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import type { SongEntry } from "@/components/menu/MusicSelect";
 import { GameScreen } from "@/components/game/GameScreen";
-import { UploadMiniBar, useUploadTask, type UploadJob } from "./UploadTask";
+import { UploadMiniBar, useUploadTask, type UploadJob, type UploadFieldName } from "./UploadTask";
 import { SettingsDialog } from "@/components/game/SettingsDialog";
 import { RankingScreen, PlayerStats } from "./RankingScreen";
 import { usePendingPlayResults } from "@/lib/usePlayResult";
@@ -41,30 +53,18 @@ import {
 import { Menu, Settings } from "lucide-react";
 
 type HubScreen =
-  "home" | "auth" | "authForm" | "ranking" | "profile" | "upload" | "publish" | "select" | "play";
+  | "home"
+  | "auth"
+  | "authForm"
+  | "ranking"
+  | "profile"
+  | "upload"
+  | "publish"
+  | "select"
+  | "detail"
+  | "edit"
+  | "play";
 type AuthMode = "login" | "signup";
-
-type SongRow = {
-  id: string;
-  title: string;
-  artist: string;
-  chart_author: string;
-  difficulty_name: string;
-  bpm: number;
-  offset_sec: number;
-  lane_count: number;
-  note_count: number;
-  mode_id: string;
-  audio_path: string | null;
-  chart_path: string | null;
-  cover_path: string | null;
-  is_published: boolean;
-  chart_type: string;
-  fnf_side: string;
-  is_official: boolean;
-  play_count: number;
-  user_id: string;
-};
 
 type Profile = {
   id: string;
@@ -90,35 +90,11 @@ function fileLabel(file: File | null) {
   return file ? file.name : "ファイルを選択";
 }
 
-function toChart(
-  row: SongRow,
-  chart: ReturnType<typeof parseChartByType>,
-  audioUrl: string,
-): Chart {
-  return {
-    id: row.id,
-    title: row.title,
-    artist: row.artist,
-    audioUrl,
-    bpm: chart.bpm || Number(row.bpm) || 60,
-    offset: chart.offset || Number(row.offset_sec) || 0,
-    laneCount: chart.laneCount || row.lane_count || 4,
-    difficultyName: row.difficulty_name || chart.difficultyName || "NORMAL",
-    notes: chart.notes,
-    ...(chart.fnf ? { fnf: chart.fnf } : {}),
-  };
-}
-
-export function RhythmHub({
-  localSongs,
-  modeId,
-  onModeChange,
-}: {
-  localSongs: SongEntry[];
-  modeId: string;
-  onModeChange: (id: string) => void;
-}) {
+export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
+  const { settings } = useGameSettings();
   const { user, loading: authLoading } = useAuth();
+  const accountOwner = useRef(user?.id);
+  accountOwner.current = user?.id;
   const pendingResults = usePendingPlayResults(user?.id ?? null);
   const [screen, setScreen] = useState<HubScreen>("home");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -126,6 +102,13 @@ export function RhythmHub({
   const [publishedSongs, setPublishedSongs] = useState<SongEntry[]>([]);
   const [mySongs, setMySongs] = useState<SongRow[]>([]);
   const [selectedSong, setSelectedSong] = useState<SongEntry | null>(null);
+  const [explicitStyles, setExplicitStyles] = useState<Record<string, PlayStyleId>>({});
+  const [runStyle, setRunStyle] = useState<PlayStyleId>("mania");
+  const [runMode, setRunMode] = useState<VisualModeId>("mania");
+  const [editingSong, setEditingSong] = useState<SongRow | null>(null);
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+  const startGeneration = useRef(0);
   const [notice, setNotice] = useState("");
   const [loadingSongs, setLoadingSongs] = useState(false);
   const uploadTask = useUploadTask(() => {
@@ -135,38 +118,15 @@ export function RhythmHub({
 
   const loadPublicSongs = async () => {
     setLoadingSongs(true);
-    const { data, error } = await supabase
-      .from("songs")
-      .select("*")
-      .eq("is_published", true)
-      .order("published_at", { ascending: false });
-    if (error) {
-      setNotice(`公開曲を読み込めませんでした: ${error.message}`);
+    try {
+      setPublishedSongs((await listPublicSongs()).map(songToEntry));
+    } catch (error) {
+      setNotice(
+        `公開曲を読み込めませんでした: ${error instanceof Error ? error.message : "通信エラー"}`,
+      );
+    } finally {
       setLoadingSongs(false);
-      return;
     }
-    const remote: SongEntry[] = [];
-    for (const row of (data ?? []) as SongRow[]) {
-      if (!row.audio_path || !row.chart_path) continue;
-      const [audio, chartFile] = await Promise.all([
-        supabase.storage.from(BUCKET).createSignedUrl(row.audio_path, 3600),
-        supabase.storage.from(BUCKET).download(row.chart_path),
-      ]);
-      if (audio.error || chartFile.error) continue;
-      try {
-        const parsed = parseChartByType(await chartFile.data.text(), row.chart_type, row.fnf_side);
-        remote.push({
-          id: row.id,
-          title: row.title,
-          artist: row.artist,
-          chart: toChart(row, parsed, audio.data.signedUrl),
-        });
-      } catch {
-        // A broken public chart should not prevent other public songs from loading.
-      }
-    }
-    setPublishedSongs(remote);
-    setLoadingSongs(false);
   };
 
   const loadAccount = async (nextUser: User) => {
@@ -178,8 +138,15 @@ export function RhythmHub({
         .eq("user_id", nextUser.id)
         .order("created_at", { ascending: false }),
     ]);
+    if (accountOwner.current !== nextUser.id) return;
+    if (profileResult.error || songsResult.error)
+      setNotice(
+        profileResult.error?.message ??
+          songsResult.error?.message ??
+          "アカウントを読み込めませんでした",
+      );
     if (profileResult.data) setProfile(profileResult.data as Profile);
-    if (songsResult.data) setMySongs(songsResult.data as SongRow[]);
+    if (songsResult.data) setMySongs(songsResult.data.map(normalizeSong));
   };
 
   useEffect(() => {
@@ -187,6 +154,8 @@ export function RhythmHub({
   }, []);
 
   useEffect(() => {
+    setProfile(null);
+    setMySongs([]);
     if (user) void loadAccount(user);
     else {
       setProfile(null);
@@ -219,6 +188,36 @@ export function RhythmHub({
     setNotice("ログインしました");
   };
 
+  const selectSong = (song: SongEntry) => {
+    startGeneration.current += 1;
+    void getAudioSession()
+      .unlock()
+      .catch(() => {
+        /* Manual preview remains available when autoplay is blocked. */
+      });
+    setSelectedSong(song);
+    setScreen("detail");
+  };
+  const startSong = async (song: SongEntry, style: PlayStyleId) => {
+    const generation = ++startGeneration.current;
+    const origin = screenRef.current;
+    const chart = song.source ? await loadPlayableChart(song.source) : song.chart;
+    if (!chart) throw new Error("譜面を取得できませんでした");
+    if (generation !== startGeneration.current || screenRef.current !== origin) return;
+    setRunStyle(style);
+    setRunMode(style === "fnf" ? "fnf" : settings.maniaSkin === "classic" ? "classic" : "mania");
+    setSelectedSong({ ...song, chart });
+    setScreen("play");
+  };
+  const editSong = (song: SongRow) => {
+    if (song.user_id !== user?.id) return;
+    setSelectedSong(songToEntry(song));
+    setEditingSong(song);
+    setScreen("edit");
+  };
+  const setSongStyle = (id: string, style: PlayStyleId) =>
+    setExplicitStyles((current) => ({ ...current, [id]: style }));
+
   if (authLoading) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#090a0f] text-sm text-white/60">
@@ -233,9 +232,10 @@ export function RhythmHub({
         key={selectedSong.id}
         chart={selectedSong.chart}
         userId={user?.id ?? null}
-        modeId={modeId}
-        onModeChange={onModeChange}
-        onExit={() => setScreen("select")}
+        modeId={runMode}
+        playStyle={runStyle}
+        autoStart
+        onExit={() => setScreen("detail")}
       />
     );
   }
@@ -280,10 +280,7 @@ export function RhythmHub({
             loadingSongs={loadingSongs}
             localSongs={localSongs}
             onAuth={openAuth}
-            onPlay={(song) => {
-              setSelectedSong(song);
-              setScreen("play");
-            }}
+            onPlay={selectSong}
             onSelect={() => setScreen("select")}
             onUpload={() => (user ? setScreen("upload") : openAuth("signup"))}
           />
@@ -292,9 +289,56 @@ export function RhythmHub({
           <SelectScreen
             songs={songsForSelect}
             onBack={() => setScreen("home")}
-            onPlay={(song) => {
+            selectedSongId={selectedSong?.id}
+            explicitStyles={explicitStyles}
+            onSelect={(song) => {
               setSelectedSong(song);
-              setScreen("play");
+              startGeneration.current += 1;
+              void getAudioSession()
+                .unlock()
+                .catch(() => {});
+            }}
+            onStyleChange={setSongStyle}
+            onStart={startSong}
+            onEdit={editSong}
+            userId={user?.id ?? null}
+          />
+        )}
+        {screen === "detail" && selectedSong && (
+          <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-28 md:px-8">
+            <PageHeading
+              title="曲の詳細"
+              eyebrow="READY TO PLAY"
+              onBack={() => setScreen("select")}
+            />
+            <SongDetail
+              explicitSelection
+              key={selectedSong.id}
+              song={selectedSong}
+              explicitStyle={explicitStyles[selectedSong.id]}
+              onStyleChange={(style) => setSongStyle(selectedSong.id, style)}
+              onStart={(style) => startSong(selectedSong, style)}
+              onEdit={
+                selectedSong.source?.user_id === user?.id && selectedSong.source
+                  ? () => editSong(selectedSong.source!)
+                  : undefined
+              }
+            />
+          </main>
+        )}
+        {screen === "edit" && editingSong && user?.id === editingSong.user_id && (
+          <SongMetadataEditor
+            key={`${editingSong.id}:${editingSong.metadata_version}`}
+            song={editingSong}
+            onCancel={() => setScreen("detail")}
+            onSaved={(row) => {
+              setMySongs((current) => current.map((song) => (song.id === row.id ? row : song)));
+              setPublishedSongs((current) =>
+                current.map((song) => (song.id === row.id ? songToEntry(row) : song)),
+              );
+              setSelectedSong(songToEntry(row));
+              setScreen("detail");
+              setNotice("曲情報を保存しました");
             }}
           />
         )}
@@ -322,10 +366,8 @@ export function RhythmHub({
               setProfile(next);
               setNotice("プロフィールを保存しました");
             }}
-            onPlay={(song) => {
-              setSelectedSong(song);
-              setScreen("play");
-            }}
+            onPlay={selectSong}
+            onEdit={editSong}
           />
         )}
         {screen === "upload" && user && (
@@ -543,7 +585,7 @@ function SongCard({ song, onPlay }: { song: SongEntry; onPlay: () => void }) {
     <button
       type="button"
       onClick={onPlay}
-      disabled={!song.chart}
+      disabled={!song.chart && !song.source}
       className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-200/40 hover:bg-white/[0.08] disabled:opacity-50"
     >
       <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/70 to-cyan-300/50">
@@ -561,29 +603,45 @@ function SongCard({ song, onPlay }: { song: SongEntry; onPlay: () => void }) {
 function SelectScreen({
   songs,
   onBack,
-  onPlay,
+  selectedSongId,
+  explicitStyles,
+  onSelect,
+  onStyleChange,
+  onStart,
+  onEdit,
+  userId,
 }: {
   songs: SongEntry[];
   onBack: () => void;
-  onPlay: (song: SongEntry) => void;
+  selectedSongId?: string | undefined;
+  explicitStyles: Record<string, PlayStyleId>;
+  onSelect: (song: SongEntry) => void;
+  onStyleChange: (id: string, style: PlayStyleId) => void;
+  onStart: (song: SongEntry, style: PlayStyleId) => Promise<void>;
+  onEdit: (song: SongRow) => void;
+  userId: string | null;
 }) {
-  const [selectedId, setSelectedId] = useState(songs[0]?.id ?? "");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [difficulty, setDifficulty] = useState("all");
   const difficulties = Array.from(
     new Set(
-      songs.flatMap((song) => (song.chart?.difficultyName ? [song.chart.difficultyName] : [])),
+      songs.flatMap((song) =>
+        [song.chart?.difficultyName ?? song.source?.difficulty_name].filter(
+          (name): name is string => Boolean(name),
+        ),
+      ),
     ),
   );
   const filteredSongs = songs.filter((song) => {
     const text = `${song.title} ${song.artist}`.toLowerCase();
     return (
       text.includes(query.trim().toLowerCase()) &&
-      (difficulty === "all" || song.chart?.difficultyName === difficulty)
+      (difficulty === "all" ||
+        (song.chart?.difficultyName ?? song.source?.difficulty_name) === difficulty)
     );
   });
-  const selected = songs.find((song) => song.id === selectedId) ?? filteredSongs[0] ?? songs[0];
+  const selected = songs.find((song) => song.id === selectedSongId) ?? filteredSongs[0] ?? songs[0];
   return (
     <main className="relative flex-1 px-4 pb-28 md:px-8">
       <button
@@ -596,43 +654,25 @@ function SelectScreen({
       </button>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <PageHeading title="曲を探して遊ぶ" eyebrow="MUSIC SELECT" onBack={onBack} />
-      <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-3xl border border-cyan-200/20 bg-gradient-to-br from-cyan-200/10 to-violet-400/10 p-6">
-          <div className="flex aspect-square items-center justify-center rounded-2xl bg-black/20">
-            <Music2 className="size-20 text-cyan-200/70" />
-          </div>
+      <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="min-w-0">
           {selected && (
-            <>
-              <h2 className="mt-5 text-2xl font-bold">{selected.title}</h2>
-              <p className="mt-1 text-white/50">{selected.artist}</p>
-              {selected.chart && (
-                <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-black/20 p-2">
-                    <dt className="text-[10px] text-white/35">難易度</dt>
-                    <dd className="mt-1 text-xs text-cyan-100">{selected.chart.difficultyName}</dd>
-                  </div>
-                  <div className="rounded-xl bg-black/20 p-2">
-                    <dt className="text-[10px] text-white/35">BPM</dt>
-                    <dd className="mt-1 text-xs text-cyan-100">{selected.chart.bpm}</dd>
-                  </div>
-                  <div className="rounded-xl bg-black/20 p-2">
-                    <dt className="text-[10px] text-white/35">NOTES</dt>
-                    <dd className="mt-1 text-xs text-cyan-100">{selected.chart.notes.length}</dd>
-                  </div>
-                </dl>
-              )}
-              <button
-                type="button"
-                disabled={!selected.chart}
-                onClick={() => selected.chart && onPlay(selected)}
-                className="mt-6 w-full rounded-full bg-cyan-200 py-3 text-sm font-bold text-[#0b101a] disabled:opacity-40"
-              >
-                PLAY
-              </button>
-            </>
+            <SongDetail
+              explicitSelection={selectedSongId === selected.id}
+              key={selected.id}
+              song={selected}
+              explicitStyle={explicitStyles[selected.id]}
+              onStyleChange={(style) => onStyleChange(selected.id, style)}
+              onStart={(style) => onStart(selected, style)}
+              onEdit={
+                selected.source?.user_id === userId && selected.source
+                  ? () => onEdit(selected.source!)
+                  : undefined
+              }
+            />
           )}
         </div>
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <div className="mb-3 flex gap-2">
             <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3">
               <Search className="size-4 text-white/35" />
@@ -669,7 +709,7 @@ function SelectScreen({
             <button
               type="button"
               key={song.id}
-              onClick={() => setSelectedId(song.id)}
+              onClick={() => onSelect(song)}
               className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left ${song.id === selected?.id ? "border-cyan-200/50 bg-cyan-200/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.07]"}`}
             >
               <span className="flex size-10 items-center justify-center rounded-xl bg-violet-400/20 text-cyan-100">
@@ -679,7 +719,9 @@ function SelectScreen({
                 <span className="block truncate font-semibold">{song.title}</span>
                 <span className="block truncate text-xs text-white/45">{song.artist}</span>
               </span>
-              <span className="text-[10px] text-white/35">{song.chart ? "PLAY" : "準備中"}</span>
+              <span className="text-[10px] text-white/35">
+                {song.chart || song.source ? "詳細" : "準備中"}
+              </span>
             </button>
           ))}
         </div>
@@ -945,6 +987,7 @@ function ProfileScreen({
   onBack,
   onSaved,
   onPlay,
+  onEdit,
 }: {
   user: User;
   profile: Profile | null;
@@ -952,6 +995,7 @@ function ProfileScreen({
   onBack: () => void;
   onSaved: (profile: Profile) => void;
   onPlay: (song: SongEntry) => void;
+  onEdit: (song: SongRow) => void;
 }) {
   const [username, setUsername] = useState(profile?.username ?? "");
   const [display, setDisplay] = useState(profile?.display_name ?? "");
@@ -1106,33 +1150,22 @@ function ProfileScreen({
                       {song.is_published ? "公開中" : "下書き"} · {song.note_count} notes
                     </p>
                   </div>
-                  {song.is_published && song.audio_path && song.chart_path && (
+                  <div className="flex flex-col gap-1">
                     <button
                       type="button"
-                      onClick={async () => {
-                        const [audio, chartFile] = await Promise.all([
-                          supabase.storage.from(BUCKET).createSignedUrl(song.audio_path!, 3600),
-                          supabase.storage.from(BUCKET).download(song.chart_path!),
-                        ]);
-                        if (audio.data && chartFile.data) {
-                          const parsed = parseChartByType(
-                            await chartFile.data.text(),
-                            song.chart_type,
-                            song.fnf_side,
-                          );
-                          onPlay({
-                            id: song.id,
-                            title: song.title,
-                            artist: song.artist,
-                            chart: toChart(song, parsed, audio.data.signedUrl),
-                          });
-                        }
-                      }}
-                      className="rounded-lg p-2 text-cyan-200 hover:bg-white/10"
+                      onClick={() => onPlay(songToEntry(song))}
+                      className="min-h-11 rounded-lg px-3 text-cyan-200 hover:bg-white/10"
                     >
                       PLAY
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => onEdit(song)}
+                      className="min-h-11 rounded-lg px-3 text-xs text-white/70 hover:bg-white/10"
+                    >
+                      譜面を編集
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1158,6 +1191,29 @@ function UploadScreen({
   const [artist, setArtist] = useState("");
   const [charter, setCharter] = useState("");
   const [difficulty, setDifficulty] = useState("NORMAL");
+  const [metadataAvailable, setMetadataAvailable] = useState<boolean | null>(null);
+  const [metadataError, setMetadataError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    void supabase
+      .from("songs")
+      .select("metadata_version")
+      .limit(0)
+      .then(({ error }) => {
+        if (cancelled) return;
+        if (error && error.code !== "42703" && error.code !== "PGRST204") {
+          setMetadataError("投稿機能を確認できませんでした。時間をおいて開き直してください。");
+          return;
+        }
+        setMetadataAvailable(!error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const [extraMetadata, setExtraMetadata] = useState<
+    Pick<SongMetadataForm, "description" | "recommendedPlayStyle" | "previewStartMs">
+  >({ description: "", recommendedPlayStyle: null, previewStartMs: null });
   const [audio, setAudio] = useState<File | null>(null);
   const [chart, setChart] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
@@ -1168,6 +1224,8 @@ function UploadScreen({
   const [chartType, setChartType] = useState<ChartType>("mania");
   const [side, setSide] = useState<FnfSide>("right");
   const [sides, setSides] = useState<Record<FnfSide, number> | null>(null);
+  const [rightsConfirmed, setRightsConfirmed] = useState(false);
+  const [previewRequested, setPreviewRequested] = useState(false);
   const [official, setOfficial] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminCode, setAdminCode] = useState("");
@@ -1242,15 +1300,16 @@ function UploadScreen({
   };
   const upload = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!title.trim() || !audio || !chart) {
-      onError("曲名・音源・譜面は必須です");
+    if (metadataAvailable === null || metadataError) return;
+    if (!title.trim() || !audio || !chart || !rightsConfirmed) {
+      onError("曲名・音源・譜面と配信権利の確認が必要です");
       return;
     }
     setBusy(true);
     try {
       const parsed = parseChartByType(await chart.text(), chartType, side);
       const songId = crypto.randomUUID();
-      const candidates: [string, File | null][] = [
+      const candidates: [UploadFieldName, File | null][] = [
         ["audio_path", audio],
         ["chart_path", chart],
         ["cover_path", cover],
@@ -1259,7 +1318,7 @@ function UploadScreen({
           ? ([
               ["player_image_path", player],
               ["opponent_image_path", opponent],
-            ] as [string, File | null][])
+            ] as [UploadFieldName, File | null][])
           : []),
       ];
       onUploaded({
@@ -1268,7 +1327,7 @@ function UploadScreen({
         title: title.trim(),
         subtitle: artist.trim(),
         cover,
-        files: candidates.filter((c): c is [string, File] => !!c[1]),
+        files: candidates.filter((c): c is [UploadFieldName, File] => !!c[1]),
         row: {
           id: songId,
           user_id: user.id,
@@ -1276,6 +1335,15 @@ function UploadScreen({
           artist: artist.trim(),
           chart_author: charter.trim(),
           difficulty_name: difficulty.trim() || "NORMAL",
+          ...(metadataAvailable
+            ? {
+                rights_confirmed: rightsConfirmed,
+                preview_requested: previewRequested,
+                description: extraMetadata.description,
+                recommended_play_style: extraMetadata.recommendedPlayStyle,
+                preview_start_ms: null,
+              }
+            : {}),
           bpm: parsed.bpm,
           offset_sec: parsed.offset,
           lane_count: parsed.laneCount,
@@ -1361,45 +1429,38 @@ function UploadScreen({
               </div>
             </div>
           )}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="label sm:col-span-2">
-              曲名
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="field"
-                placeholder="例: Neon Horizon"
-              />
-            </label>
-            <label className="label">
-              楽曲作成者
-              <input
-                value={artist}
-                onChange={(e) => setArtist(e.target.value)}
-                className="field"
-                placeholder="曲を作った人"
-              />
-            </label>
-            <label className="label">
-              譜面作成者
-              <input
-                value={charter}
-                onChange={(e) => setCharter(e.target.value)}
-                className="field"
-                placeholder="譜面を作った人"
-              />
-            </label>
-            <label className="label">
-              難易度名
-              <input
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                className="field"
-                placeholder="NORMAL"
-              />
-            </label>
-          </div>
+          {metadataAvailable === false && (
+            <p className="mb-4 text-xs text-white/60">
+              説明・おすすめスタイル・試聴希望は準備中です。通常の曲投稿は利用できます。
+            </p>
+          )}
+          {metadataError && (
+            <p role="alert" className="mb-4 text-sm text-rose-200">
+              {metadataError}
+            </p>
+          )}
+          <SongMetadataFields
+            extendedEditable={metadataAvailable === true}
+            previewEditable={false}
+            value={{
+              title,
+              artist,
+              chartAuthor: charter,
+              difficultyName: difficulty,
+              ...extraMetadata,
+            }}
+            onChange={(value) => {
+              setTitle(value.title);
+              setArtist(value.artist);
+              setCharter(value.chartAuthor);
+              setDifficulty(value.difficultyName);
+              setExtraMetadata({
+                description: value.description,
+                recommendedPlayStyle: value.recommendedPlayStyle,
+                previewStartMs: value.previewStartMs,
+              });
+            }}
+          />
           <div className="mt-6 space-y-3">
             <UploadField
               icon={<AudioLines className="size-5" />}
@@ -1504,12 +1565,30 @@ function UploadScreen({
               </p>
             )}
           </div>
+          <label className="mt-4 flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={rightsConfirmed}
+              onChange={(e) => setRightsConfirmed(e.target.checked)}
+              required
+            />
+            音源・譜面・画像を配信する権利を確認しました
+          </label>
+          <label className="flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              disabled={metadataAvailable !== true}
+              checked={previewRequested}
+              onChange={(e) => setPreviewRequested(e.target.checked)}
+            />
+            試聴配信を希望します（対象音源のRevision作成時に再確認）
+          </label>
           <div className="mt-4 rounded-xl bg-cyan-200/10 p-4 text-xs leading-5 text-cyan-100/80">
             アップロードした曲はまず下書きとして保存されます。次の公開画面で内容を確認してから公開できます。
           </div>
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || metadataAvailable === null || Boolean(metadataError)}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-200 py-3 text-sm font-bold text-[#0b101a] disabled:opacity-50"
           >
             <Upload className="size-4" />

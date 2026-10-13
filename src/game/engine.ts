@@ -1,3 +1,5 @@
+import { acceptsCandidate, TIMING_EPSILON } from "./judgementPolicy";
+import type { JudgementPolicyId } from "./judgementPolicy";
 import type {
   Chart,
   Judgement,
@@ -36,10 +38,10 @@ export function createPlayState(): PlayState {
 
 export function judgeDelta(delta: number, w: JudgementWindows): Judgement | null {
   const d = Math.abs(delta);
-  if (d <= w.perfect) return "PERFECT";
-  if (d <= w.great) return "GREAT";
-  if (d <= w.good) return "GOOD";
-  if (d <= w.miss) return "MISS";
+  if (d <= w.perfect + TIMING_EPSILON) return "PERFECT";
+  if (d <= w.great + TIMING_EPSILON) return "GREAT";
+  if (d <= w.good + TIMING_EPSILON) return "GOOD";
+  if (d <= w.miss + TIMING_EPSILON) return "MISS";
   return null;
 }
 
@@ -52,6 +54,7 @@ export function findHittableNote(
   lane: number,
   time: number,
   w: JudgementWindows,
+  policy: JudgementPolicyId = "pulse-mania-v1",
 ): RuntimeNote | null {
   // Binary-search the first note inside the window so dense charts
   // (tens of thousands of notes) stay O(log n + hits) per input.
@@ -59,15 +62,16 @@ export function findHittableNote(
   let hi = notes.length;
   while (lo < hi) {
     const mid = (lo + hi) >> 1;
-    if (notes[mid]!.time < time - w.miss) lo = mid + 1;
+    if (notes[mid]!.time < time - w.miss - TIMING_EPSILON) lo = mid + 1;
     else hi = mid;
   }
   let best: RuntimeNote | null = null;
   let bestDelta = Infinity;
   for (let i = lo; i < notes.length; i++) {
     const note = notes[i]!;
-    if (note.time - time > w.miss) break; // notes are time-sorted
+    if (note.time - time > w.miss + TIMING_EPSILON) break; // notes are time-sorted
     if (note.judged || note.lane !== lane) continue;
+    if (!acceptsCandidate(time - note.time, w, policy)) continue;
     const d = Math.abs(note.time - time);
     if (d < bestDelta) {
       best = note;

@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { ArrowUpRight, Menu } from "lucide-react";
-import type { Chart } from "@/game/types";
+import type { SongRow } from "@/lib/chartRepository";
+import type { Chart, PlayStyleId } from "@/game/types";
 
 export interface SongEntry {
   id: string;
   title: string;
   artist: string;
   chart?: Chart;
+  source?: SongRow;
+  recommendedPlayStyle?: PlayStyleId | null;
+  description?: string;
+  previewStartMs?: number | null;
+  previewAllowed?: boolean;
 }
 
 /** Orange skewed button used for Select / Back, matching the reference UI. */
@@ -26,8 +32,7 @@ function SlantButton({
       disabled={disabled}
       className="group relative -skew-x-12 border border-orange-200/40 px-10 py-2.5 shadow-lg transition-transform active:scale-95 disabled:opacity-50"
       style={{
-        background:
-          "linear-gradient(180deg, oklch(0.72 0.19 55), oklch(0.5 0.16 45))",
+        background: "linear-gradient(180deg, oklch(0.72 0.19 55), oklch(0.5 0.16 45))",
       }}
     >
       <span className="block skew-x-12 font-display text-lg font-bold tracking-widest text-white drop-shadow">
@@ -96,16 +101,10 @@ export function MusicSelect({
         {/* left: selected song details + Select */}
         <div className="flex w-[42%] flex-col justify-center gap-4 p-5 sm:p-8">
           <div className="rounded-sm bg-black/35 p-4 backdrop-blur-[2px]">
-            <h2 className="text-xl font-bold text-white italic sm:text-2xl">
-              {selected.title}
-            </h2>
-            <p className="mt-1 text-sm text-white/70 italic">
-              {selected.artist}
-            </p>
+            <h2 className="text-xl font-bold text-white italic sm:text-2xl">{selected.title}</h2>
+            <p className="mt-1 text-sm text-white/70 italic">{selected.artist}</p>
             {!selected.chart && (
-              <p className="mt-3 text-xs tracking-widest text-orange-200">
-                COMING SOON
-              </p>
+              <p className="mt-3 text-xs tracking-widest text-orange-200">COMING SOON</p>
             )}
           </div>
           <div className="mt-6">
@@ -134,10 +133,7 @@ export function MusicSelect({
                     }`}
                   >
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-violet-600">
-                      <ArrowUpRight
-                        className="size-5 text-white"
-                        aria-hidden="true"
-                      />
+                      <ArrowUpRight className="size-5 text-white" aria-hidden="true" />
                     </span>
                     <span className="truncate text-base font-bold text-white italic sm:text-lg">
                       {song.artist}
