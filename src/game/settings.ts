@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import type { PlayStyleId } from "./types";
 
 export type ScrollDirectionSetting = "mode" | "down" | "up";
 export type NoteShapeSetting = "mode" | "bar" | "circle" | "arrow";
 export type SettingsPreset = "simple" | "readable" | "effects" | "custom";
 
 export interface GameSettings {
-  version: 2;
+  version: 3;
+  autoPreview: boolean;
+  previewVolume: number;
+  lastPlayedStyle: PlayStyleId | null;
+  maniaSkin: "standard" | "classic";
   showTouchBorders: boolean;
   middleScroll: boolean;
   scrollSpeed: number;
@@ -44,7 +49,11 @@ export interface GameSettings {
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  version: 2,
+  version: 3,
+  autoPreview: true,
+  previewVolume: 0.5,
+  lastPlayedStyle: null,
+  maniaSkin: "standard",
   showTouchBorders: false,
   middleScroll: false,
   scrollSpeed: 1,
@@ -97,6 +106,14 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     values.includes(v as T) ? (v as T) : fallback;
   return {
     ...DEFAULT_SETTINGS,
+    autoPreview: bool(s.autoPreview, true),
+    previewVolume: clamp(s.previewVolume, 0, 1, 0.5),
+    lastPlayedStyle:
+      s.lastPlayedStyle === "mania" || s.lastPlayedStyle === "fnf" ? s.lastPlayedStyle : null,
+    maniaSkin:
+      s.maniaSkin === "classic" || ("modeId" in s && s.modeId === "classic")
+        ? "classic"
+        : "standard",
     showTouchBorders: bool(s.showTouchBorders, false),
     middleScroll: bool(s.middleScroll, false),
     scrollSpeed: clamp(s.scrollSpeed, 0.5, 4, 1),
@@ -172,27 +189,36 @@ export function applyPreset(
   };
 }
 
-export function useGameSettings() {
-  const [settings, setSettingsState] = useState(DEFAULT_SETTINGS);
-  const [loaded, setLoaded] = useState(false);
-  const [saveError, setSaveError] = useState(false);
-  useEffect(() => {
+/** A single hydrated store prevents menu, preview and gameplay from overwriting one another. */
+export function createGameSettingsStore(storage?: Pick<Storage, "getItem" | "setItem">) {
+  let snapshot = { settings: DEFAULT_SETTINGS, loaded: false, saveError: false };
+  const listeners = new Set<() => void>();
+  const emit = () => listeners.forEach((listener) => listener());
+  const read = (key: string) => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY),
-        device = localStorage.getItem(DEVICE_STORAGE_KEY);
-      setSettingsState(
-        sanitizeSettings(raw ? JSON.parse(raw) : {}, device ? JSON.parse(device) : undefined),
-      );
+      const raw = storage?.getItem(key);
+      return raw ? (JSON.parse(raw) as unknown) : undefined;
     } catch {
-      /* corrupt/unavailable storage uses safe defaults */
+      return undefined;
     }
-    setLoaded(true);
-  }, []);
-  useEffect(() => {
-    if (!loaded) return;
+  };
+  const hydrate = () => {
+    if (snapshot.loaded) return;
+    snapshot = {
+      settings: sanitizeSettings(read(STORAGE_KEY), read(DEVICE_STORAGE_KEY)),
+      loaded: true,
+      saveError: false,
+    };
+    emit();
+  };
+  const setSettings: React.Dispatch<React.SetStateAction<GameSettings>> = (next) => {
+    hydrate();
+    const value = typeof next === "function" ? next(snapshot.settings) : next;
+    const settings = sanitizeSettings(value, value);
+    let saveError = false;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      localStorage.setItem(
+      storage?.setItem(STORAGE_KEY, JSON.stringify(settings));
+      storage?.setItem(
         DEVICE_STORAGE_KEY,
         JSON.stringify({
           version: 2,
@@ -203,15 +229,53 @@ export function useGameSettings() {
           touchAreaHeight: settings.touchAreaHeight,
         }),
       );
-      setSaveError(false);
+      if (!storage) saveError = true;
     } catch {
-      setSaveError(true);
+      saveError = true;
     }
-  }, [settings, loaded]);
-  const setSettings: React.Dispatch<React.SetStateAction<GameSettings>> = (next) =>
-    setSettingsState((current) => {
-      const value = typeof next === "function" ? next(current) : next;
-      return sanitizeSettings(value, value);
-    });
-  return { settings, setSettings, saveError, loaded };
+    snapshot = { settings, loaded: true, saveError };
+    emit();
+  };
+  return {
+    hydrate,
+    setSettings,
+    getSnapshot: () => snapshot,
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+
+const serverSnapshot = { settings: DEFAULT_SETTINGS, loaded: false, saveError: false };
+let browserStore: ReturnType<typeof createGameSettingsStore> | undefined;
+const getStore = () => {
+  if (typeof window === "undefined") return undefined;
+  if (!browserStore) {
+    let storage: Storage | undefined;
+    try {
+      storage = window.localStorage;
+    } catch {
+      /* Storage can be disabled. */
+    }
+    browserStore = createGameSettingsStore(storage);
+  }
+  return browserStore;
+};
+const serverSubscribe = () => () => {};
+const serverGetSnapshot = () => serverSnapshot;
+
+export function useGameSettings() {
+  const store = getStore();
+  const snapshot = useSyncExternalStore(
+    store?.subscribe ?? serverSubscribe,
+    store?.getSnapshot ?? serverGetSnapshot,
+    serverGetSnapshot,
+  );
+  useEffect(() => {
+    store?.hydrate();
+  }, [store]);
+  return { ...snapshot, setSettings: store?.setSettings ?? (() => {}) };
 }

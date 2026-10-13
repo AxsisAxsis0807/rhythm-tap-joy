@@ -1,203 +1,206 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { InputLedger } from "./input";
 import { AudioClock } from "./audio";
-import {
-  DEFAULT_KEY_MAP,
-  DEFAULT_SCORE_RULES,
-  DEFAULT_SCROLL_TIME,
-  DEFAULT_WINDOWS,
-  START_DELAY,
-} from "./config";
-import {
-  applyJudgement,
-  buildRuntimeNotes,
-  createPlayState,
-  findHittableNote,
-  judgeDelta,
-} from "./engine";
-import type {
-  Chart,
-  CompletedPlay,
-  JudgementWindows,
-  PlayState,
-  RuntimeNote,
-  ScoreRules,
-} from "./types";
+import { getAudioSession } from "./audioSession";
+import { DEFAULT_KEY_MAP, DEFAULT_SCROLL_TIME, START_DELAY } from "./config";
+import { GameplayCore } from "./gameplayCore";
+import { ReplayRecorder } from "./replay";
+import type { GameplayEventInput, ReplayEvidence } from "./replay";
+import { createRunConfiguration } from "./runConfiguration";
+import type { RunConfiguration, RunOptions } from "./runConfiguration";
+import type { Chart, CompletedPlay } from "./types";
 
 export type GameStatus = "idle" | "loading" | "ready" | "playing" | "paused" | "finished";
-
-export interface RhythmGameOptions {
-  windows?: JudgementWindows;
-  scoreRules?: ScoreRules;
+export interface RhythmGameOptions extends RunOptions {
   keyMap?: string[][];
   scrollTime?: number;
-  timingOffsetMs?: number;
   volume?: number;
   hitSoundVolume?: number;
-  competitive?: boolean;
 }
 
 export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
-  const windows = options.windows ?? DEFAULT_WINDOWS;
-  const scoreRules = options.scoreRules ?? DEFAULT_SCORE_RULES;
   const keyMap = options.keyMap ?? DEFAULT_KEY_MAP;
   const scrollTime = options.scrollTime ?? DEFAULT_SCROLL_TIME;
-  const timingOffset = (options.timingOffsetMs ?? 0) / 1000;
-
-  const clockRef = useRef<AudioClock | null>(null);
-  const notesRef = useRef<RuntimeNote[]>(buildRuntimeNotes(chart));
-  const playRef = useRef<PlayState>(createPlayState());
-  const timeRef = useRef(0);
   const [inputs] = useState(() => new InputLedger());
-  const activeLanesRef = useRef(inputs.activeLanes);
-  const heldNotesRef = useRef<Map<number, RuntimeNote>>(new Map());
+  const clockRef = useRef<AudioClock | null>(null);
+  const coreRef = useRef<GameplayCore | null>(null);
+  if (!coreRef.current) coreRef.current = new GameplayCore(chart, createRunConfiguration(chart));
+  const replayRef = useRef<ReplayRecorder | null>(null);
+  const leaseRef = useRef<ReturnType<ReturnType<typeof getAudioSession>["beginGameplay"]> | null>(
+    null,
+  );
+  const sourceIdsRef = useRef(new Map<string, number>());
+  const activeSourceIdsRef = useRef(new Map<string, number>());
+  const sourceSequenceRef = useRef(0);
+  const timeRef = useRef(0);
   const pausedAtRef = useRef(0);
-  /** Index of the first possibly-unjudged note; keeps auto-miss O(1) per tick. */
-  const missCursorRef = useRef(0);
-
-  const runIdRef = useRef<string | null>(null);
+  const startedAtRef = useRef(0);
   const startingRef = useRef(false);
+  const [runConfiguration, setRunConfiguration] = useState<RunConfiguration | null>(null);
   const [completedPlay, setCompletedPlay] = useState<CompletedPlay | null>(null);
+  const [completedReplay, setCompletedReplay] = useState<ReplayEvidence | null>(null);
   const [status, setStatus] = useState<GameStatus>("idle");
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [, setFrame] = useState(0);
-
   const statusRef = useRef(status);
   const changeStatus = useCallback((next: GameStatus) => {
     statusRef.current = next;
     setStatus(next);
   }, []);
   const keySignature = JSON.stringify(keyMap);
-
-  /** lane index by key code, rebuilt when the mapping changes. */
   const keyToLane = useMemo(() => {
     const map = new Map<string, number>();
     (JSON.parse(keySignature) as string[][]).forEach((codes, lane) =>
-      codes.forEach((c) => map.set(c, lane)),
+      codes.forEach((code) => map.set(code, lane)),
     );
     return map;
   }, [keySignature]);
 
   useEffect(() => {
-    const clock = new AudioClock();
-    const heldNotes = heldNotesRef.current;
+    const activeSources = activeSourceIdsRef.current;
+    const clock = new AudioClock(() => getAudioSession().getContext());
     clockRef.current = clock;
+    setLoadError(null);
     changeStatus("loading");
     clock
       .load(chart.audioUrl)
       .then(() => {
         if (clockRef.current === clock) changeStatus("ready");
       })
-      .catch(() => {
-        if (clockRef.current === clock) changeStatus("idle");
+      .catch((error: unknown) => {
+        if (clockRef.current === clock) {
+          setLoadError(error instanceof Error ? error.message : "音源を読み込めませんでした");
+          changeStatus("idle");
+        }
       });
     return () => {
       statusRef.current = "idle";
       inputs.clear();
-      heldNotes.forEach((n) => {
-        n.holding = false;
-      });
-      heldNotes.clear();
+      activeSources.clear();
+      leaseRef.current?.release();
+      leaseRef.current = null;
       clock.dispose();
-      clockRef.current = null;
+      if (clockRef.current === clock) clockRef.current = null;
     };
-  }, [chart.audioUrl, inputs, changeStatus]);
+  }, [chart.audioUrl, chart.id, loadAttempt, inputs, changeStatus]);
 
   useEffect(() => {
-    (
-      clockRef.current as (AudioClock & { setVolume?: (value: number) => void }) | null
-    )?.setVolume?.(options.volume ?? 1);
-  }, [options.volume]);
+    clockRef.current?.setVolume?.(options.volume ?? 1);
+  }, [options.volume, status]);
+
+  const dispatch = useCallback((event: GameplayEventInput) => {
+    const recorder = replayRef.current;
+    if (!recorder) return undefined;
+    const outcome = coreRef.current?.process(recorder.append(event));
+    // The replay is now ineligible; retain only currently active sources for gameplay.
+    if (!recorder.recording) sourceIdsRef.current.clear();
+    return outcome;
+  }, []);
+  const eventTime = useCallback(
+    (songTime: number, clockTime = clockRef.current?.now() ?? timeRef.current) => ({
+      songTime,
+      clockTime,
+      elapsedMs: Math.max(0, performance.now() - startedAtRef.current),
+    }),
+    [],
+  );
 
   const clearInputs = useCallback(() => {
     inputs.clear();
-    heldNotesRef.current.forEach((held) => {
-      held.holding = false;
-      held.judgement = "MISS";
-      applyJudgement(playRef.current, "MISS", 0, scoreRules, timeRef.current);
-    });
-    heldNotesRef.current.clear();
-  }, [inputs, scoreRules]);
-
-  const start = useCallback(async () => {
-    const clock = clockRef.current;
-    if (!clock || startingRef.current) return;
-    startingRef.current = true;
-    try {
-      await clock.start(START_DELAY);
-      if (clockRef.current !== clock) return;
-      notesRef.current = buildRuntimeNotes(chart);
-      playRef.current = createPlayState();
-      heldNotesRef.current.forEach((note) => {
-        note.holding = false;
-      });
-      heldNotesRef.current.clear();
-      clearInputs();
-      missCursorRef.current = 0;
-      runIdRef.current = crypto.randomUUID();
-      setCompletedPlay(null);
-      timeRef.current = -START_DELAY;
-      statusRef.current = "playing";
-      changeStatus("playing");
-    } finally {
-      startingRef.current = false;
+    activeSourceIdsRef.current.clear();
+    if (statusRef.current === "playing" || statusRef.current === "paused") {
+      dispatch({ type: "clear", ...eventTime(timeRef.current) });
     }
-  }, [chart, clearInputs, changeStatus]);
+  }, [inputs, dispatch, eventTime]);
 
-  /** Single entry point for every input source (touch, keyboard, future pads). */
-  const hitLane = useCallback(
-    (lane: number, stamp?: number) => {
-      if (statusRef.current !== "playing") return "inactive";
-      // Read the clock at the exact moment of input instead of the last frame.
-      const time = (clockRef.current?.nowAt(stamp) ?? timeRef.current) + timingOffset;
-      const note = findHittableNote(notesRef.current, lane, time, windows);
-      if (!note) return "outside-window";
-      const delta = time - note.time;
-      const judgement = judgeDelta(delta, windows);
-      if (!judgement) return "outside-window";
-      note.judged = true;
-      note.judgement = judgement;
-      if (note.kind === "hold" && judgement !== "MISS") {
-        note.holding = true;
-        heldNotesRef.current.set(lane, note);
+  const start = useCallback(
+    async (runId?: string, preparedConfiguration?: RunConfiguration): Promise<boolean> => {
+      const clock = clockRef.current;
+      if (
+        !clock ||
+        startingRef.current ||
+        statusRef.current === "loading" ||
+        statusRef.current === "idle"
+      )
+        return false;
+      // Snapshot before the first await: settings/metadata changes during audio unlock cannot rewrite START.
+      const configuration = preparedConfiguration ?? createRunConfiguration(chart, options);
+      const core = new GameplayCore(chart, configuration);
+      const lease = getAudioSession().beginGameplay();
+      leaseRef.current?.release();
+      leaseRef.current = lease;
+      startingRef.current = true;
+      try {
+        await lease.ready;
+        if (!lease.isCurrent() || clockRef.current !== clock) return false;
+        await clock.start(START_DELAY, 0, configuration.rate);
+        if (!lease.isCurrent() || clockRef.current !== clock) return false;
+        inputs.clear();
+        sourceIdsRef.current.clear();
+        activeSourceIdsRef.current.clear();
+        sourceSequenceRef.current = 0;
+        coreRef.current = core;
+        replayRef.current = new ReplayRecorder(runId ?? crypto.randomUUID(), configuration);
+        startedAtRef.current = performance.now();
+        setRunConfiguration(configuration);
+        setCompletedPlay(null);
+        setCompletedReplay(null);
+        setLoadError(null);
+        timeRef.current = -START_DELAY;
+        changeStatus("playing");
+        return true;
+      } catch (error) {
+        lease.release();
+        setLoadError(error instanceof Error ? error.message : "再生を開始できませんでした");
+        throw error;
+      } finally {
+        startingRef.current = false;
+        if (clockRef.current !== clock || !lease.isCurrent()) lease.release();
       }
-      applyJudgement(playRef.current, judgement, delta * 1000, scoreRules, time);
-      if ((options.hitSoundVolume ?? 0) > 0) {
-        (
-          clockRef.current as (AudioClock & { playHit?: (value: number) => void }) | null
-        )?.playHit?.(options.hitSoundVolume ?? 0);
-      }
-      return judgement;
     },
-    [windows, scoreRules, timingOffset, options.hitSoundVolume],
+    [chart, options, inputs, changeStatus],
   );
 
   const pressSource = useCallback(
     (source: string, lane: number, stamp?: number) => {
       if (statusRef.current !== "playing") return;
       const bar = inputs.press(source, lane, stamp);
-      if (bar) bar.outcome = hitLane(lane, bar.start);
+      if (!bar) return;
+      const token = sourceIdsRef.current.get(source) ?? ++sourceSequenceRef.current;
+      if (replayRef.current?.recording) sourceIdsRef.current.set(source, token);
+      activeSourceIdsRef.current.set(source, token);
+      const songTime = clockRef.current?.nowAt(bar.start) ?? timeRef.current;
+      const outcome = dispatch({ type: "press", source: token, lane, ...eventTime(songTime) });
+      if (outcome) bar.outcome = outcome;
+      if (
+        outcome &&
+        ["PERFECT", "GREAT", "GOOD", "MISS"].includes(outcome) &&
+        (options.hitSoundVolume ?? 0) > 0
+      ) {
+        clockRef.current?.playHit?.(options.hitSoundVolume ?? 0);
+      }
     },
-    [hitLane, inputs],
+    [inputs, dispatch, eventTime, options.hitSoundVolume],
   );
 
   const releaseSource = useCallback(
     (source: string, stamp?: number, cancelled = false) => {
       const bar = inputs.release(source, stamp, cancelled);
-      if (!bar || inputs.activeLanes.has(bar.lane)) return;
-      const held = heldNotesRef.current.get(bar.lane);
-      if (!held) return;
-      const time = (clockRef.current?.nowAt(bar.end) ?? timeRef.current) + timingOffset;
-      if (cancelled || (held.endTime !== undefined && time < held.endTime - windows.good)) {
-        held.judgement = "MISS";
-        applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
-      }
-      held.holding = false;
-      heldNotesRef.current.delete(bar.lane);
+      const token = activeSourceIdsRef.current.get(source);
+      if (!bar || token === undefined) return;
+      activeSourceIdsRef.current.delete(source);
+      const songTime = clockRef.current?.nowAt(bar.end) ?? timeRef.current;
+      dispatch({
+        type: cancelled ? "cancel" : "release",
+        source: token,
+        lane: bar.lane,
+        ...eventTime(songTime),
+      });
     },
-    [inputs, scoreRules, timingOffset, windows.good],
+    [inputs, dispatch, eventTime],
   );
 
-  // Main loop: read the audio clock, auto-miss passed notes, redraw.
   useEffect(() => {
     if (status !== "playing") return;
     let raf = 0;
@@ -206,77 +209,57 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       const clock = clockRef.current;
       if (clock) timeRef.current = clock.now();
       const time = timeRef.current;
-      const all = notesRef.current;
-      heldNotesRef.current.forEach((note, lane) => {
-        if (note.endTime !== undefined && time >= note.endTime) {
-          note.holding = false;
-          heldNotesRef.current.delete(lane);
-        }
-      });
-      let cursor = missCursorRef.current;
-      while (cursor < all.length) {
-        const note = all[cursor]!;
-        if (note.judged) {
-          cursor++;
-          continue;
-        }
-        if (time - note.time > windows.miss) {
-          note.judged = true;
-          note.judgement = "MISS";
-          applyJudgement(playRef.current, "MISS", 0, scoreRules, time);
-          cursor++;
-        } else break;
-      }
-      missCursorRef.current = cursor;
-      const last = notesRef.current[notesRef.current.length - 1];
-      // Wait for the entire audio and the last judgement window, including empty charts.
+      dispatch({ type: "advance", ...eventTime(time, time) });
+      const core = coreRef.current!;
+      const last = core.notes[core.notes.length - 1];
       if (time > Math.max(clock?.duration ?? 0, (last?.time ?? 0) + 2.5)) {
-        if (runIdRef.current) {
+        dispatch({ type: "complete", ...eventTime(time, time) });
+        inputs.clear();
+        activeSourceIdsRef.current.clear();
+        const recorder = replayRef.current;
+        if (recorder) {
           setCompletedPlay({
-            id: runIdRef.current,
-            songId: chart.id,
-            play: {
-              ...playRef.current,
-              counts: { ...playRef.current.counts },
-              timingErrorsMs: [...playRef.current.timingErrorsMs],
-            },
-            competitive: options.competitive !== false,
+            id: recorder.runId,
+            songId: recorder.configuration.songId,
+            play: core.snapshotPlay(),
+            competitive: recorder.configuration.competitive,
+            configuration: recorder.configuration,
+            replayStatus: recorder.replayStatus,
           });
+          setCompletedReplay(recorder.snapshot());
         }
-        statusRef.current = "finished";
-        clearInputs();
+        leaseRef.current?.release();
+        leaseRef.current = null;
         changeStatus("finished");
         return;
       }
-      setFrame((f) => f + 1);
+      setFrame((frame) => frame + 1);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [status, windows.miss, scoreRules, chart.id, options.competitive, clearInputs, changeStatus]);
+  }, [status, dispatch, eventTime, inputs, changeStatus]);
 
   const latestInput = useRef({ pressSource, releaseSource });
   latestInput.current = { pressSource, releaseSource };
-
-  // Keyboard input (external keyboard on phones/tablets works the same way).
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.repeat || e.defaultPrevented || statusRef.current !== "playing") return;
-      const lane = keyToLane.get(e.code);
+    if (status !== "playing") return;
+    const down = (event: KeyboardEvent) => {
+      if (event.repeat || event.defaultPrevented || statusRef.current !== "playing") return;
+      const lane = keyToLane.get(event.code);
       if (lane === undefined) return;
-      e.preventDefault();
-      latestInput.current.pressSource(`key:${e.code}`, lane, e.timeStamp);
+      event.preventDefault();
+      latestInput.current.pressSource(`key:${event.code}`, lane, event.timeStamp);
     };
-    const up = (e: KeyboardEvent) => {
-      latestInput.current.releaseSource(`key:${e.code}`, e.timeStamp);
-    };
+    const up = (event: KeyboardEvent) =>
+      latestInput.current.releaseSource(`key:${event.code}`, event.timeStamp);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [keyToLane]);
+  }, [keyToLane, status]);
 
   const pressLane = useCallback(
     (lane: number, source = `touch:lane:${lane}`, stamp?: number) =>
@@ -293,31 +276,32 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
 
   const pause = useCallback(async () => {
     if (statusRef.current !== "playing") return;
-    changeStatus("paused");
-    const clock = clockRef.current as (AudioClock & { pause?: () => Promise<number> }) | null;
     clearInputs();
+    changeStatus("paused");
+    const clock = clockRef.current;
     pausedAtRef.current = clock?.pause ? await clock.pause() : timeRef.current;
     timeRef.current = pausedAtRef.current;
-  }, [clearInputs, changeStatus]);
-
+    dispatch({ type: "pause", ...eventTime(pausedAtRef.current, pausedAtRef.current) });
+  }, [clearInputs, changeStatus, dispatch, eventTime]);
   const resume = useCallback(async () => {
     if (statusRef.current !== "paused" || !clockRef.current || startingRef.current) return;
-    const clock = clockRef.current as AudioClock & {
-      resume?: (position: number, delay?: number) => Promise<void>;
-    };
+    const clock = clockRef.current;
     startingRef.current = true;
     try {
       if (clock.resume) await clock.resume(pausedAtRef.current, 0.75);
-      if (clockRef.current === clock && statusRef.current === "paused") changeStatus("playing");
+      if (clockRef.current === clock && statusRef.current === "paused") {
+        dispatch({ type: "resume", ...eventTime(pausedAtRef.current, clock.now()) });
+        changeStatus("playing");
+      }
     } finally {
       startingRef.current = false;
     }
-  }, [changeStatus]);
+  }, [changeStatus, dispatch, eventTime]);
 
   useEffect(() => {
     const deactivate = () => {
-      clearInputs();
       if (statusRef.current === "playing") void pause();
+      else clearInputs();
     };
     const visibility = () => {
       if (document.hidden) deactivate();
@@ -334,6 +318,10 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     status,
     inputs,
     completedPlay,
+    completedReplay,
+    runConfiguration,
+    loadError,
+    retryLoad: () => setLoadAttempt((attempt) => attempt + 1),
     start,
     pause,
     resume,
@@ -341,11 +329,11 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     pressLane,
     releaseLane,
     scrollTime,
-    windows,
+    windows: coreRef.current.configuration.windows,
     songTime: timeRef.current,
-    notes: notesRef.current,
-    play: playRef.current,
-    activeLanes: activeLanesRef.current,
+    notes: coreRef.current.notes,
+    play: coreRef.current.play,
+    activeLanes: inputs.activeLanes,
     duration: clockRef.current?.duration ?? 0,
   };
 }
