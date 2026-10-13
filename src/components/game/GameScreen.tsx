@@ -1,8 +1,11 @@
+import { usePlaySession } from "@/lib/usePlaySession";
+import { createRunConfiguration } from "@/game/runConfiguration";
+import { getAudioSession } from "@/game/audioSession";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCw, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRhythmGame } from "@/game/useRhythmGame";
-import type { Chart } from "@/game/types";
+import type { Chart, PlayStyleId } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { FnfField } from "./FnfField";
@@ -21,17 +24,24 @@ export function GameScreen({
   userId = null,
   modeId,
   onModeChange,
+  playStyle = modeId === "fnf" ? "fnf" : "mania",
+  autoStart = false,
   onExit,
 }: {
   chart: Chart;
   userId?: string | null;
   modeId: string;
-  onModeChange: (id: string) => void;
+  onModeChange?: (id: string) => void;
+  playStyle?: PlayStyleId;
+  autoStart?: boolean;
   onExit?: () => void;
 }) {
   const { settings, setSettings, saveError } = useGameSettings();
-  const mode = getMode(chart.fnf ? "fnf" : modeId);
+  const mode = getMode(modeId);
+  const fnfDisplay = playStyle === "fnf" && Boolean(chart.fnf);
   const game = useRhythmGame(chart, {
+    playStyle,
+    visualMode: mode.id,
     scrollTime: DEFAULT_SCROLL_TIME / settings.scrollSpeed,
     timingOffsetMs: settings.timingOffsetMs,
     volume: settings.masterVolume * settings.musicVolume,
@@ -54,6 +64,7 @@ export function GameScreen({
     duration,
   } = game;
 
+  const xpSession = usePlaySession(userId, game.completedReplay);
   const runOwner = useRef<string | null>(null);
   const starting = useRef(false);
   const [startError, setStartError] = useState("");
@@ -71,14 +82,35 @@ export function GameScreen({
     const owner = userId;
     setStartError("");
     try {
-      await start();
-      runOwner.current = owner;
+      const unlocking = getAudioSession().unlock();
+      getAudioSession().stopPreview();
+      const configuration = createRunConfiguration(chart, {
+        playStyle,
+        visualMode: mode.id,
+        timingOffsetMs: settings.timingOffsetMs,
+      });
+      await unlocking;
+      const sessionId = await xpSession.prepare(configuration);
+      if (await start(sessionId, configuration)) {
+        runOwner.current = owner;
+        setSettings((current) => ({ ...current, lastPlayedStyle: playStyle }));
+      }
     } catch {
       setStartError("再生を開始できませんでした。もう一度お試しください");
     } finally {
       starting.current = false;
     }
   };
+
+  const didAutoStart = useRef(false);
+  const latestStart = useRef(startPlay);
+  latestStart.current = startPlay;
+  useEffect(() => {
+    if (autoStart && status === "ready" && !didAutoStart.current) {
+      didAutoStart.current = true;
+      void latestStart.current();
+    }
+  }, [autoStart, status]);
 
   const lanes = Array.from({ length: chart.laneCount }, (_, i) => i);
   const judge = settings.judgeLinePct;
@@ -212,7 +244,7 @@ export function GameScreen({
         settings={settings}
         onChange={setSettings}
         onClose={() => setSettingsOpen(false)}
-        fnf={Boolean(chart.fnf)}
+        fnf={fnfDisplay}
         saveError={saveError}
       />
 
@@ -227,9 +259,9 @@ export function GameScreen({
 
       {/* Playfield: a centred column that stays playable in landscape */}
       <div
-        className={`relative flex min-h-0 flex-1 justify-center overflow-hidden ${chart.fnf && settings.inputOverlayEnabled ? `fnf-overlay-${settings.inputOverlayPosition}` : ""}`}
+        className={`relative flex min-h-0 flex-1 justify-center overflow-hidden ${fnfDisplay && settings.inputOverlayEnabled ? `fnf-overlay-${settings.inputOverlayPosition}` : ""}`}
       >
-        {chart.fnf ? (
+        {fnfDisplay ? (
           <FnfField
             chart={chart}
             mode={renderMode}
@@ -370,7 +402,7 @@ export function GameScreen({
             </div>
           </div>
         )}
-        {chart.fnf && (
+        {fnfDisplay && (
           <div className="pointer-events-none absolute inset-x-0 top-[40%] z-20 text-center">
             {play.combo > 1 && (
               <p className="font-display text-4xl tabular-nums text-combo">{play.combo}</p>
@@ -450,11 +482,11 @@ export function GameScreen({
       {(status === "ready" || status === "loading" || status === "idle") && (
         <Overlay>
           <h2 className="font-display text-2xl text-foreground">{chart.title}</h2>
-          {!chart.fnf && <ModePicker value={mode.id} onChange={onModeChange} />}
+          {onModeChange && <ModePicker value={playStyle} onChange={onModeChange} />}
           <p className="text-sm text-muted-foreground">
             4レーンをタップ、または{" "}
             {settings.keyBindings.map((k) => k.replace(/^Key/, "")).join(" / ")}{" "}
-            キーで演奏します。3モードは表示と流れる方向が異なり、判定・スコア規則は共通です。
+            キーで演奏します。スタイルにより早すぎる入力の扱いが異なります。判定幅と得点係数は共通です。
           </p>
           {!isLandscape && (
             <div className="flex flex-col items-center gap-2">
@@ -479,8 +511,16 @@ export function GameScreen({
             onClick={() => void startPlay()}
             className="rounded-full bg-primary px-8 py-3 font-display tracking-widest text-primary-foreground transition-opacity disabled:opacity-40"
           >
-            {status === "ready" ? "START" : "LOADING…"}
+            {status === "ready" ? "START" : game.loadError ? "読込失敗" : "LOADING…"}
           </button>
+          {game.loadError && (
+            <div role="alert" className="text-sm text-rose-200">
+              {game.loadError}
+              <button type="button" onClick={game.retryLoad} className="ml-2 min-h-11 underline">
+                読み込みを再試行
+              </button>
+            </div>
+          )}
           {startError && (
             <p role="alert" className="text-xs text-rose-200">
               {startError}
@@ -549,6 +589,11 @@ export function GameScreen({
               <p className="mt-1 text-center text-[10px] text-white/30">FAST ← 0ms → LATE</p>
             </div>
           )}
+          {xpSession.storageWarning && (
+            <p role="alert" className="text-xs text-amber-200">
+              入力記録を端末に保存できません。再読み込みすると未送信のXP確認データが失われることがあります。
+            </p>
+          )}
           <ResultXpCard userId={runOwner.current} playId={game.completedPlay?.id ?? null} />
           <div
             className="w-full max-w-sm break-words text-xs text-muted-foreground"
@@ -589,7 +634,7 @@ export function GameScreen({
               {startError}
             </p>
           )}
-          {!chart.fnf && <ModePicker value={mode.id} onChange={onModeChange} />}
+          {onModeChange && <ModePicker value={playStyle} onChange={onModeChange} />}
           <button
             onClick={() => void startPlay()}
             className="rounded-full bg-primary px-8 py-3 font-display tracking-widest text-primary-foreground"

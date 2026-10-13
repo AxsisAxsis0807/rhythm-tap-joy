@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { LiveGrowthProvider } from "@/components/app/LiveGrowthProvider";
 import { createFileRoute } from "@tanstack/react-router";
-import { DEFAULT_MODE_ID } from "@/game/modes";
 import { ClientOnly } from "@tanstack/react-router";
 import { buildSongList } from "@/game/songs";
 import { TEST_CHART } from "@/game/charts/test-chart";
@@ -31,12 +30,12 @@ export const Route = createFileRoute("/")({
 const SONGS = buildSongList(TEST_CHART);
 
 function Index() {
-  const [modeId, setModeId] = useState(DEFAULT_MODE_ID);
-
   return (
     <main>
       <ClientOnly fallback={<div className="h-[100dvh] bg-background" />}>
-        <RhythmHub localSongs={SONGS} modeId={modeId} onModeChange={setModeId} />
+        <LiveGrowthProvider>
+          <RhythmHub localSongs={SONGS} />
+        </LiveGrowthProvider>
       </ClientOnly>
     </main>
   );

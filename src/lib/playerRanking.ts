@@ -11,12 +11,6 @@ export type PlayerRanking = {
   global_rank: string;
 };
 
-// Ranking RPCs are not in the generated schema types yet; call them untyped.
-const rpc = supabase.rpc.bind(supabase) as unknown as (
-  fn: string,
-  args?: Record<string, unknown>,
-) => ReturnType<typeof supabase.rpc>;
-
 export const rankingKeys = {
   all: ["player-ranking"] as const,
   leaderboard: ["player-ranking", "top100"] as const,
@@ -35,15 +29,15 @@ export class PlayResultSaveError extends Error {
 }
 
 export async function fetchLeaderboard(): Promise<PlayerRanking[]> {
-  const { data, error } = await rpc("get_global_leaderboard");
+  const { data, error } = await supabase.rpc("get_global_leaderboard");
   if (error) throw new Error(error.message);
-  return (data as unknown as PlayerRanking[] | null) ?? [];
+  return data ?? [];
 }
 
 export async function fetchPlayerRanking(userId: string): Promise<PlayerRanking | null> {
-  const { data, error } = await rpc("get_player_ranking", { p_user_id: userId });
+  const { data, error } = await supabase.rpc("get_player_ranking", { p_user_id: userId });
   if (error) throw new Error(error.message);
-  return (data as unknown as PlayerRanking[] | null)?.[0] ?? null;
+  return data?.[0] ?? null;
 }
 
 export async function recordCompletedPlay(result: CompletedPlay, ownerId: string) {
@@ -72,21 +66,38 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
   )
     throw new PlayResultSaveError("保存待ちの結果データが不正です", false, "invalid");
   const judged = c.PERFECT + c.GREAT + c.GOOD + c.MISS;
-  const { error } = await rpc("record_play_result", {
-      p_id: result.id,
-      p_song_id: result.songId,
-      p_score: play.score,
-      p_accuracy: judged ? ((c.PERFECT + c.GREAT * 0.7 + c.GOOD * 0.4) / judged) * 100 : 100,
-      p_max_combo: play.maxCombo,
-      p_perfect_count: c.PERFECT,
-      p_great_count: c.GREAT,
-      p_good_count: c.GOOD,
-      p_miss_count: c.MISS,
-    })
-    // Pin this request to the captured session. A concurrent sign-in must never
-    // send the old account's result with the new account's access token.
+  const args = {
+    p_id: result.id,
+    p_song_id: result.songId,
+    p_score: play.score,
+    p_accuracy: judged ? ((c.PERFECT + c.GREAT * 0.7 + c.GOOD * 0.4) / judged) * 100 : 100,
+    p_max_combo: play.maxCombo,
+    p_perfect_count: c.PERFECT,
+    p_great_count: c.GREAT,
+    p_good_count: c.GOOD,
+    p_miss_count: c.MISS,
+  };
+  const config = result.configuration;
+  const query = config
+    ? supabase.rpc("record_play_result_v2", {
+        ...args,
+        p_revision_id: config.revisionId,
+        p_play_style: config.playStyle,
+        p_policy_id: config.judgementPolicyId,
+        p_parser_version: config.chartParserVersion,
+        p_scoring_side: config.scoringSide,
+      })
+    : supabase.rpc("record_play_result", args);
+  let { error } = await query
     .setHeader("Authorization", `Bearer ${session.access_token}`)
     .abortSignal(AbortSignal.timeout(15_000));
+  // A server not yet expanded still accepts the original, identical score payload.
+  if (config && error?.code === "PGRST202") {
+    ({ error } = await supabase
+      .rpc("record_play_result", args)
+      .setHeader("Authorization", `Bearer ${session.access_token}`)
+      .abortSignal(AbortSignal.timeout(15_000)));
+  }
   if (error) {
     const invalid =
       error.code === "22023" ||
