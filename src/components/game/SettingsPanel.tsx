@@ -309,7 +309,7 @@ export function SettingsPanel({
               <Group title="タイミング補正">
                 <OffsetRow
                   label="全体タイミングオフセット"
-                  description="プラスにすると、より遅い入力が譜面時刻に合います。端末別に保存されます。"
+                  description="入力時刻にこの値を加えます。遅く判定される場合はマイナス、早く判定される場合はプラスへ調整します。端末別に保存されます。"
                   value={settings.timingOffsetMs}
                   onChange={(v) => set("timingOffsetMs", v)}
                 />
@@ -751,8 +751,9 @@ function Calibration({ onAdopt }: { onAdopt: (v: number) => void }) {
   });
   const sorted = [...errors].sort((a, b) => a - b);
   const trimmed = sorted.length > 4 ? sorted.slice(1, -1) : sorted;
+  // Gameplay adds this offset to input time: a late tap needs a negative correction.
   const suggestion = trimmed.length
-    ? Math.round(trimmed.reduce((a, b) => a + b, 0) / trimmed.length)
+    ? -Math.round(trimmed.reduce((a, b) => a + b, 0) / trimmed.length)
     : null;
   return (
     <div className="py-3">
