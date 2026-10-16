@@ -1,0 +1,32 @@
+{
+  "mpg123": {
+    "gitHead": "8f2428c1cd96b54dab74836c8471ff75fe35cbee",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/eshaz/wasm-audio-decoders.git",
+      "directory": "src/mpg123-decoder"
+    },
+    "dist.integrity": "sha512-+fjxnWigodWJm3+4pndi+KUg9TBojgn31DPk85zEsim7C6s0X5Ztc/hQYdytXkwuGXH+aB0/aEkG40Emukv6oQ=="
+  },
+  "opus": {
+    "gitHead": "c9ff316db7f21fe95b0e89b308d0720fde6fecd2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/eshaz/wasm-audio-decoders.git",
+      "directory": "src/opus-decoder"
+    },
+    "dist.integrity": "sha512-6zpHFDi/MhYvMwyYiuJPqJ2lcRkfm7wHblSvT3lUtx/kLvHkunoe/rhTn1dLKxqVGLeQj3gQi7CnR0N2p3RuOg=="
+  },
+  "vorbis": {
+    "gitHead": "6fe55b9a29543d0a5a2d896338c39199a81d9a58",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/eshaz/wasm-audio-decoders.git",
+      "directory": "src/ogg-vorbis"
+    },
+    "dist.integrity": "sha512-zaQPasU5usRjUDXtXOHYED5tfkR4QMXd+EH3Nrz1+4+M5pCsdD+s9YxJqb0oqnTyRu/KUujOmu5Z/m/NT47vwg=="
+  }
+}

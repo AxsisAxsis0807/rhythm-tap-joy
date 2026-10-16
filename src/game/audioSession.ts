@@ -2,6 +2,7 @@ export type PreviewStatus =
   "idle" | "loading" | "ready" | "playing" | "paused" | "blocked" | "error" | "unavailable";
 
 export interface PreviewSource {
+  purpose?: "public-preview" | "owner-preview";
   /** Selection identity is distinct from the stable, shared audio asset identity. */
   selectionId: string;
   assetId: string;
@@ -53,6 +54,8 @@ interface MediaRecord {
 }
 
 const initialState: PreviewState = { status: "idle", message: null, retryable: false };
+export const PREVIEW_DURATION_MS = 18000;
+export type PreviewOwnerToken = symbol;
 const abortError = () => new DOMException("Preview cancelled", "AbortError");
 const unit = (value: number) => (Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0);
 const assetKey = (source: PreviewSource) => `${source.assetId}:${source.audioHash ?? ""}`;
@@ -79,6 +82,8 @@ export class AudioSessionController {
   private segmentEnd = 0;
   private position: number | null = null;
   private lifecycleAttached = false;
+  private previewOwner: PreviewOwnerToken | null = null;
+  private preciseSeek = false;
 
   constructor(
     private readonly createContext: () => AudioContext = () => {
@@ -124,9 +129,65 @@ export class AudioSessionController {
   }
 
   private onVisibility = () => {
-    if (document.hidden) this.stopPreview();
+    if (document.hidden) this.stopPreview(this.previewOwner ?? undefined);
   };
-  private onPageHide = () => this.stopPreview();
+  private onPageHide = () => this.stopPreview(this.previewOwner ?? undefined);
+
+  acquirePreviewOwner(ownerKey: string): PreviewOwnerToken {
+    this.stopPreview(this.previewOwner ?? undefined);
+    const token = Symbol(ownerKey);
+    this.previewOwner = token;
+    return token;
+  }
+
+  releasePreviewOwner(token: PreviewOwnerToken): void {
+    if (this.previewOwner !== token) return;
+    this.stopPreview(token);
+    this.source = null;
+    this.selection = "";
+    this.previewOwner = null;
+    this.publish("idle");
+  }
+
+  private ownsPreview(token?: PreviewOwnerToken): boolean {
+    return this.previewOwner === null ? token === undefined : token === this.previewOwner;
+  }
+
+  updatePreviewSegment(token: PreviewOwnerToken, startMs: number | null): void {
+    if (!this.ownsPreview(token) || !this.source) return;
+    if (startMs !== null && (!Number.isSafeInteger(startMs) || startMs < 0))
+      throw new PreviewError("Invalid preview position", false, "position");
+    this.pause(token);
+    this.source = { ...this.source, previewStartMs: startMs };
+    this.selection = selectionKey(this.source);
+    this.position = null;
+    this.preciseSeek = true;
+  }
+
+  seekPreview(token: PreviewOwnerToken, timeMs: number): void {
+    if (!this.ownsPreview(token) || !this.source) return;
+    const start = this.source.previewStartMs ?? 0;
+    const end = Math.min(
+      start + PREVIEW_DURATION_MS,
+      (this.media?.element.duration ?? Infinity) * 1000,
+    );
+    if (!Number.isFinite(timeMs) || timeMs < start || timeMs >= end)
+      throw new PreviewError("Seek is outside preview interval", false, "position");
+    const playing = this.state.status === "playing";
+    this.pause(token);
+    this.position = timeMs / 1000;
+    this.preciseSeek = true;
+    if (playing) this.play(token);
+  }
+
+  getPlaybackPosition(token: PreviewOwnerToken): number | null {
+    if (!this.ownsPreview(token)) return null;
+    return this.state.status === "playing" && this.media
+      ? this.media.element.currentTime * 1000
+      : this.position === null
+        ? null
+        : this.position * 1000;
+  }
 
   setPreviewVolume(master: number, menu: number, preview: number): void {
     this.volume = unit(master) * unit(menu) * unit(preview);
@@ -136,8 +197,17 @@ export class AudioSessionController {
   /** A metadata refresh with the same selection never overrides a manual pause. */
   selectPreview(
     source: PreviewSource | null,
-    { autoPlay = false, userGesture = false }: { autoPlay?: boolean; userGesture?: boolean } = {},
+    {
+      autoPlay = false,
+      userGesture = false,
+      ownerToken,
+    }: {
+      autoPlay?: boolean;
+      userGesture?: boolean;
+      ownerToken?: PreviewOwnerToken;
+    } = {},
   ): void {
+    if (!this.ownsPreview(ownerToken)) return;
     this.attachLifecycle();
     const key = source ? selectionKey(source) : "";
     const changed = key !== this.selection;
@@ -175,22 +245,26 @@ export class AudioSessionController {
     }
   }
 
-  play = (): void => {
+  play = (token?: PreviewOwnerToken): void => {
+    if (!this.ownsPreview(token)) return;
     if (!this.source || this.state.status === "unavailable" || this.activeLease !== null) return;
     this.manuallyPaused = false;
     this.startPreview(false);
   };
 
-  replay = (): void => {
+  replay = (token?: PreviewOwnerToken): void => {
+    if (!this.ownsPreview(token)) return;
     this.position = null;
-    this.play();
+    this.preciseSeek = true;
+    this.play(token);
   };
 
-  retry = (): void => {
-    if (this.state.retryable || this.state.status === "blocked") this.play();
+  retry = (token?: PreviewOwnerToken): void => {
+    if (this.state.retryable || this.state.status === "blocked") this.play(token);
   };
 
-  pause = (): void => {
+  pause = (token?: PreviewOwnerToken): void => {
+    if (!this.ownsPreview(token)) return;
     if (this.media && this.state.status === "playing")
       this.position = this.media.element.currentTime;
     this.manuallyPaused = true;
@@ -198,7 +272,8 @@ export class AudioSessionController {
     if (this.source && this.state.status !== "unavailable") this.publish("paused");
   };
 
-  stopPreview = (): void => {
+  stopPreview = (token?: PreviewOwnerToken): void => {
+    if (!this.ownsPreview(token)) return;
     this.manuallyPaused = true;
     this.position = null;
     this.invalidate();
@@ -206,7 +281,8 @@ export class AudioSessionController {
   };
 
   beginGameplay(): GameplayLease {
-    this.stopPreview();
+    this.stopPreview(this.previewOwner ?? undefined);
+    this.previewOwner = null;
     const id = ++this.lease;
     this.activeLease = id;
     // A real AudioClock load has created the context. Keeping this lazy also supports SSR.
@@ -349,12 +425,13 @@ export class AudioSessionController {
         );
       }
       this.segmentStart = start;
-      this.segmentEnd = Math.min(start + 18, element.duration);
+      this.segmentEnd = Math.min(start + PREVIEW_DURATION_MS / 1000, element.duration);
       const position =
         this.position !== null && this.position >= start && this.position < this.segmentEnd
           ? this.position
           : start;
-      if (Math.abs(element.currentTime - position) > 0.02) {
+      if (this.preciseSeek || Math.abs(element.currentTime - position) > 0.02) {
+        this.preciseSeek = false;
         element.currentTime = position;
         await this.waitForMedia(media, "seeked", () => !element.seeking, generation, signal);
       }
@@ -387,7 +464,17 @@ export class AudioSessionController {
           this.fail(error);
         }
       };
-      this.ending = setTimeout(finish, Math.max(0, this.segmentEnd - element.currentTime) * 1000);
+      // A timer only wakes the controller: stalled/buffering time is not audio time.
+      const checkEnd = () => {
+        if (!this.current(generation, media)) return;
+        const remaining = this.segmentEnd - element.currentTime;
+        if (remaining <= 0 || element.ended) finish();
+        else this.ending = setTimeout(checkEnd, Math.max(20, Math.min(1000, remaining * 1000)));
+      };
+      this.ending = setTimeout(
+        checkEnd,
+        Math.max(20, Math.min(1000, (this.segmentEnd - element.currentTime) * 1000)),
+      );
     } catch (error) {
       media.pendingPlay = false;
       if (!this.current(generation, media)) {
@@ -487,6 +574,7 @@ export class AudioSessionController {
       this.lifecycleAttached = false;
     }
     this.activeLease = null;
+    this.previewOwner = null;
     this.source = null;
     this.selection = "";
     const context = this.context;

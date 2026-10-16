@@ -30,7 +30,18 @@ import {
   type SongRow,
 } from "@/lib/chartRepository";
 import { SongDetail } from "./SongDetail";
-import { SongMetadataEditor } from "./SongMetadataEditor";
+import { SongSettingsDialog } from "./song-settings/SongSettingsDialog";
+import { MySongManagementMenu } from "./song-settings/MySongManagementMenu";
+import { useNavigate, useRouter, useSearch, useRouterState } from "@tanstack/react-router";
+import { getSongBackground, getSongSettings } from "@/lib/songSettings.functions";
+import { ownerTransport } from "@/lib/ownerTransport";
+import type { SongBackgroundAsset } from "@/lib/songSettingsContract";
+import type { SongSettingsRow } from "@/lib/songSettingsContract";
+declare module "@tanstack/react-router" {
+  interface HistoryState {
+    songSettingsInternal?: boolean;
+  }
+}
 import { SongMetadataFields, type SongMetadataForm } from "./SongMetadataFields";
 import { detectFnfSides, parseChartByType, type ChartType, type FnfSide } from "@/game/chartFile";
 import { useServerFn } from "@tanstack/react-start";
@@ -62,7 +73,6 @@ type HubScreen =
   | "publish"
   | "select"
   | "detail"
-  | "edit"
   | "play";
 type AuthMode = "login" | "signup";
 
@@ -103,9 +113,20 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
   const [mySongs, setMySongs] = useState<SongRow[]>([]);
   const [selectedSong, setSelectedSong] = useState<SongEntry | null>(null);
   const [explicitStyles, setExplicitStyles] = useState<Record<string, PlayStyleId>>({});
+  const [runBackground, setRunBackground] = useState<SongBackgroundAsset | null>(null);
+  const [runBackgroundOwner, setRunBackgroundOwner] = useState<string | null>(null);
   const [runStyle, setRunStyle] = useState<PlayStyleId>("mania");
   const [runMode, setRunMode] = useState<VisualModeId>("mania");
-  const [editingSong, setEditingSong] = useState<SongRow | null>(null);
+  const { songSettings: editingSongId } = useSearch({ from: "/" });
+  const navigate = useNavigate({ from: "/" });
+  const router = useRouter();
+  const internalSettings = useRouterState({
+    select: (state) => state.location.state.songSettingsInternal,
+  });
+  const fetchGeneration = useRef(0);
+  useEffect(() => {
+    if (editingSongId) setScreen("profile");
+  }, [editingSongId, user?.id]);
   const screenRef = useRef(screen);
   screenRef.current = screen;
   const startGeneration = useRef(0);
@@ -117,9 +138,11 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
   });
 
   const loadPublicSongs = async () => {
+    const generation = fetchGeneration.current;
     setLoadingSongs(true);
     try {
-      setPublishedSongs((await listPublicSongs()).map(songToEntry));
+      const rows = await listPublicSongs();
+      if (generation === fetchGeneration.current) setPublishedSongs(rows.map(songToEntry));
     } catch (error) {
       setNotice(
         `公開曲を読み込めませんでした: ${error instanceof Error ? error.message : "通信エラー"}`,
@@ -130,6 +153,7 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
   };
 
   const loadAccount = async (nextUser: User) => {
+    const generation = fetchGeneration.current;
     const [profileResult, songsResult] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", nextUser.id).maybeSingle(),
       supabase
@@ -138,7 +162,7 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
         .eq("user_id", nextUser.id)
         .order("created_at", { ascending: false }),
     ]);
-    if (accountOwner.current !== nextUser.id) return;
+    if (accountOwner.current !== nextUser.id || generation !== fetchGeneration.current) return;
     if (profileResult.error || songsResult.error)
       setNotice(
         profileResult.error?.message ??
@@ -150,10 +174,9 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
   };
 
   useEffect(() => {
+    fetchGeneration.current += 1;
+    startGeneration.current += 1;
     void loadPublicSongs();
-  }, []);
-
-  useEffect(() => {
     setProfile(null);
     setMySongs([]);
     if (user) void loadAccount(user);
@@ -198,22 +221,73 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
     setSelectedSong(song);
     setScreen("detail");
   };
+  const readBackground = async (song: SongEntry): Promise<SongBackgroundAsset | null> => {
+    if (!song.source) return null;
+    try {
+      if (!song.source.is_published && song.source.user_id === user?.id)
+        return (
+          await getSongSettings({ data: { songId: song.id }, fetch: await ownerTransport(user.id) })
+        ).background;
+      return await getSongBackground({ data: { songId: song.id } });
+    } catch {
+      return null;
+    }
+  };
   const startSong = async (song: SongEntry, style: PlayStyleId) => {
     const generation = ++startGeneration.current;
     const origin = screenRef.current;
-    const chart = song.source ? await loadPlayableChart(song.source) : song.chart;
+    // Optional display data may be used if ready at START, but cannot delay it.
+    let background: SongBackgroundAsset | null = null,
+      started = false;
+    void readBackground(song).then((value) => {
+      background = value;
+      if (started && generation === startGeneration.current && screenRef.current === "play")
+        setRunBackground(value);
+    });
+    const chart = await (song.source ? loadPlayableChart(song.source) : song.chart);
     if (!chart) throw new Error("譜面を取得できませんでした");
     if (generation !== startGeneration.current || screenRef.current !== origin) return;
+    setRunBackground(background);
+    setRunBackgroundOwner(song.source && !song.source.is_published ? song.source.user_id : null);
     setRunStyle(style);
     setRunMode(style === "fnf" ? "fnf" : settings.maniaSkin === "classic" ? "classic" : "mania");
     setSelectedSong({ ...song, chart });
+    started = true;
     setScreen("play");
   };
   const editSong = (song: SongRow) => {
     if (song.user_id !== user?.id) return;
-    setSelectedSong(songToEntry(song));
-    setEditingSong(song);
-    setScreen("edit");
+    void navigate({
+      search: { songSettings: song.id },
+      state: (previous) => ({ ...previous, songSettingsInternal: true }),
+    });
+  };
+  const closeSongSettings = () => {
+    if (internalSettings) router.history.back();
+    else
+      void navigate({
+        search: {},
+        replace: true,
+        state: (previous) => ({ ...previous, songSettingsInternal: false }),
+      });
+  };
+  const savedSongSettings = (row: SongSettingsRow) => {
+    if (row.user_id !== accountOwner.current) return;
+    fetchGeneration.current += 1;
+    const merge = (song: SongRow): SongRow =>
+      BigInt(String(song.metadata_version)) > BigInt(row.metadata_version)
+        ? song
+        : { ...song, ...row, fnf_side: row.fnf_side ?? song.fnf_side };
+    setMySongs((current) => current.map((song) => (song.id === row.id ? merge(song) : song)));
+    setPublishedSongs((current) =>
+      current.map((entry) =>
+        entry.id === row.id && entry.source ? songToEntry(merge(entry.source)) : entry,
+      ),
+    );
+    if (screenRef.current !== "play")
+      setSelectedSong((current) =>
+        current?.id === row.id && current.source ? songToEntry(merge(current.source)) : current,
+      );
   };
   const setSongStyle = (id: string, style: PlayStyleId) =>
     setExplicitStyles((current) => ({ ...current, [id]: style }));
@@ -231,6 +305,9 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
       <GameScreen
         key={selectedSong.id}
         chart={selectedSong.chart}
+        background={runBackground}
+        backgroundOwner={runBackgroundOwner}
+        resolveBackground={() => readBackground(selectedSong)}
         userId={user?.id ?? null}
         modeId={runMode}
         playStyle={runStyle}
@@ -300,8 +377,6 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
             }}
             onStyleChange={setSongStyle}
             onStart={startSong}
-            onEdit={editSong}
-            userId={user?.id ?? null}
           />
         )}
         {screen === "detail" && selectedSong && (
@@ -318,29 +393,8 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
               explicitStyle={explicitStyles[selectedSong.id]}
               onStyleChange={(style) => setSongStyle(selectedSong.id, style)}
               onStart={(style) => startSong(selectedSong, style)}
-              onEdit={
-                selectedSong.source?.user_id === user?.id && selectedSong.source
-                  ? () => editSong(selectedSong.source!)
-                  : undefined
-              }
             />
           </main>
-        )}
-        {screen === "edit" && editingSong && user?.id === editingSong.user_id && (
-          <SongMetadataEditor
-            key={`${editingSong.id}:${editingSong.metadata_version}`}
-            song={editingSong}
-            onCancel={() => setScreen("detail")}
-            onSaved={(row) => {
-              setMySongs((current) => current.map((song) => (song.id === row.id ? row : song)));
-              setPublishedSongs((current) =>
-                current.map((song) => (song.id === row.id ? songToEntry(row) : song)),
-              );
-              setSelectedSong(songToEntry(row));
-              setScreen("detail");
-              setNotice("曲情報を保存しました");
-            }}
-          />
         )}
         {screen === "auth" && (
           <AuthEntryScreen onSelect={openAuthForm} onBack={() => setScreen("home")} />
@@ -358,6 +412,8 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
         )}
         {screen === "profile" && user && (
           <ProfileScreen
+            key={user.id}
+            songSettingsOpen={Boolean(editingSongId)}
             user={user}
             profile={profile}
             songs={mySongs}
@@ -399,6 +455,15 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
           />
         )}
       </div>
+      {editingSongId && user && (
+        <SongSettingsDialog
+          key={`${user.id}:${editingSongId}`}
+          ownerId={user.id}
+          songId={editingSongId}
+          onClose={closeSongSettings}
+          onSaved={savedSongSettings}
+        />
+      )}
       {uploadTask.task && screen !== "play" && (
         <UploadMiniBar
           task={uploadTask.task}
@@ -608,8 +673,6 @@ function SelectScreen({
   onSelect,
   onStyleChange,
   onStart,
-  onEdit,
-  userId,
 }: {
   songs: SongEntry[];
   onBack: () => void;
@@ -618,8 +681,6 @@ function SelectScreen({
   onSelect: (song: SongEntry) => void;
   onStyleChange: (id: string, style: PlayStyleId) => void;
   onStart: (song: SongEntry, style: PlayStyleId) => Promise<void>;
-  onEdit: (song: SongRow) => void;
-  userId: string | null;
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -664,11 +725,6 @@ function SelectScreen({
               explicitStyle={explicitStyles[selected.id]}
               onStyleChange={(style) => onStyleChange(selected.id, style)}
               onStart={(style) => onStart(selected, style)}
-              onEdit={
-                selected.source?.user_id === userId && selected.source
-                  ? () => onEdit(selected.source!)
-                  : undefined
-              }
             />
           )}
         </div>
@@ -988,7 +1044,9 @@ function ProfileScreen({
   onSaved,
   onPlay,
   onEdit,
+  songSettingsOpen,
 }: {
+  songSettingsOpen: boolean;
   user: User;
   profile: Profile | null;
   songs: SongRow[];
@@ -997,6 +1055,13 @@ function ProfileScreen({
   onPlay: (song: SongEntry) => void;
   onEdit: (song: SongRow) => void;
 }) {
+  const [selectedMySongId, setSelectedMySongId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!songs.some((song) => song.id === selectedMySongId)) setSelectedMySongId(null);
+  }, [songs, selectedMySongId]);
+  useEffect(() => {
+    if (songSettingsOpen) setSettingsOpen(false);
+  }, [songSettingsOpen]);
   const [username, setUsername] = useState(profile?.username ?? "");
   const [display, setDisplay] = useState(profile?.display_name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
@@ -1042,6 +1107,7 @@ function ProfileScreen({
       <div className="pt-4">
         <button
           type="button"
+          disabled={songSettingsOpen}
           onClick={() => setSettingsOpen(true)}
           aria-label="設定を開く"
           className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white"
@@ -1133,7 +1199,9 @@ function ProfileScreen({
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-white/40">MY TRACKS</p>
-              <h2 className="mt-1 text-xl font-bold">投稿した曲</h2>
+              <h2 id="my-tracks-heading" tabIndex={-1} className="mt-1 text-xl font-bold">
+                投稿した曲
+              </h2>
             </div>
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs">{songs.length} 曲</span>
           </div>
@@ -1142,31 +1210,17 @@ function ProfileScreen({
           ) : (
             <div className="space-y-2">
               {songs.map((song) => (
-                <div key={song.id} className="flex items-center gap-3 rounded-xl bg-black/20 p-3">
-                  <Music2 className="size-5 text-cyan-200" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{song.title}</p>
-                    <p className="text-xs text-white/40">
-                      {song.is_published ? "公開中" : "下書き"} · {song.note_count} notes
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <button
-                      type="button"
-                      onClick={() => onPlay(songToEntry(song))}
-                      className="min-h-11 rounded-lg px-3 text-cyan-200 hover:bg-white/10"
-                    >
-                      PLAY
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onEdit(song)}
-                      className="min-h-11 rounded-lg px-3 text-xs text-white/70 hover:bg-white/10"
-                    >
-                      譜面を編集
-                    </button>
-                  </div>
-                </div>
+                <MySongManagementMenu
+                  key={song.id}
+                  song={song}
+                  selected={selectedMySongId === song.id}
+                  onSelect={() => setSelectedMySongId(song.id)}
+                  onPlay={() => onPlay(songToEntry(song))}
+                  onEdit={() => {
+                    setSettingsOpen(false);
+                    onEdit(song);
+                  }}
+                />
               ))}
             </div>
           )}

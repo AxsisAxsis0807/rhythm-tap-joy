@@ -1,0 +1,14 @@
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "title": "Fixture Song",
+  "artist": "Fixture Artist",
+  "difficultyName": "NORMAL",
+  "audioUrl": "",
+  "bpm": 120,
+  "offset": 0,
+  "laneCount": 4,
+  "notes": [
+    { "beat": 0.5, "lane": 0, "kind": "tap" },
+    { "beat": 1, "lane": 1, "kind": "hold", "lengthBeats": 0.5 }
+  ]
+}
