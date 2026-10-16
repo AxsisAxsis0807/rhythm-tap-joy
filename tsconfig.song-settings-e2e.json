@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/e2e/**/*.ts", "tests/e2e/**/*.tsx"],
+  "compilerOptions": { "types": ["vite/client", "node"] }
+}

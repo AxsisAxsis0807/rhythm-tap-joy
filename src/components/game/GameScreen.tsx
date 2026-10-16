@@ -1,3 +1,5 @@
+import { SongGameBackground } from "./SongGameBackground";
+import type { SongBackgroundAsset } from "@/lib/songSettingsContract";
 import { usePlaySession } from "@/lib/usePlaySession";
 import { createRunConfiguration } from "@/game/runConfiguration";
 import { getAudioSession } from "@/game/audioSession";
@@ -21,6 +23,9 @@ import { usePlayResult } from "@/lib/usePlayResult";
 
 export function GameScreen({
   chart,
+  background,
+  backgroundOwner = null,
+  resolveBackground,
   userId = null,
   modeId,
   onModeChange,
@@ -29,6 +34,9 @@ export function GameScreen({
   onExit,
 }: {
   chart: Chart;
+  background?: SongBackgroundAsset | null;
+  backgroundOwner?: string | null;
+  resolveBackground?: (() => Promise<SongBackgroundAsset | null>) | undefined;
   userId?: string | null;
   modeId: string;
   onModeChange?: (id: string) => void;
@@ -46,9 +54,9 @@ export function GameScreen({
     timingOffsetMs: settings.timingOffsetMs,
     volume: settings.masterVolume * settings.musicVolume,
     hitSoundVolume: settings.hitSoundEnabled ? settings.masterVolume * settings.hitSoundVolume : 0,
-    keyMap: settings.keyBindings.map((code, i) =>
-      [code, settings.altKeyBindings[i] ?? ""].filter((k) => k && k !== code),
-    ),
+    keyMap: settings.keyBindings.map((code, i) => [
+      ...new Set([code, settings.altKeyBindings[i] ?? ""].filter(Boolean)),
+    ]),
   });
   const {
     status,
@@ -195,6 +203,11 @@ export function GameScreen({
       className={`relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none ${settings.reducedMotion ? "[&_*]:!animate-none [&_*]:!transition-none" : ""} ${settings.screenShake && showJudge && last?.judgement === "MISS" ? "animate-game-shake" : ""}`}
       style={{ overscrollBehavior: "none", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
+      {background &&
+        !settings.lightweightMode &&
+        (!backgroundOwner || backgroundOwner === userId) && (
+          <SongGameBackground asset={background} resolve={resolveBackground} />
+        )}
       {settings.backgroundEffects && !settings.lightweightMode && (
         <div
           aria-hidden="true"

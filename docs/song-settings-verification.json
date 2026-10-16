@@ -1,0 +1,238 @@
+{
+  "recordedAt": "2026-10-16T21:24:45Z",
+  "mainCommit": "96449aab48f8c6ac5e4a87594db034cb7dbdc9ca",
+  "branch": "codex/song-settings-update",
+  "node": "24.19.0",
+  "bun": "1.3.10",
+  "lockSha256": "73e164165d3540ef0e7e57d643d711b1a0e349dca1604ecd16a805a300fc5a44",
+  "unit": {
+    "passed": 259,
+    "skippedRealStorage": 7
+  },
+  "realServiceTests": {
+    "passed": 7,
+    "production": false
+  },
+  "postgres": {
+    "version": "17.11",
+    "appliedLocalMigrations": 22,
+    "productionVersions": null
+  },
+  "lint": {
+    "fullErrors": 159,
+    "fullWarnings": 7,
+    "changedErrors": 0,
+    "changedWarnings": 0
+  },
+  "browser": [
+    {
+      "case": "desktop",
+      "viewport": [1280, 900],
+      "modalBounds": {
+        "x": 200,
+        "y": 245.5,
+        "width": 880,
+        "height": 409
+      },
+      "result": "pass"
+    },
+    {
+      "case": "small",
+      "viewport": [320, 568],
+      "modalBounds": {
+        "x": 12,
+        "y": 67.5,
+        "width": 296,
+        "height": 433
+      },
+      "result": "pass"
+    },
+    {
+      "case": "phone",
+      "viewport": [390, 844],
+      "modalBounds": {
+        "x": 12,
+        "y": 215.5,
+        "width": 366,
+        "height": 413
+      },
+      "result": "pass"
+    },
+    {
+      "case": "landscape",
+      "viewport": [844, 390],
+      "modalBounds": {
+        "x": 12,
+        "y": 12,
+        "width": 820,
+        "height": 366
+      },
+      "result": "pass"
+    },
+    {
+      "case": "real waveform Worker / short preview end / null reset / timing confirmation",
+      "result": "pass"
+    },
+    {
+      "case": "lost response reconciles one committed receipt",
+      "result": "pass"
+    },
+    {
+      "case": "50 modal/Worker/audio/focus/profile/scroll-lock cycles",
+      "result": "pass"
+    },
+    {
+      "case": "native touch single/double tap",
+      "result": "pass"
+    },
+    {
+      "case": "browser codec wav",
+      "result": "pass",
+      "durationMs": 1125,
+      "impulseMs": 500,
+      "mediaDurationMs": 1125
+    },
+    {
+      "case": "browser codec mp3",
+      "result": "pass",
+      "durationMs": 1125,
+      "impulseMs": 500,
+      "mediaDurationMs": 1125
+    },
+    {
+      "case": "browser codec ogg",
+      "result": "pass",
+      "durationMs": 1125,
+      "impulseMs": 500,
+      "mediaDurationMs": 1125
+    },
+    {
+      "case": "browser codec opus",
+      "result": "pass",
+      "durationMs": 1125,
+      "impulseMs": 500,
+      "mediaDurationMs": 1131.5
+    },
+    {
+      "case": "browser codec m4a",
+      "result": "pass",
+      "durationMs": 1125,
+      "impulseMs": 500,
+      "mediaDurationMs": 1125
+    },
+    {
+      "case": "browser codec webm",
+      "result": "pass",
+      "durationMs": 1125,
+      "impulseMs": 500,
+      "mediaDurationMs": 1133
+    }
+  ],
+  "localWorkerd": {
+    "compatibilityDate": "2026-10-13",
+    "productionCompatibilityDate": "2026-10-16",
+    "note": "Local artifact test; not a deployed target/plan verification. Only an export was added to expose the production analysis function.",
+    "results": [
+      {
+        "case": "wav",
+        "milliseconds": 36,
+        "durationMs": 1125,
+        "format": "wav",
+        "hash": "78126cf09253126e488105558bfd698a4a0120560ca3c7d4609815e2b0055145",
+        "peaks": 226
+      },
+      {
+        "case": "mp3",
+        "milliseconds": 34,
+        "durationMs": 1125,
+        "format": "mp3",
+        "hash": "6741c7898a0e85b76f608472f78416f8c9c869ba96213336a9d0c8c1e2f9bf1f",
+        "peaks": 226
+      },
+      {
+        "case": "ogg",
+        "milliseconds": 48,
+        "durationMs": 1125,
+        "format": "ogg-vorbis",
+        "hash": "445f31d9329f7bb16ff1427effef545f78797ccff58cbba50f3ae8c1c932bb9b",
+        "peaks": 226
+      },
+      {
+        "case": "opus",
+        "milliseconds": 30,
+        "durationMs": 1125,
+        "format": "ogg-opus",
+        "hash": "15db1ae3ef4cdf048fe67cdbfd6c79d66fdd67069efb18630b8e9da2c86d3746",
+        "peaks": 226
+      },
+      {
+        "case": "m4a",
+        "milliseconds": 41,
+        "durationMs": 1125,
+        "format": "mp4-aac",
+        "hash": "ab80611a61738bee403d5d3098b7cc3ffa38717768cf142d1cf6857c95cd7d3a",
+        "peaks": 226
+      },
+      {
+        "case": "webm",
+        "milliseconds": 35,
+        "durationMs": 1125,
+        "format": "webm-opus",
+        "hash": "6d831d4eafff3c1aaa2d5c5cb14959dde45dea85b82d768aae13a130cac83909",
+        "peaks": 226
+      },
+      {
+        "case": "jpg",
+        "mime": "image/jpeg",
+        "width": 16,
+        "height": 9,
+        "hash": "20c51957cdf7fa4371422e64c5994ab914c45a85ca591cf55e2f9296a1120467",
+        "bytes": 272
+      },
+      {
+        "case": "png",
+        "mime": "image/jpeg",
+        "width": 16,
+        "height": 9,
+        "hash": "20c51957cdf7fa4371422e64c5994ab914c45a85ca591cf55e2f9296a1120467",
+        "bytes": 272
+      },
+      {
+        "case": "webp",
+        "mime": "image/jpeg",
+        "width": 16,
+        "height": 9,
+        "hash": "c235ee446fb853a1bbebb7f563479180db272404af7af21efd9b0cb3c41a72ef",
+        "bytes": 272
+      },
+      {
+        "case": "100 MiB streaming PCM boundary",
+        "milliseconds": 3252,
+        "durationMs": 546133,
+        "bytes": 104857600
+      },
+      {
+        "case": "100 MiB + 1 declared WAV rejected",
+        "status": 422
+      },
+      {
+        "case": "unsupported image rejected",
+        "status": 422
+      }
+    ]
+  },
+  "production": {
+    "migrations": "unverified",
+    "flags": "unverified; new source defaults OFF",
+    "deploy": "not performed",
+    "scheduler": "not configured or executed",
+    "smoke": "not performed"
+  },
+  "uncompleted": [
+    "S09 deployed target / resource measurements",
+    "S10 actual cron / monitoring",
+    "real iPhone Safari / Firefox / WebKit / assistive technology matrix",
+    "Supabase CLI start/reset/lint and GoTrue full-auth flow",
+    "remaining acceptance matrix in implementation report"
+  ]
+}

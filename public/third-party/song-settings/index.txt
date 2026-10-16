@@ -1,0 +1,39 @@
+Song Settings audio and image software notices
+
+mpg123: Copyright (c) 1995-2020 by Michael Hipp and others,
+free software under the terms of the LGPL v2.1.
+See mpg123-LGPL.txt (complete terms), mpg123-source.tar.gz (exact C source),
+mpg123-wrapper-source.tar.gz (adapter/build source). No mpg123 C source was
+modified. Its independently replaceable WASM module is src/lib/codecs/mpg123.wasm.
+Pinned wrapper commit: 8f2428c1cd96b54dab74836c8471ff75fe35cbee
+Pinned mpg123 commit: 08247b317163175e62035893af3ff9e71a5dfefd
+Use the supplied wrapper Makefile's mpg123-configure / mpg123-decoder targets
+with Emscripten; the README documents dependency/configuration/build steps.
+Replace the separate WASM file and rebuild the application to use a modified
+library. scripts/extract-audio-wasm.mjs extracts unmodified official npm bytes.
+
+wasm-audio-decoders JavaScript adapters: MIT, Ethan Halsall and contributors.
+Project source: https://github.com/eshaz/wasm-audio-decoders
+Exact npm versions, repository commits and package integrity: provenance.json.
+MIT terms are reproduced in wasm-audio-decoders-MIT.txt.
+Opus / Vorbis / Ogg: see opus-BSD.txt, vorbis-BSD.txt, ogg-BSD.txt.
+No optional Opus speech-enhancement model is used for waveform analysis.
+
+AAC: Symphonia 0.5.4, MPL-2.0 (symphonia-MPL.txt).
+Source: https://github.com/pdeljanov/Symphonia/tree/v0.5.4
+The Pulse AAC packet adapter and Cargo.lock are in pulse-aac-source.tar.gz.
+This adapter uses Rust 1.90.0; Rust MIT/Apache notices are included.
+The adapter's transitive crate licenses and checksums are listed in Cargo.lock
+and crates-notices.txt. The AAC WASM maximum linear memory is 32 MiB.
+
+jSquash JPEG 1.6.0 / PNG 3.1.1 / WebP 1.5.0: Apache-2.0 wrappers,
+plus the individual codec notices in jpeg-codec.txt, png-codec.txt,
+webp-codec.txt. Source: https://github.com/jamsinclair/jSquash
+
+Mediabunny 1.61.4: MPL-2.0.
+Source: https://github.com/Vanilagy/mediabunny/tree/v1.61.4
+See mediabunny-MPL.txt. Used for bounded packet demuxing, without WebCodecs.
+@noble/hashes 2.0.1: MIT, Paul Miller. See noble-hashes-MIT.txt.
+
+These notices are included with the application distribution. Codec assets
+are bundled locally. No executable codec is loaded from an external CDN.

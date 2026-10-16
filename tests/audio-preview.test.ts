@@ -140,7 +140,58 @@ it("18-second preview stops without looping, and no permission creates no contex
   controller.selectPreview(source("allowed"));
   controller.play();
   await settle();
+  media[0]!.currentTime = 18;
   await vi.advanceTimersByTimeAsync(18000);
   expect(controller.getSnapshot().status).toBe("ready");
   expect(media[0]?.loop).toBe(false);
+});
+
+it("buffering wall time does not consume the preview interval", async () => {
+  vi.useFakeTimers();
+  const { controller, media } = setup();
+  controller.selectPreview(source("buffering"));
+  controller.play();
+  await settle();
+  await vi.advanceTimersByTimeAsync(20000);
+  expect(controller.getSnapshot().status).toBe("playing");
+  media[0]!.currentTime = 18;
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(controller.getSnapshot().status).toBe("ready");
+});
+it("an editor lease rejects stale cleanup and applies a 1ms seek without reloading audio", async () => {
+  const { controller, media, context } = setup();
+  const first = controller.acquirePreviewOwner("first");
+  const token = controller.acquirePreviewOwner("second");
+  controller.selectPreview(source("editor"), { ownerToken: token });
+  controller.play(token);
+  await settle();
+  controller.stopPreview();
+  controller.releasePreviewOwner(first);
+  controller.selectPreview(null);
+  expect(controller.getSnapshot().status).toBe("playing");
+  controller.updatePreviewSegment(token, 1);
+  controller.play(token);
+  await settle();
+  expect(media[0]!.currentTime).toBe(0.001);
+  expect(context.createMediaElementSource).toHaveBeenCalledTimes(1);
+  expect(media[0]!.load).toHaveBeenCalledTimes(1);
+  controller.releasePreviewOwner(token);
+  expect(controller.getSnapshot().status).toBe("idle");
+});
+
+it("validated duration bounds seeks and preview end despite container padding", async () => {
+  vi.useFakeTimers();
+  const { controller, media } = setup();
+  const token = controller.acquirePreviewOwner("validated");
+  controller.selectPreview(
+    { ...source("padded-opus"), durationMs: 1125, previewStartMs: 1124 },
+    { ownerToken: token },
+  );
+  controller.play(token);
+  await settle();
+  expect(media[0]!.currentTime).toBe(1.124);
+  expect(() => controller.seekPreview(token, 1125)).toThrow("outside preview interval");
+  media[0]!.currentTime = 1.125;
+  await vi.advanceTimersByTimeAsync(20);
+  expect(controller.getSnapshot().status).toBe("ready");
 });

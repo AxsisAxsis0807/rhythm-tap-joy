@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/types/**/*.d.ts",
+    "tests/song-settings-*.test.ts",
+    "tests/song-background.test.ts",
+    "tests/audio-codec-fixtures.test.ts",
+    "tests/waveform.test.ts",
+    "tests/audio-preview.test.ts",
+    "tests/fnf-gameplay-integration.test.tsx",
+    "vitest.config.ts"
+  ],
+  "compilerOptions": { "types": ["vite/client", "node"] }
+}

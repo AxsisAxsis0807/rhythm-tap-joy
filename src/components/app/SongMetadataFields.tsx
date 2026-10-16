@@ -14,9 +14,11 @@ export function SongMetadataFields({
   value,
   onChange,
   previewEditable = true,
+  hidePreview = false,
   extendedEditable = true,
 }: {
   previewEditable?: boolean;
+  hidePreview?: boolean;
   extendedEditable?: boolean;
   value: SongMetadataForm;
   onChange: (value: SongMetadataForm) => void;
@@ -30,7 +32,6 @@ export function SongMetadataFields({
         <input
           className="field"
           required
-          maxLength={120}
           value={value.title}
           onChange={(event) => set("title", event.target.value)}
         />
@@ -39,7 +40,6 @@ export function SongMetadataFields({
         楽曲作成者
         <input
           className="field"
-          maxLength={120}
           value={value.artist}
           onChange={(event) => set("artist", event.target.value)}
         />
@@ -48,7 +48,6 @@ export function SongMetadataFields({
         譜面作成者
         <input
           className="field"
-          maxLength={120}
           value={value.chartAuthor}
           onChange={(event) => set("chartAuthor", event.target.value)}
         />
@@ -57,7 +56,6 @@ export function SongMetadataFields({
         難易度名
         <input
           className="field"
-          maxLength={40}
           value={value.difficultyName}
           onChange={(event) => set("difficultyName", event.target.value)}
         />
@@ -87,37 +85,38 @@ export function SongMetadataFields({
         <textarea
           disabled={!extendedEditable}
           className="field min-h-24 resize-y"
-          maxLength={2000}
           value={value.description}
           onChange={(event) => set("description", event.target.value)}
         />
         <span className="text-xs text-white/50">
-          テキストのみ · {value.description.length}/2000
+          テキストのみ · {[...value.description].length}/2000
         </span>
       </label>
-      <label className="label sm:col-span-2">
-        試聴開始位置（秒）
-        <input
-          disabled={!previewEditable}
-          type="number"
-          min={0}
-          step={0.001}
-          className="field"
-          placeholder="指定なし"
-          value={value.previewStartMs === null ? "" : value.previewStartMs / 1000}
-          onChange={(event) =>
-            set(
-              "previewStartMs",
-              event.target.value === "" ? null : Math.round(Number(event.target.value) * 1000),
-            )
-          }
-        />
-        <span className="text-xs text-white/50">
-          {previewEditable
-            ? "対象音源の試聴許可を確認できた場合に有効になります。"
-            : "試聴位置は新しいRevisionを作成するときに指定できます。"}
-        </span>
-      </label>
+      {!hidePreview && (
+        <label className="label sm:col-span-2">
+          試聴開始位置（秒）
+          <input
+            disabled={!previewEditable}
+            type="number"
+            min={0}
+            step={0.001}
+            className="field"
+            placeholder="指定なし"
+            value={value.previewStartMs === null ? "" : value.previewStartMs / 1000}
+            onChange={(event) =>
+              set(
+                "previewStartMs",
+                event.target.value === "" ? null : Math.round(Number(event.target.value) * 1000),
+              )
+            }
+          />
+          <span className="text-xs text-white/50">
+            {previewEditable
+              ? "対象音源の試聴許可を確認できた場合に有効になります。"
+              : "試聴位置は新しいRevisionを作成するときに指定できます。"}
+          </span>
+        </label>
+      )}
     </div>
   );
 }
