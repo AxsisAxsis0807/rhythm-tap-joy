@@ -218,21 +218,31 @@ export function SettingsPanel({
                 <p className="mb-3 text-xs text-white/45">
                   ボタンを押してからキーを入力してください。同じキーの重複は保存しません。
                 </p>
-                <div className="grid grid-cols-4 gap-2">
-                  {settings.keyBindings.map((code, lane) => (
-                    <KeyCapture
-                      key={lane}
-                      lane={lane}
-                      code={code}
-                      bindings={settings.keyBindings}
-                      onChange={(next) => {
-                        const keys = [...settings.keyBindings] as GameSettings["keyBindings"];
-                        keys[lane] = next;
-                        set("keyBindings", keys);
-                      }}
-                    />
-                  ))}
-                </div>
+                {(["keyBindings", "altKeyBindings"] as const).map((field, set_) => (
+                  <div key={field} className="mb-3">
+                    <p className="mb-1 text-xs text-white/60">
+                      {set_ === 0 ? "メイン" : "サブ（Backspaceで解除）"}
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {settings[field].map((code, lane) => (
+                        <KeyCapture
+                          key={lane}
+                          lane={lane}
+                          code={code}
+                          clearable={set_ === 1}
+                          others={[...settings.keyBindings, ...settings.altKeyBindings].filter(
+                            (_, i) => i !== set_ * 4 + lane,
+                          )}
+                          onChange={(next) => {
+                            const keys = [...settings[field]] as GameSettings["keyBindings"];
+                            keys[lane] = next;
+                            set(field, keys);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </Group>
             )}
             {show("controls", "入力 オーバーレイ 履歴 テスト") && (
@@ -660,12 +670,14 @@ function OffsetRow({
 function KeyCapture({
   lane,
   code,
-  bindings,
+  others,
+  clearable,
   onChange,
 }: {
   lane: number;
   code: string;
-  bindings: string[];
+  others: string[];
+  clearable?: boolean;
   onChange: (v: string) => void;
 }) {
   const [waiting, setWaiting] = useState(false);
@@ -678,7 +690,13 @@ function KeyCapture({
         setWaiting(false);
         return;
       }
-      if (bindings.some((v, i) => i !== lane && v === e.code)) {
+      if (clearable && (e.key === "Backspace" || e.key === "Delete")) {
+        onChange("");
+        setError("");
+        setWaiting(false);
+        return;
+      }
+      if (others.includes(e.code)) {
         setError("重複");
         setWaiting(false);
         return;
@@ -689,7 +707,7 @@ function KeyCapture({
     };
     window.addEventListener("keydown", handler, { capture: true });
     return () => window.removeEventListener("keydown", handler, { capture: true });
-  }, [waiting, bindings, lane, onChange]);
+  }, [waiting, others, clearable, onChange]);
   return (
     <button
       type="button"
@@ -698,7 +716,7 @@ function KeyCapture({
     >
       <span className="block text-white/40">L{lane + 1}</span>
       <span className="block truncate text-cyan-100">
-        {waiting ? "入力…" : code.replace(/^Key/, "")}
+        {waiting ? "入力…" : code ? code.replace(/^Key/, "").replace(/^Arrow/, "→").replace(/^→Left/, "←").replace(/^→Down/, "↓").replace(/^→Up/, "↑").replace(/^→Right/, "→") : "—"}
       </span>
       {error && <span className="text-rose-300">{error}</span>}
     </button>

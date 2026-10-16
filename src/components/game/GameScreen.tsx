@@ -54,7 +54,9 @@ export function GameScreen({
     timingOffsetMs: settings.timingOffsetMs,
     volume: settings.masterVolume * settings.musicVolume,
     hitSoundVolume: settings.hitSoundEnabled ? settings.masterVolume * settings.hitSoundVolume : 0,
-    keyMap: settings.keyBindings.map((code) => [code]),
+    keyMap: settings.keyBindings.map((code, i) =>
+      [code, settings.altKeyBindings[i] ?? ""].filter((k) => k && k !== code),
+    ),
   });
   const {
     status,

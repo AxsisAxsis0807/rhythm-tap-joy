@@ -125,7 +125,8 @@ export function InputTest({ settings }: { settings: GameSettings }) {
         (e.target instanceof HTMLElement && e.target.closest("input,select,textarea"))
       )
         return;
-      const lane = settings.keyBindings.indexOf(e.code);
+      let lane = settings.keyBindings.indexOf(e.code);
+      if (lane < 0 && e.code) lane = settings.altKeyBindings.indexOf(e.code);
       if (lane < 0) return;
       e.preventDefault();
       inputs.press(`key:${e.code}`, lane, e.timeStamp);
@@ -148,7 +149,7 @@ export function InputTest({ settings }: { settings: GameSettings }) {
       document.removeEventListener("visibilitychange", hidden);
       clear();
     };
-  }, [enabled, inputs, settings.keyBindings]);
+  }, [enabled, inputs, settings.keyBindings, settings.altKeyBindings]);
   return (
     <div className="py-3">
       <button

@@ -23,6 +23,8 @@ export interface GameSettings {
   menuVolume: number;
   hitSoundEnabled: boolean;
   keyBindings: [string, string, string, string];
+  /** Secondary set (FNF-style dual setup); "" means unbound. */
+  altKeyBindings: [string, string, string, string];
   laneWidth: number;
   noteScale: number;
   judgeLinePct: number;
@@ -66,6 +68,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   menuVolume: 0.7,
   hitSoundEnabled: true,
   keyBindings: ["KeyD", "KeyF", "KeyJ", "KeyK"],
+  altKeyBindings: ["ArrowLeft", "ArrowDown", "ArrowUp", "ArrowRight"],
   laneWidth: 100,
   noteScale: 100,
   judgeLinePct: 86,
@@ -128,6 +131,10 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     keyBindings: DEFAULT_SETTINGS.keyBindings.map((fallback, i) =>
       typeof keys[i] === "string" && /^[A-Za-z0-9]+$/.test(keys[i]) ? keys[i] : fallback,
     ) as GameSettings["keyBindings"],
+    altKeyBindings: DEFAULT_SETTINGS.altKeyBindings.map((fallback, i) => {
+      const alt = Array.isArray(s.altKeyBindings) ? s.altKeyBindings[i] : undefined;
+      return typeof alt === "string" && /^[A-Za-z0-9]*$/.test(alt) ? alt : fallback;
+    }) as GameSettings["altKeyBindings"],
     laneWidth: clamp(d.laneWidth, 70, 130, 100),
     noteScale: clamp(s.noteScale, 70, 140, 100),
     judgeLinePct: clamp(d.judgeLinePct, 65, 92, 86),
