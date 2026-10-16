@@ -191,6 +191,7 @@ export function SongPreviewEditor({
         permissionAudioHash: source.audioHash,
         allowed: true,
         previewStartMs: startMs,
+        durationMs: source.durationMs,
         url: source.audioUrl,
         expiresAt: source.expiresAt,
         resolveUrl: async () => {
@@ -206,6 +207,7 @@ export function SongPreviewEditor({
     token,
     source.operationId,
     source.audioHash,
+    source.durationMs,
     source.audioUrl,
     source.expiresAt,
     ownerId,

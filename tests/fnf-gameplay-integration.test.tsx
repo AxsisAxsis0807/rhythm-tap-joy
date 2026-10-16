@@ -644,6 +644,25 @@ it.each([
   expect(core.play.counts.MISS).toBe(expected === "MISS" ? 1 : 0);
 });
 
+it.each(["KeyD", "ArrowLeft"])(
+  "main and alternate binding %s both reach the judgement engine",
+  async (code) => {
+    const view = render(
+      <GameScreen chart={makeChart("4k")} modeId="classic" playStyle="mania" autoStart />,
+    );
+    act(() => settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false }));
+    await act(async () => {});
+    paint();
+    at(1);
+    const event = new KeyboardEvent("keydown", { code, bubbles: true, cancelable: true });
+    Object.defineProperty(event, "timeStamp", { value: now });
+    fireEvent(window, event);
+    paint();
+    expect(core.play.counts.PERFECT).toBe(1);
+    view.unmount();
+  },
+);
+
 it.each([-200, 0, 200])(
   "calibration %ims is stored with the inverse sign and used by START",
   async (residual) => {

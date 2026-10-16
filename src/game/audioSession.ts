@@ -10,6 +10,8 @@ export interface PreviewSource {
   permissionAudioHash?: string;
   allowed: boolean;
   previewStartMs?: number | null;
+  /** Duration from full source validation; avoids encoded container padding. */
+  durationMs?: number;
   url?: string;
   expiresAt?: number | undefined;
   resolveUrl?: (signal: AbortSignal, refresh: boolean) => Promise<PreviewUrl>;
@@ -60,7 +62,7 @@ const abortError = () => new DOMException("Preview cancelled", "AbortError");
 const unit = (value: number) => (Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0);
 const assetKey = (source: PreviewSource) => `${source.assetId}:${source.audioHash ?? ""}`;
 const selectionKey = (source: PreviewSource) =>
-  `${source.selectionId}:${assetKey(source)}:${source.previewStartMs ?? 0}`;
+  `${source.selectionId}:${assetKey(source)}:${source.previewStartMs ?? 0}:${source.durationMs ?? "media"}`;
 
 /** One context, separate gains, and one owner for every asynchronous preview operation. */
 export class AudioSessionController {
@@ -170,6 +172,7 @@ export class AudioSessionController {
     const end = Math.min(
       start + PREVIEW_DURATION_MS,
       (this.media?.element.duration ?? Infinity) * 1000,
+      this.source.durationMs ?? Infinity,
     );
     if (!Number.isFinite(timeMs) || timeMs < start || timeMs >= end)
       throw new PreviewError("Seek is outside preview interval", false, "position");
@@ -412,12 +415,8 @@ export class AudioSessionController {
       );
       if (!this.current(generation, media)) return;
       const start = (source.previewStartMs ?? 0) / 1000;
-      if (
-        !Number.isFinite(start) ||
-        start < 0 ||
-        !Number.isFinite(element.duration) ||
-        start >= element.duration
-      ) {
+      const duration = Math.min(element.duration, (source.durationMs ?? Infinity) / 1000);
+      if (!Number.isFinite(start) || start < 0 || !Number.isFinite(duration) || start >= duration) {
         throw new PreviewError(
           "試聴開始位置が音源の範囲外です。作者による再設定が必要です。",
           false,
@@ -425,7 +424,7 @@ export class AudioSessionController {
         );
       }
       this.segmentStart = start;
-      this.segmentEnd = Math.min(start + PREVIEW_DURATION_MS / 1000, element.duration);
+      this.segmentEnd = Math.min(start + PREVIEW_DURATION_MS / 1000, duration);
       const position =
         this.position !== null && this.position >= start && this.position < this.segmentEnd
           ? this.position

@@ -178,3 +178,20 @@ it("an editor lease rejects stale cleanup and applies a 1ms seek without reloadi
   controller.releasePreviewOwner(token);
   expect(controller.getSnapshot().status).toBe("idle");
 });
+
+it("validated duration bounds seeks and preview end despite container padding", async () => {
+  vi.useFakeTimers();
+  const { controller, media } = setup();
+  const token = controller.acquirePreviewOwner("validated");
+  controller.selectPreview(
+    { ...source("padded-opus"), durationMs: 1125, previewStartMs: 1124 },
+    { ownerToken: token },
+  );
+  controller.play(token);
+  await settle();
+  expect(media[0]!.currentTime).toBe(1.124);
+  expect(() => controller.seekPreview(token, 1125)).toThrow("outside preview interval");
+  media[0]!.currentTime = 1.125;
+  await vi.advanceTimersByTimeAsync(20);
+  expect(controller.getSnapshot().status).toBe("ready");
+});

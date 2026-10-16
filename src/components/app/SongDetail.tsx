@@ -60,6 +60,7 @@ export function SongDetail({
             permissionAudioHash: previewAsset.permissionAudioHash,
             allowed: true,
             previewStartMs: previewAsset.startMs,
+            durationMs: previewAsset.durationMs,
           }
         : null,
     [previewAsset, song.id],

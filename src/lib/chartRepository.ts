@@ -124,6 +124,7 @@ export async function getSongPreview(value: SongRow) {
     audioHash: r.audio_hash,
     permissionAudioHash: r.audio_hash,
     startMs: row.preview_start_ms ?? 0,
+    durationMs: r.duration_ms,
     url: await signed("chart-revision-assets", r.audio_path),
     expiresAt: Date.now() + 3_600_000,
     resolveUrl: async () => ({

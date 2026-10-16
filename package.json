@@ -14,7 +14,10 @@
     "typecheck": "tsc --noEmit",
     "dev:e2e": "vite --config tests/e2e/vite.config.ts",
     "test:e2e": "python3 scripts/verify-song-settings-ui.py",
-    "typecheck:song-settings-tests": "tsc --noEmit -p tsconfig.song-settings-tests.json"
+    "typecheck:song-settings-tests": "tsc --noEmit -p tsconfig.song-settings-tests.json",
+    "build:e2e": "vite build --config tests/e2e/vite.config.ts",
+    "preview:e2e": "vite preview --config tests/e2e/vite.config.ts --host 127.0.0.1 --port 4175",
+    "typecheck:song-settings-e2e": "tsc --noEmit -p tsconfig.song-settings-e2e.json"
   },
   "overrides": {
     "rolldown": "1.2.1"
