@@ -96,3 +96,7 @@ PR #8には「maniaで旧サブArrowLeftも有効」という旧仕様のテス�
 4. PR #8の先後に関わらず、上記競合解決とテスト期待値の更新を行い、統合後のtests/typecheck/buildを実行してください。
 
 これらを完了扱いにはせず、PRはDraftとして提出します。
+
+## ブラウザ計測・画像
+
+[計測JSON](style-keybinds-assets/browser-verification.json) / [360×780](style-keybinds-assets/settings-360x780.png) / [390×844](style-keybinds-assets/settings-390x844.png) / [667×375](style-keybinds-assets/settings-667x375.png) / [844×390](style-keybinds-assets/settings-844x390.png) / [1440×900](style-keybinds-assets/settings-1440x900.png)
