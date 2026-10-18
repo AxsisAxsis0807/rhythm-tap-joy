@@ -56,5 +56,5 @@ it("v2 hydration preserves device settings and CLASSIC without writing defaults 
   expect(writes).toBe(0);
   store.setSettings((s) => ({ ...s, previewVolume: 0.2 }));
   expect(store.getSnapshot().settings.timingOffsetMs).toBe(125);
-  expect(store.getSnapshot().settings.keyBindings[0]).toBe("KeyA");
+  expect(store.getSnapshot().settings.maniaKeybinds[0]).toBe("KeyA");
 });

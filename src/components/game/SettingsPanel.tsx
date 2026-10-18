@@ -3,8 +3,9 @@ import { RotateCcw, Search, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { getMode } from "@/game/modes";
 import { InputTest } from "./InputOverlay";
-import { applyPreset, DEFAULT_SETTINGS, type GameSettings } from "@/game/settings";
+import { isBindableKey, DEFAULT_SETTINGS, type GameSettings, type LaneKeys } from "@/game/settings";
 
 type Category = "play" | "controls" | "audio" | "visual" | "comfort";
 const categories: { id: Category; label: string }[] = [
@@ -31,6 +32,7 @@ export function SettingsPanel({
   saveError?: boolean;
 }) {
   const [category, setCategory] = useState<Category>("play");
+  const [editingStyle, setEditingStyle] = useState<"mania" | "fnf">(fnf ? "fnf" : "mania");
   const [query, setQuery] = useState("");
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -80,7 +82,7 @@ export function SettingsPanel({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200 md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200 px-[max(env(safe-area-inset-left),env(safe-area-inset-right))] md:items-center md:px-[max(1.5rem,env(safe-area-inset-left),env(safe-area-inset-right))] md:py-6"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -107,8 +109,8 @@ export function SettingsPanel({
             <X className="size-5" />
           </Button>
         </header>
-        <div className="grid min-h-0 flex-1 md:grid-cols-[190px_1fr_290px]">
-          <aside className="shrink-0 border-b border-white/10 p-3 md:border-r md:border-b-0 md:p-4">
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)_290px] md:grid-rows-[minmax(0,1fr)]">
+          <aside className="min-h-0 shrink-0 overflow-y-auto border-b border-white/10 p-3 md:border-r md:border-b-0 md:p-4">
             <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3">
               <Search className="size-4 text-white/40" />
               <input
@@ -138,19 +140,6 @@ export function SettingsPanel({
             </nav>
           </aside>
           <main className="min-h-0 overflow-y-auto px-4 py-4 md:px-6">
-            <div className="mb-5 flex flex-wrap gap-2">
-              {(["simple", "readable", "effects"] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => onChange(applyPreset(settings, p))}
-                  className={`rounded-full border px-3 py-1.5 text-xs ${settings.preset === p ? "border-cyan-300 bg-cyan-300/15 text-cyan-100" : "border-white/10 text-white/60"}`}
-                >
-                  {p === "simple" ? "シンプル" : p === "readable" ? "視認性重視" : "演出重視"}
-                </button>
-              ))}
-            </div>
-
             {show("play", "スクロール 方向 速度 ミドル") && (
               <Group title="スクロール">
                 <SelectRow
@@ -215,28 +204,53 @@ export function SettingsPanel({
 
             {show("controls", "キー キーバインド 入力") && (
               <Group title="キーバインド">
+                <div
+                  className="my-2 flex flex-wrap gap-2"
+                  role="group"
+                  aria-label="キーバインド編集対象"
+                >
+                  {(["mania", "fnf"] as const).map((style) => (
+                    <button
+                      key={style}
+                      type="button"
+                      aria-pressed={editingStyle === style}
+                      onClick={() => setEditingStyle(style)}
+                      className={`min-h-11 flex-1 rounded-lg border px-3 text-xs ${editingStyle === style ? "border-cyan-200 bg-cyan-300/15 font-bold underline underline-offset-4" : "border-white/10 text-white/60"}`}
+                    >
+                      {style === "mania" ? "OSU!MANIA" : "FNF"}
+                    </button>
+                  ))}
+                </div>
                 <p className="mb-3 text-xs text-white/45">
-                  ボタンを押してからキーを入力してください。同じキーの重複は保存しません。
+                  編集対象のみ切替。Play
+                  Styleは変わりません。異なるレーンへのキー重複は保存しません。
                 </p>
-                {(["keyBindings", "altKeyBindings"] as const).map((field, set_) => (
-                  <div key={field} className="mb-3">
+                {(editingStyle === "mania"
+                  ? [settings.maniaKeybinds]
+                  : [settings.fnfKeybinds.primary, settings.fnfKeybinds.secondary]
+                ).map((bindings, setIndex, sets) => (
+                  <div key={`${editingStyle}-${setIndex}`} className="mb-3">
                     <p className="mb-1 text-xs text-white/60">
-                      {set_ === 0 ? "メイン" : "サブ（Backspaceで解除）"}
+                      SET {setIndex + 1}
+                      {setIndex === 1 ? "（Backspaceで解除）" : ""}
                     </p>
                     <div className="grid grid-cols-4 gap-2">
-                      {settings[field].map((code, lane) => (
+                      {bindings.map((code, lane) => (
                         <KeyCapture
                           key={lane}
                           lane={lane}
                           code={code}
-                          clearable={set_ === 1}
-                          others={[...settings.keyBindings, ...settings.altKeyBindings].filter(
-                            (_, i) => i !== set_ * 4 + lane,
-                          )}
+                          clearable={setIndex === 1}
+                          others={sets.flatMap((keys) => keys.filter((_, index) => index !== lane))}
                           onChange={(next) => {
-                            const keys = [...settings[field]] as GameSettings["keyBindings"];
+                            const keys = [...bindings] as LaneKeys;
                             keys[lane] = next;
-                            set(field, keys);
+                            if (editingStyle === "mania") set("maniaKeybinds", keys);
+                            else
+                              set("fnfKeybinds", {
+                                ...settings.fnfKeybinds,
+                                [setIndex === 0 ? "primary" : "secondary"]: keys,
+                              });
                           }}
                         />
                       ))}
@@ -293,7 +307,7 @@ export function SettingsPanel({
                 <p className="py-2 text-xs text-white/45">
                   スマホはHUD下の専用領域に表示。保持時間を棒の長さで示します。判定時間外の入力も表示します。
                 </p>
-                <InputTest settings={settings} />
+                <InputTest settings={settings} playStyle={editingStyle} />
               </Group>
             )}
             {show("controls", "タッチ エリア 枠") && (
@@ -485,12 +499,12 @@ export function SettingsPanel({
               すべて初期値に戻す
             </button>
           </main>
-          <aside className="order-first border-b border-white/10 p-3 md:order-none md:border-l md:border-b-0 md:p-5">
-            <Preview settings={settings} />
+          <aside className="order-first min-h-0 overflow-y-auto border-b border-white/10 p-3 max-md:[@media(max-height:500px)]:py-1 md:order-none md:border-l md:border-b-0 md:p-5">
+            <Preview settings={settings} fnf={editingStyle === "fnf"} />
           </aside>
         </div>
         <footer
-          className="shrink-0 border-t border-white/10 px-4 py-2 text-right text-[11px] text-white/40"
+          className="shrink-0 border-t border-white/10 px-4 pt-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-right text-[11px] text-white/40"
           role="status"
         >
           {saveError ? "この端末に保存できませんでした" : "● この端末に自動保存済み"}
@@ -686,6 +700,8 @@ function KeyCapture({
     if (!waiting) return;
     const handler = (e: KeyboardEvent) => {
       e.preventDefault();
+      e.stopImmediatePropagation();
+      if (e.repeat) return;
       if (e.key === "Escape") {
         setWaiting(false);
         return;
@@ -693,6 +709,11 @@ function KeyCapture({
       if (clearable && (e.key === "Backspace" || e.key === "Delete")) {
         onChange("");
         setError("");
+        setWaiting(false);
+        return;
+      }
+      if (!isBindableKey(e.code)) {
+        setError("使用不可");
         setWaiting(false);
         return;
       }
@@ -705,8 +726,18 @@ function KeyCapture({
       setError("");
       setWaiting(false);
     };
+    const cancel = () => setWaiting(false);
+    const hidden = () => {
+      if (document.hidden) cancel();
+    };
     window.addEventListener("keydown", handler, { capture: true });
-    return () => window.removeEventListener("keydown", handler, { capture: true });
+    window.addEventListener("blur", cancel);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      window.removeEventListener("keydown", handler, { capture: true });
+      window.removeEventListener("blur", cancel);
+      document.removeEventListener("visibilitychange", hidden);
+    };
   }, [waiting, others, clearable, onChange]);
   return (
     <button
@@ -716,7 +747,17 @@ function KeyCapture({
     >
       <span className="block text-white/40">L{lane + 1}</span>
       <span className="block truncate text-cyan-100">
-        {waiting ? "入力…" : code ? code.replace(/^Key/, "").replace(/^Arrow/, "→").replace(/^→Left/, "←").replace(/^→Down/, "↓").replace(/^→Up/, "↑").replace(/^→Right/, "→") : "—"}
+        {waiting
+          ? "入力…"
+          : code
+            ? code
+                .replace(/^Key/, "")
+                .replace(/^Arrow/, "→")
+                .replace(/^→Left/, "←")
+                .replace(/^→Down/, "↓")
+                .replace(/^→Up/, "↑")
+                .replace(/^→Right/, "→")
+            : "—"}
       </span>
       {error && <span className="text-rose-300">{error}</span>}
     </button>
@@ -813,20 +854,24 @@ function Calibration({ onAdopt }: { onAdopt: (v: number) => void }) {
     </div>
   );
 }
-function Preview({ settings }: { settings: GameSettings }) {
-  const direction = settings.scrollDirection === "up" ? "up" : "down";
+function Preview({ settings, fnf }: { settings: GameSettings; fnf: boolean }) {
+  const mode = getMode(fnf ? "fnf" : settings.maniaSkin === "classic" ? "classic" : "mania");
+  const direction = settings.scrollDirection === "mode" ? mode.scroll : settings.scrollDirection;
+  const shape = settings.noteShape === "mode" ? mode.noteShape : settings.noteShape;
   return (
     <div>
-      <p className="mb-2 text-xs tracking-widest text-white/45">LIVE PREVIEW</p>
+      <p className="mb-2 text-xs tracking-widest text-white/45 max-md:[@media(max-height:500px)]:mb-1">
+        LIVE PREVIEW
+      </p>
       <div
-        className="relative mx-auto h-32 max-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-black"
+        className="relative mx-auto h-32 max-w-[280px] max-md:[@media(max-height:500px)]:h-10 overflow-hidden rounded-xl border border-white/10 bg-black"
         style={{ opacity: 0.4 + settings.laneOpacity / 170 }}
       >
         <div className="absolute inset-0 grid grid-cols-4">
           {[0, 1, 2, 3].map((lane) => (
             <div key={lane} className="relative border-r border-white/10 last:border-0">
               <i
-                className={`absolute left-1/2 block -translate-x-1/2 bg-cyan-300 ${settings.noteShape === "circle" ? "size-4 rounded-full" : settings.noteShape === "arrow" ? "size-4 rotate-45" : "h-2 w-[80%] rounded"} ${settings.reducedMotion ? "" : direction === "up" ? "animate-preview-up" : "animate-preview-down"}`}
+                className={`absolute left-1/2 block -translate-x-1/2 bg-cyan-300 ${shape === "circle" ? "size-4 rounded-full" : shape === "arrow" ? "size-4 rotate-45" : "h-2 w-[80%] rounded"} ${settings.reducedMotion ? "" : direction === "up" ? "animate-preview-up" : "animate-preview-down"}`}
                 style={{
                   animationDuration: `${1.1 / settings.scrollSpeed}s`,
                   transform: `translateX(-50%) scale(${settings.noteScale / 100})`,
@@ -840,7 +885,7 @@ function Preview({ settings }: { settings: GameSettings }) {
           style={{ top: `${settings.judgeLinePct}%` }}
         />
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+      <p className="mt-2 text-[11px] leading-relaxed text-white/35 max-md:[@media(max-height:500px)]:hidden">
         速度・方向・形状・サイズ・判定ラインを反映
       </p>
     </div>

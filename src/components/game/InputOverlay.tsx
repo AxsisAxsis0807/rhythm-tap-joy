@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { DIRECTIONS, InputLedger } from "@/game/input";
-import type { GameSettings } from "@/game/settings";
+import { resolveKeyMap, type GameSettings } from "@/game/settings";
+import type { PlayStyleId } from "@/game/types";
 import { TouchInput } from "./TouchInput";
 
 export function InputOverlay({
   inputs,
   settings,
   test = false,
+  playStyle = "mania",
 }: {
   inputs: InputLedger;
   settings: GameSettings;
   test?: boolean;
+  playStyle?: PlayStyleId;
 }) {
   useSyncExternalStore(inputs.subscribe, inputs.snapshot, inputs.snapshot);
   const [now, setNow] = useState(0);
@@ -100,7 +103,9 @@ export function InputOverlay({
           >
             <div>{label}</div>
             <div className="truncate text-[9px]">
-              {(settings.keyBindings[lane] ?? "").replace(/^Key/, "")}
+              {resolveKeyMap(settings, playStyle)
+                [lane]?.map((k) => k.replace(/^Key/, ""))
+                .join(" / ")}
             </div>
           </div>
         ))}
@@ -109,7 +114,14 @@ export function InputOverlay({
   );
 }
 
-export function InputTest({ settings }: { settings: GameSettings }) {
+export function InputTest({
+  settings,
+  playStyle = "mania",
+}: {
+  settings: GameSettings;
+  playStyle?: PlayStyleId;
+}) {
+  const keySignature = JSON.stringify(resolveKeyMap(settings, playStyle));
   const [inputs] = useState(() => new InputLedger());
   useSyncExternalStore(inputs.subscribe, inputs.snapshot, inputs.snapshot);
   const [enabled, setEnabled] = useState(false);
@@ -125,8 +137,9 @@ export function InputTest({ settings }: { settings: GameSettings }) {
         (e.target instanceof HTMLElement && e.target.closest("input,select,textarea"))
       )
         return;
-      let lane = settings.keyBindings.indexOf(e.code);
-      if (lane < 0 && e.code) lane = settings.altKeyBindings.indexOf(e.code);
+      const lane = (JSON.parse(keySignature) as string[][]).findIndex((keys) =>
+        keys.includes(e.code),
+      );
       if (lane < 0) return;
       e.preventDefault();
       inputs.press(`key:${e.code}`, lane, e.timeStamp);
@@ -149,7 +162,7 @@ export function InputTest({ settings }: { settings: GameSettings }) {
       document.removeEventListener("visibilitychange", hidden);
       clear();
     };
-  }, [enabled, inputs, settings.keyBindings, settings.altKeyBindings]);
+  }, [enabled, inputs, keySignature]);
   return (
     <div className="py-3">
       <button
@@ -161,7 +174,7 @@ export function InputTest({ settings }: { settings: GameSettings }) {
       </button>
       {enabled && (
         <>
-          <InputOverlay inputs={inputs} settings={settings} test />
+          <InputOverlay inputs={inputs} settings={settings} playStyle={playStyle} test />
           <div className="relative mt-2 h-20 rounded border border-cyan-200/20 bg-black/30">
             <TouchInput
               borders
