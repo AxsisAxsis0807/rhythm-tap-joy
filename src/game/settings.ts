@@ -1,12 +1,73 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { PlayStyleId } from "./types";
 
+export type LaneKeys = [string, string, string, string];
+/** Reserve dialog/pause/navigation keys. Use physical KeyboardEvent.code, independent of layout. */
+export function isBindableKey(code: unknown): code is string {
+  return (
+    typeof code === "string" &&
+    /^(Key[A-Z]|Digit[0-9]|Arrow(Left|Down|Up|Right)|Numpad([0-9]|Add|Subtract|Multiply|Divide|Decimal|Enter)|Space|Enter|Shift(Left|Right)|Control(Left|Right)|Alt(Left|Right)|Semicolon|Quote|Comma|Period|Slash|Backslash|BracketLeft|BracketRight|Minus|Equal|Backquote|IntlBackslash|IntlRo|IntlYen)$/.test(
+      code,
+    )
+  );
+}
+/** Preserve every valid assignment before filling missing slots; never steal a later custom key. */
+function sanitizeLaneKeys(value: unknown, defaults: LaneKeys, primary?: LaneKeys): LaneKeys {
+  const raw = Array.isArray(value) ? value : [];
+  const owners = new Map<string, number>();
+  primary?.forEach((code, lane) => {
+    if (code) owners.set(code, lane);
+  });
+  const result = defaults.map((_, lane) => {
+    const code: unknown = raw[lane];
+    if (primary && code === "") return "";
+    if (!isBindableKey(code) || (owners.has(code) && owners.get(code) !== lane)) return undefined;
+    owners.set(code, lane);
+    return code;
+  });
+  return result.map((code, lane) => {
+    if (code !== undefined) return code;
+    if (primary) {
+      const fallback = defaults[lane]!;
+      if (owners.has(fallback) && owners.get(fallback) !== lane) return "";
+      owners.set(fallback, lane);
+      return fallback;
+    }
+    const fallback = [
+      defaults[lane]!,
+      ...defaults,
+      "KeyA",
+      "KeyS",
+      "KeyW",
+      "KeyL",
+      "Digit1",
+      "Digit2",
+      "Digit3",
+      "Digit4",
+    ].find((k) => !owners.has(k))!;
+    owners.set(fallback, lane);
+    return fallback;
+  }) as LaneKeys;
+}
+export function resolveKeyMap(settings: GameSettings, style: PlayStyleId): string[][] {
+  return settings.maniaKeybinds.map((code, lane) =>
+    style === "mania"
+      ? [code]
+      : [
+          ...new Set(
+            [settings.fnfKeybinds.primary[lane]!, settings.fnfKeybinds.secondary[lane]!].filter(
+              Boolean,
+            ),
+          ),
+        ],
+  );
+}
 export type ScrollDirectionSetting = "mode" | "down" | "up";
 export type NoteShapeSetting = "mode" | "bar" | "circle" | "arrow";
 export type SettingsPreset = "simple" | "readable" | "effects" | "custom";
 
 export interface GameSettings {
-  version: 3;
+  version: 4;
   autoPreview: boolean;
   previewVolume: number;
   lastPlayedStyle: PlayStyleId | null;
@@ -22,9 +83,8 @@ export interface GameSettings {
   hitSoundVolume: number;
   menuVolume: number;
   hitSoundEnabled: boolean;
-  keyBindings: [string, string, string, string];
-  /** Secondary set (FNF-style dual setup); "" means unbound. */
-  altKeyBindings: [string, string, string, string];
+  maniaKeybinds: LaneKeys;
+  fnfKeybinds: { primary: LaneKeys; secondary: LaneKeys };
   laneWidth: number;
   noteScale: number;
   judgeLinePct: number;
@@ -51,7 +111,7 @@ export interface GameSettings {
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  version: 3,
+  version: 4,
   autoPreview: true,
   previewVolume: 0.5,
   lastPlayedStyle: null,
@@ -67,8 +127,11 @@ export const DEFAULT_SETTINGS: GameSettings = {
   hitSoundVolume: 0.55,
   menuVolume: 0.7,
   hitSoundEnabled: true,
-  keyBindings: ["KeyD", "KeyF", "KeyJ", "KeyK"],
-  altKeyBindings: ["ArrowLeft", "ArrowDown", "ArrowUp", "ArrowRight"],
+  maniaKeybinds: ["KeyD", "KeyF", "KeyJ", "KeyK"],
+  fnfKeybinds: {
+    primary: ["KeyA", "KeyS", "KeyW", "KeyD"],
+    secondary: ["ArrowLeft", "ArrowDown", "ArrowUp", "ArrowRight"],
+  },
   laneWidth: 100,
   noteScale: 100,
   judgeLinePct: 86,
@@ -104,7 +167,20 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
   const s = typeof stored === "object" && stored ? (stored as Partial<GameSettings>) : {};
   const d =
     typeof deviceStored === "object" && deviceStored ? (deviceStored as Partial<GameSettings>) : s;
-  const keys = Array.isArray(s.keyBindings) ? s.keyBindings : [];
+  const legacy = s as Partial<GameSettings> & { keyBindings?: unknown; altKeyBindings?: unknown };
+  const maniaKeybinds = sanitizeLaneKeys(
+    s.maniaKeybinds ?? legacy.keyBindings,
+    DEFAULT_SETTINGS.maniaKeybinds,
+  );
+  const primary = sanitizeLaneKeys(
+    s.fnfKeybinds?.primary ?? legacy.keyBindings,
+    DEFAULT_SETTINGS.fnfKeybinds.primary,
+  );
+  const secondary = sanitizeLaneKeys(
+    s.fnfKeybinds?.secondary ?? legacy.altKeyBindings,
+    DEFAULT_SETTINGS.fnfKeybinds.secondary,
+    primary,
+  );
   const pick = <T extends string>(v: unknown, values: T[], fallback: T) =>
     values.includes(v as T) ? (v as T) : fallback;
   return {
@@ -128,13 +204,8 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     hitSoundVolume: clamp(s.hitSoundVolume, 0, 1, 0.55),
     menuVolume: clamp(s.menuVolume, 0, 1, 0.7),
     hitSoundEnabled: bool(s.hitSoundEnabled, true),
-    keyBindings: DEFAULT_SETTINGS.keyBindings.map((fallback, i) =>
-      typeof keys[i] === "string" && /^[A-Za-z0-9]+$/.test(keys[i]) ? keys[i] : fallback,
-    ) as GameSettings["keyBindings"],
-    altKeyBindings: DEFAULT_SETTINGS.altKeyBindings.map((fallback, i) => {
-      const alt = Array.isArray(s.altKeyBindings) ? s.altKeyBindings[i] : undefined;
-      return typeof alt === "string" && /^[A-Za-z0-9]*$/.test(alt) ? alt : fallback;
-    }) as GameSettings["altKeyBindings"],
+    maniaKeybinds,
+    fnfKeybinds: { primary, secondary },
     laneWidth: clamp(d.laneWidth, 70, 130, 100),
     noteScale: clamp(s.noteScale, 70, 140, 100),
     judgeLinePct: clamp(d.judgeLinePct, 65, 92, 86),

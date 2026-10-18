@@ -251,7 +251,7 @@ async function start(
   fireEvent.click(view.getByRole("radio", { name: style === "fnf" ? "OSU!MANIA" : "FNF" }));
   fireEvent.click(view.getByRole("radio", { name: style === "fnf" ? "FNF" : "OSU!MANIA" }));
   await act(async () => {
-    fireEvent.click(view.getByRole("button", { name: "START", exact: true }));
+    fireEvent.click(view.getByRole("button", { name: "START" }));
   });
   expect(audioStart).toBeGreaterThan(0);
   paint();
@@ -274,7 +274,9 @@ function edge(
   const stamp = now - delayMs + (epoch ? performance.timeOrigin : 0);
   if (input === "keyboard") {
     const event = new KeyboardEvent(type === "down" ? "keydown" : "keyup", {
-      code: ["KeyD", "KeyF", "KeyJ", "KeyK"][lane],
+      code: (core.configuration.playStyle === "fnf"
+        ? ["KeyA", "KeyS", "KeyW", "KeyD"]
+        : ["KeyD", "KeyF", "KeyJ", "KeyK"])[lane]!,
       bubbles: true,
       cancelable: true,
     });
@@ -366,9 +368,9 @@ for (const format of ["4k", "fnf"] as const)
         if (chart.fnf) chart.fnf.right = chart.notes;
         const view = render(<Workflow chart={chart} />);
         act(() => settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false }));
-        fireEvent.click(view.getByRole("radio", { name: "FNF", exact: true }));
+        fireEvent.click(view.getByRole("radio", { name: "FNF" }));
         await act(async () => {
-          fireEvent.click(view.getByRole("button", { name: "START", exact: true }));
+          fireEvent.click(view.getByRole("button", { name: "START" }));
         });
         paint();
         at(1);
@@ -418,7 +420,7 @@ for (const format of ["4k", "fnf"] as const)
         at(4.1);
         paint();
         await act(async () => {
-          fireEvent.click(view.getByRole("button", { name: "RETRY", exact: true }));
+          fireEvent.click(view.getByRole("button", { name: "RETRY" }));
         });
         paint();
         expect([...runs.keys()].at(-1)).not.toBe(oldRun);
@@ -488,16 +490,16 @@ for (const input of ["keyboard", "touch"] as const)
           }),
         );
         if (entrance === "select")
-          fireEvent.click(view.getByRole("button", { name: "曲を探して遊ぶ", exact: true }));
+          fireEvent.click(view.getByRole("button", { name: "曲を探して遊ぶ" }));
         else if (entrance === "home")
           fireEvent.click(view.getByRole("button", { name: /Fixture/ }));
         else {
           fireEvent.click(view.getByRole("button", { name: "Test Player" }));
-          fireEvent.click(view.getByRole("button", { name: "PLAY", exact: true }));
+          fireEvent.click(view.getByRole("button", { name: "PLAY" }));
         }
-        fireEvent.click(view.getByRole("radio", { name: "FNF", exact: true }));
+        fireEvent.click(view.getByRole("radio", { name: "FNF" }));
         await act(async () => {
-          fireEvent.click(view.getByRole("button", { name: "START", exact: true }));
+          fireEvent.click(view.getByRole("button", { name: "START" }));
         });
         paint();
         expect(core.configuration).toMatchObject({
@@ -522,9 +524,9 @@ for (const input of ["keyboard", "touch"] as const) {
     act(() =>
       settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false, timingOffsetMs: 300 }),
     );
-    fireEvent.click(view.getByRole("radio", { name: "FNF", exact: true }));
+    fireEvent.click(view.getByRole("radio", { name: "FNF" }));
     await act(async () => {
-      fireEvent.click(view.getByRole("button", { name: "START", exact: true }));
+      fireEvent.click(view.getByRole("button", { name: "START" }));
     });
     paint();
     at(0.85);
@@ -566,18 +568,18 @@ for (const input of ["keyboard", "touch"] as const) {
   it(`calibration adopted through settings cannot turn an early press into late MISS: ${input}`, async () => {
     const view = render(<CalibratedWorkflow chart={makeChart("fnf")} />);
     act(() => settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false }));
-    fireEvent.click(view.getByRole("button", { name: "音声・タイミング", exact: true }));
+    fireEvent.click(view.getByRole("button", { name: "音声・タイミング" }));
     const calibrationStart = now;
-    fireEvent.click(view.getByRole("button", { name: "開始", exact: true }));
+    fireEvent.click(view.getByRole("button", { name: "開始" }));
     for (let i = 1; i <= 8; i++) {
       now = calibrationStart + i * 500 + 200;
       fireEvent.click(view.getByRole("button", { name: /点滅に合わせてタップ/ }));
     }
-    fireEvent.click(view.getByRole("button", { name: "採用", exact: true }));
-    fireEvent.click(view.getByRole("button", { name: "設定を閉じる", exact: true }));
-    fireEvent.click(view.getByRole("radio", { name: "FNF", exact: true }));
+    fireEvent.click(view.getByRole("button", { name: "採用" }));
+    fireEvent.click(view.getByRole("button", { name: "設定を閉じる" }));
+    fireEvent.click(view.getByRole("radio", { name: "FNF" }));
     await act(async () => {
-      fireEvent.click(view.getByRole("button", { name: "START", exact: true }));
+      fireEvent.click(view.getByRole("button", { name: "START" }));
     });
     paint();
     at(0.95);
@@ -612,6 +614,11 @@ it.each([
   expect(core.configuration.playStyle).toBe(style);
   expect(core.configuration.visualMode).toBe(mode);
   at(0.85);
+  if (style === "mania") {
+    physicalKey("keydown", "ArrowLeft");
+    physicalKey("keyup", "ArrowLeft");
+    expect(recorded.filter((event) => event.type === "press")).toHaveLength(0);
+  }
   edge(view, "keyboard", "down");
   paint();
   expect(core.play.counts.MISS).toBe(expected === "MISS" ? 1 : 0);
@@ -622,18 +629,18 @@ it.each([-200, 0, 200])(
   async (residual) => {
     const view = render(<CalibratedWorkflow chart={makeChart("4k")} />);
     act(() => settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false }));
-    fireEvent.click(view.getByRole("button", { name: "音声・タイミング", exact: true }));
+    fireEvent.click(view.getByRole("button", { name: "音声・タイミング" }));
     const began = now;
-    fireEvent.click(view.getByRole("button", { name: "開始", exact: true }));
+    fireEvent.click(view.getByRole("button", { name: "開始" }));
     for (let i = 1; i <= 8; i++) {
       now = began + i * 500 + residual;
       fireEvent.click(view.getByRole("button", { name: /点滅に合わせてタップ/ }));
     }
-    fireEvent.click(view.getByRole("button", { name: "採用", exact: true }));
-    fireEvent.click(view.getByRole("button", { name: "設定を閉じる", exact: true }));
-    fireEvent.click(view.getByRole("radio", { name: "FNF", exact: true }));
+    fireEvent.click(view.getByRole("button", { name: "採用" }));
+    fireEvent.click(view.getByRole("button", { name: "設定を閉じる" }));
+    fireEvent.click(view.getByRole("radio", { name: "FNF" }));
     await act(async () => {
-      fireEvent.click(view.getByRole("button", { name: "START", exact: true }));
+      fireEvent.click(view.getByRole("button", { name: "START" }));
     });
     paint();
     expect(core.configuration.timingOffsetMs).toBeCloseTo(-residual);
@@ -644,5 +651,80 @@ it.each([-200, 0, 200])(
     edge(view, "keyboard", "down");
     paint();
     expect(core.play.counts.PERFECT).toBe(1);
+  },
+);
+
+function physicalKey(type: "keydown" | "keyup", code: string) {
+  const event = new KeyboardEvent(type, { code, bubbles: true, cancelable: true });
+  Object.defineProperty(event, "timeStamp", { value: now });
+  fireEvent(window, event);
+}
+
+it.each(["primary", "secondary", "mixed"] as const)(
+  "Settings UI → saved FNF %s bindings → real GameScreen → replay and RETRY",
+  async (setup) => {
+    const view = render(<CalibratedWorkflow chart={makeChart("fnf")} />);
+    act(() =>
+      settings.setSettings({
+        ...DEFAULT_SETTINGS,
+        hitSoundEnabled: false,
+        lastPlayedStyle: "mania",
+      }),
+    );
+    fireEvent.click(view.getByRole("button", { name: "操作" }));
+    fireEvent.click(view.getByRole("button", { name: "FNF" }));
+    const captures = view.getAllByRole("button").filter((b) => b.textContent?.startsWith("L"));
+    fireEvent.click(captures[0]!);
+    fireEvent.keyDown(window, { key: "q", code: "KeyQ" });
+    expect(settings.settings.maniaKeybinds).toEqual(DEFAULT_SETTINGS.maniaKeybinds);
+    expect(settings.settings.lastPlayedStyle).toBe("mania");
+    expect(
+      JSON.parse(localStorage.getItem("pulse-lane:game-settings")!).fnfKeybinds.primary[0],
+    ).toBe("KeyQ");
+    fireEvent.click(view.getByRole("button", { name: "設定を閉じる" }));
+    fireEvent.click(view.getByRole("radio", { name: "FNF" }));
+    await act(async () => {
+      fireEvent.click(view.getByRole("button", { name: "START" }));
+    });
+    paint();
+    const primary = ["KeyQ", "KeyS", "KeyW", "KeyD"];
+    const secondary = ["ArrowLeft", "ArrowDown", "ArrowUp", "ArrowRight"];
+    const keys =
+      setup === "primary"
+        ? primary
+        : setup === "secondary"
+          ? secondary
+          : [primary[0], secondary[1], primary[2], secondary[3]];
+    at(0.85);
+    physicalKey("keydown", keys[0]!);
+    paint();
+    expect(core.play.counts.MISS).toBe(0);
+    physicalKey("keyup", keys[0]!);
+    at(1);
+    keys.forEach((code) => physicalKey("keydown", code!));
+    // All physical sources are recorded; the same four notes score once.
+    secondary.forEach((code) => physicalKey("keydown", code!));
+    paint();
+    expect(core.play.counts.PERFECT).toBe(4);
+    expect(core.play.counts.MISS).toBe(0);
+    expect(core.play.combo).toBe(4);
+    expect(view.getByText("ACC 100.00%")).toBeTruthy();
+    expect(
+      view.getByTestId("input-overlay").querySelector('[data-source="key:ArrowLeft"]'),
+    ).toBeTruthy();
+    const replayed = new GameplayCore(makeChart("fnf"), core.configuration);
+    recorded.forEach((event) => replayed.process(event));
+    expect(replayed.snapshotPlay()).toEqual(core.snapshotPlay());
+    at(4.1);
+    paint();
+    await act(async () => {
+      fireEvent.click(view.getByRole("button", { name: "RETRY" }));
+    });
+    paint();
+    at(1);
+    physicalKey("keydown", "KeyQ");
+    paint();
+    expect(core.play.counts.PERFECT).toBe(1);
+    expect(core.configuration.playStyle).toBe("fnf");
   },
 );
