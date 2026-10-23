@@ -12,7 +12,7 @@ describe("settings migration", () => {
       timingOffsetMs: Infinity,
       keyBindings: ["KeyA", "!", "KeyL", "KeyP"],
     });
-    expect(settings.version).toBe(4);
+    expect(settings.version).toBe(5);
     expect(settings.showTouchBorders).toBe(true);
     expect(settings.middleScroll).toBe(true);
     expect(settings.scrollSpeed).toBe(4);

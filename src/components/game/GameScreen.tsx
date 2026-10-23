@@ -13,7 +13,7 @@ import { resolveKeyMap, useGameSettings } from "@/game/settings";
 import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
-import { InputOverlay } from "./InputOverlay";
+import { InputOverlayLayer } from "./InputOverlay";
 import { TouchInput } from "./TouchInput";
 import { ResultXpCard } from "@/components/app/AccountGrowth";
 import { enqueuePlayResult, flushPlayResultQueue } from "@/lib/playResultQueue";
@@ -249,18 +249,12 @@ export function GameScreen({
       />
 
       <div className="shrink-0" style={{ height: "calc(36px + env(safe-area-inset-top))" }} />
-      {settings.inputOverlayEnabled && (
-        <div
-          className={`input-overlay-slot pointer-events-none z-30 ${settings.inputOverlayPosition === "left" ? "input-overlay-left" : "input-overlay-right"}`}
-        >
-          <InputOverlay inputs={game.inputs} settings={settings} playStyle={playStyle} />
-        </div>
-      )}
-
-      {/* Playfield: a centred column that stays playable in landscape */}
+      {/* Overlay is a sibling display layer INSIDE the field, never a flex item. */}
       <div
-        className={`relative flex min-h-0 flex-1 justify-center overflow-hidden ${fnfDisplay && settings.inputOverlayEnabled ? `fnf-overlay-${settings.inputOverlayPosition}` : ""}`}
+        data-testid="gameplay-area"
+        className="relative flex min-h-0 flex-1 justify-center overflow-hidden"
       >
+        <InputOverlayLayer inputs={game.inputs} settings={settings} playStyle={playStyle} />
         {fnfDisplay ? (
           <FnfField
             chart={chart}
@@ -273,6 +267,7 @@ export function GameScreen({
           />
         ) : (
           <div
+            data-testid="player-lanes"
             className={`relative h-full w-full max-w-[520px] touch-none landscape:max-w-[min(60vh,520px)] ${
               mode.fieldClass ?? ""
             }`}
@@ -291,6 +286,7 @@ export function GameScreen({
 
                   {/* Judgement line + receptor */}
                   <div
+                    data-testid={`judge-line-${lane}`}
                     className={`absolute inset-x-0 z-10 h-[3px] bg-judge-line ${settings.glowEffects && !settings.lightweightMode ? "shadow-glow" : ""}`}
                     style={{
                       top: `${judge}%`,
@@ -299,6 +295,7 @@ export function GameScreen({
                   />
                   {mode.receptors && (
                     <div
+                      data-testid={`receptor-${lane}`}
                       className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
                       style={{ top: `${judge}%` }}
                     >
@@ -331,6 +328,7 @@ export function GameScreen({
                     return noteShape === "bar" ? (
                       <div
                         key={note.id}
+                        data-testid={`player-note-${note.id}`}
                         className="absolute inset-x-1"
                         style={{
                           top: `calc(${top}% - ${mode.noteSize / 2}px)`,
@@ -342,10 +340,11 @@ export function GameScreen({
                     ) : (
                       <div
                         key={note.id}
+                        data-testid={`player-note-${note.id}`}
                         className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
                         style={{
                           top: `${top}%`,
-                          transform: `translate(-50%, -50%) scale(${settings.noteScale / 100})`,
+                          transform: `scale(${settings.noteScale / 100})`,
                         }}
                       >
                         <NoteSprite mode={renderMode} lane={lane} />

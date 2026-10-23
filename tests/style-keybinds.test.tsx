@@ -163,14 +163,18 @@ it("shows one/two sets, isolates edits, rejects invalid/ambiguous keys and previ
   expect(value.maniaKeybinds[0]).toBe("KeyQ");
   expect(value.fnfKeybinds.primary[0]).toBe("KeyZ");
   expect(value.lastPlayedStyle).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "入力可視化", exact: true }));
   fireEvent.click(view.getByRole("button", { name: "入力テストを開始" }));
   fireEvent.keyDown(window, { code: "ArrowLeft" });
-  const overlay = view.getByTestId("input-overlay");
-  expect(overlay.querySelector('[data-source="key:ArrowLeft"]')).toBeTruthy();
+  expect(view.container.querySelector('[data-source="key:ArrowLeft"]')).toBeTruthy();
   fireEvent.keyUp(window, { code: "ArrowLeft" });
+  fireEvent.click(view.getByRole("button", { name: "操作", exact: true }));
   fireEvent.click(view.getByRole("button", { name: "OSU!MANIA" }));
+  fireEvent.click(view.getByRole("button", { name: "入力可視化", exact: true }));
+  fireEvent.click(view.getByRole("button", { name: "入力テストを開始" }));
   fireEvent.keyDown(window, { code: "ArrowLeft" });
   expect(view.getByText(/保持 0/)).toBeTruthy();
+  fireEvent.click(view.getByRole("button", { name: "操作", exact: true }));
   expect(view.getByText("LIVE PREVIEW")).toBeTruthy();
 });
 for (const style of ["mania", "fnf"] as const) {
