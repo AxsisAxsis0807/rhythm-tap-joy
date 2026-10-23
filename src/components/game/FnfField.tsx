@@ -59,13 +59,10 @@ export function FnfField({
     <div className="pointer-events-none absolute inset-0" data-testid="fnf-field">
       {(["left", "right"] as const).map((side) => {
         const player = side === fnf.playerSide;
-        const bankClass = middleScroll
-          ? player
-            ? "left-[30%] w-[40%]"
-            : "left-[3%] w-[24%] opacity-40"
-          : side === "left"
-            ? "left-[6%] w-[36%]"
-            : "right-[6%] w-[36%]";
+        // Selected side changes the SOURCE, never the player's horizontal center.
+        const bankClass = player
+          ? "left-1/2 w-[40%] max-w-[520px] -translate-x-1/2"
+          : `${side === "left" ? "left-[3%]" : "right-[3%]"} w-[24%] ${middleScroll ? "opacity-40" : ""}`;
         const visible = player ? playerVisible : opponentVisible;
         return (
           <div
@@ -81,6 +78,7 @@ export function FnfField({
                 style={{ left: `${lane * 25}%` }}
               >
                 <div
+                  data-testid={player ? `receptor-${lane}` : `opponent-receptor-${lane}`}
                   className="absolute left-1/2 w-[80%] max-w-[76px] -translate-x-1/2 -translate-y-1/2"
                   style={{ top: `${judge}%` }}
                 >
@@ -105,6 +103,7 @@ export function FnfField({
                   return (
                     <div
                       key={note.id}
+                      data-testid={player ? `player-note-${note.id}` : undefined}
                       className="absolute left-1/2 w-[80%] max-w-[76px] -translate-x-1/2 -translate-y-1/2"
                       style={{ top: `${top}%` }}
                     >

@@ -2,21 +2,28 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { DIRECTIONS, InputLedger } from "@/game/input";
 import { resolveKeyMap, type GameSettings } from "@/game/settings";
 import type { PlayStyleId } from "@/game/types";
+import {
+  inputOverlayLayout,
+  inputOverlayMetrics,
+  type OverlayViewport,
+} from "@/game/inputOverlayLayout";
 import { TouchInput } from "./TouchInput";
 
 export function InputOverlay({
   inputs,
   settings,
   test = false,
+  preview = false,
   playStyle = "mania",
 }: {
   inputs: InputLedger;
   settings: GameSettings;
   test?: boolean;
+  preview?: boolean;
   playStyle?: PlayStyleId;
 }) {
   useSyncExternalStore(inputs.subscribe, inputs.snapshot, inputs.snapshot);
-  const [now, setNow] = useState(0);
+  const [now, setNow] = useState(() => performance.now());
   const historyRef = useRef<HTMLDivElement>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   useEffect(() => {
@@ -29,6 +36,7 @@ export function InputOverlay({
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
+    if (preview) return;
     let raf = 0;
     const tick = () => {
       const time = performance.now();
@@ -38,9 +46,14 @@ export function InputOverlay({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [inputs]);
+  }, [inputs, preview]);
   const seconds = settings.inputOverlayDuration;
-  const height = test ? 90 : (72 * settings.inputOverlaySize) / 100;
+  const height = settings.inputOverlayHistoryHeight;
+  const metrics = inputOverlayMetrics(settings);
+  const gridStyle = {
+    gridTemplateColumns: `repeat(4, ${settings.inputOverlayKeyWidth}px)`,
+    gap: settings.inputOverlayGap,
+  };
   const travelHeight = measuredHeight ?? height;
   const kinds = new Set(
     inputs.bars
@@ -51,17 +64,22 @@ export function InputOverlay({
   return (
     <div
       data-testid="input-overlay"
-      className="pointer-events-none mx-auto w-full max-w-[300px] rounded-lg border border-cyan-200/20 bg-[#0b1520]/90 p-1.5 text-cyan-100"
-      style={{ opacity: settings.inputOverlayOpacity }}
+      className="pointer-events-none shrink-0 rounded-lg border border-cyan-200/20 bg-[#0b1520]/90 p-1.5 text-cyan-100"
+      style={{
+        opacity: settings.inputOverlayOpacity,
+        width: metrics.width,
+        height: metrics.height,
+        boxSizing: "border-box",
+      }}
     >
-      <div className="flex justify-between text-[8px] tracking-widest">
-        <span>KEY OVERLAY</span>
-        <span>{source} · LIVE</span>
+      <div className="flex h-3 min-w-0 justify-between gap-1 overflow-hidden text-[8px] leading-3 tracking-widest">
+        <span className="truncate">KEY OVERLAY</span>
+        <span className="truncate">{preview ? "表示例" : `${source} · LIVE`}</span>
       </div>
       <div
         ref={historyRef}
-        className="relative mt-1 grid grid-cols-4 gap-1 overflow-hidden"
-        style={{ height }}
+        className="relative mt-1 grid overflow-hidden"
+        style={{ ...gridStyle, height }}
       >
         {[0, 1, 2, 3].map((lane) => (
           <div key={lane} className="relative overflow-hidden rounded bg-cyan-200/[.035]">
@@ -95,14 +113,14 @@ export function InputOverlay({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-4 gap-1">
+      <div className="mt-1 grid" style={{ ...gridStyle, height: settings.inputOverlayKeyHeight }}>
         {DIRECTIONS.map((label, lane) => (
           <div
             key={label}
-            className={`rounded border py-1 text-center text-[8px] ${inputs.activeLanes.has(lane) ? "border-cyan-100 bg-cyan-200/25 text-white" : "border-cyan-200/15"}`}
+            className={`flex min-w-0 flex-col items-center justify-center overflow-hidden rounded border text-center text-[8px] ${inputs.activeLanes.has(lane) ? "border-cyan-100 bg-cyan-200/25 text-white" : "border-cyan-200/15"}`}
           >
-            <div>{label}</div>
-            <div className="truncate text-[9px]">
+            <div className="w-full truncate">{label}</div>
+            <div className="w-full truncate text-[9px]">
               {resolveKeyMap(settings, playStyle)
                 [lane]?.map((k) => k.replace(/^Key/, ""))
                 .join(" / ")}
@@ -174,7 +192,9 @@ export function InputTest({
       </button>
       {enabled && (
         <>
-          <InputOverlay inputs={inputs} settings={settings} playStyle={playStyle} test />
+          <div className="relative h-44 overflow-hidden rounded-lg border border-white/10">
+            <InputOverlayLayer inputs={inputs} settings={settings} playStyle={playStyle} />
+          </div>
           <div className="relative mt-2 h-20 rounded border border-cyan-200/20 bg-black/30">
             <TouchInput
               borders
@@ -192,6 +212,124 @@ export function InputTest({
           </p>
         </>
       )}
+    </div>
+  );
+}
+
+/** Independent, click-through layer. It never participates in lane layout. */
+export function InputOverlayLayer({
+  inputs,
+  settings,
+  preview = false,
+  playStyle = "mania",
+}: {
+  inputs: InputLedger;
+  settings: GameSettings;
+  preview?: boolean;
+  playStyle?: PlayStyleId;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [viewport, setViewport] = useState<OverlayViewport>({ width: 0, height: 0 });
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const measure = () => {
+      const rect = node.getBoundingClientRect(),
+        css = getComputedStyle(node);
+      setViewport({
+        width: rect.width,
+        height: rect.height,
+        left: parseFloat(css.paddingLeft) || 0,
+        right: parseFloat(css.paddingRight) || 0,
+        top: parseFloat(css.paddingTop) || 0,
+        bottom: parseFloat(css.paddingBottom) || 0,
+      });
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(node);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  const layout = inputOverlayLayout(settings, viewport);
+  return (
+    <div
+      ref={ref}
+      data-testid="input-overlay-layer"
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 z-30 overflow-hidden"
+      style={{
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
+      {settings.inputOverlayEnabled && (
+        <div
+          className="pointer-events-none absolute"
+          data-testid="input-overlay-placement"
+          style={{ left: layout.left, top: layout.top, width: layout.width, height: layout.height }}
+        >
+          <div style={{ transform: `scale(${layout.scale})`, transformOrigin: "top left" }}>
+            <InputOverlay
+              inputs={inputs}
+              settings={settings}
+              preview={preview}
+              playStyle={playStyle}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function InputOverlayPreview({
+  settings,
+  playStyle = "mania",
+}: {
+  settings: GameSettings;
+  playStyle?: PlayStyleId;
+}) {
+  const [inputs] = useState(() => {
+    const input = new InputLedger(),
+      now = performance.now();
+    input.press("preview:tap", 0, now - 260);
+    input.release("preview:tap", now - 210);
+    input.press("preview:hold", 2, now - 700);
+    return input;
+  });
+  return (
+    <div className="min-w-0" aria-label="入力可視化のプレビュー">
+      <p className="mb-2 text-xs tracking-widest text-cyan-100">入力可視化プレビュー（表示例）</p>
+      <div className="relative h-40 overflow-hidden rounded-xl border border-white/10 bg-black/30 md:h-64">
+        <div
+          className="absolute inset-y-0 left-1/2 grid w-[40%] -translate-x-1/2 grid-cols-4 divide-x divide-white/15 border-x border-white/15 bg-white/[.04]"
+          aria-hidden="true"
+        >
+          {[0, 1, 2, 3].map((lane) => (
+            <div key={lane} className="relative">
+              <i
+                className="absolute inset-x-1 h-2 border border-cyan-200/40"
+                style={{ top: `${settings.judgeLinePct}%` }}
+              />
+            </div>
+          ))}
+        </div>
+        <InputOverlayLayer inputs={inputs} settings={settings} preview playStyle={playStyle} />
+        {!settings.inputOverlayEnabled && (
+          <p className="absolute inset-x-0 top-4 text-center text-xs text-white/60">
+            入力可視化は非表示です
+          </p>
+        )}
+      </div>
+      <p className="mt-2 text-[10px] leading-relaxed text-white/50">
+        枠内の配置見本です。中央のレーンは固定。大きい設定は枠内に収まるよう縮小されます。
+      </p>
     </div>
   );
 }
