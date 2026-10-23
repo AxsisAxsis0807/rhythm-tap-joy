@@ -524,7 +524,6 @@ for (const input of ["keyboard", "touch"] as const)
           fireEvent.click(view.getByRole("button", { name: "Test Player" }));
           fireEvent.click(view.getByRole("button", { name: /Fixture.*下書き|Fixture.*公開中/ }));
           fireEvent.click(view.getByRole("button", { name: "プレイ" }));
-
         }
         fireEvent.click(view.getByRole("radio", { name: "FNF" }));
         await act(async () => {
@@ -653,11 +652,11 @@ it.each([
   expect(core.play.counts.MISS).toBe(expected === "MISS" ? 1 : 0);
 });
 
-it.each(["KeyD", "ArrowLeft"])(
-  "main and alternate binding %s both reach the judgement engine",
+it.each(["KeyA", "ArrowLeft"])(
+  "FNF main and alternate binding %s both reach the judgement engine",
   async (code) => {
     const view = render(
-      <GameScreen chart={makeChart("4k")} modeId="classic" playStyle="mania" autoStart />,
+      <GameScreen chart={makeChart("4k")} modeId="classic" playStyle="fnf" autoStart />,
     );
     act(() => settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false }));
     await act(async () => {});
