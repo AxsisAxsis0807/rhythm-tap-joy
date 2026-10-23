@@ -39,3 +39,14 @@ main の再生成済み Supabase types から落ちていた既存 `UpgradeTable
 実 iPhone/Safari、公開環境での smoke は未実施。本番接続を使う保存・アップロード・削除試験は実施しない。
 #5 → #8 の順序を推奨する。#8 は独自の本番公開・受入条件が残るため Draft を維持する。
 GitHub上の競合解消と、すべての公開条件の成立は別である。自動マージは設定しない。
+
+## 今回の Chromium 配置実測
+
+27条件すべて成功。360×780 / 844×390 / 1440×900 × MANIA / FNF-left / FNF-right ×
+入力表示ON最小30% / ON最大200%・middle-scroll / 表示OFFを確認した。
+位置0/100%・最大キー/履歴寸法も使い、プレイヤーの横中心がgameplay領域の横中心から1px未満、
+overlayが表示領域内に収まることを実測した。
+実 `GameScreen` / `FnfField` / settings store をローカルVite上の一時fixtureでmountし、保存APIは使わない。
+これは配置検証であり、実端末・本番配信・音声/判定のE2E合格とは扱わない。
+[機械可読の実測結果](verification/input-layout-2026-10-24.json)。
+GitHubのpush先headにCI workflow run / commit statusの登録は観測されず、今回の成功はローカル検証結果である。
