@@ -1,17 +1,13 @@
-/**
- * Play modes (visual + input skins).
- *
- * These descriptors control drawing and default scroll direction. GameScreen
- * separately selects FNF's early-input policy from the actual mode ID;
- * changing a note skin or scroll direction does not change that policy.
- * Judgement windows and score calculation remain shared.
+/** Visual skins are independent of play style and judgement policy.
+ * Styles differ in early-input handling; judgement windows and scoring factors are shared.
  */
+export type VisualModeId = "classic" | "mania" | "fnf";
 
 export type NoteShape = "bar" | "circle" | "arrow";
 export type ScrollDirection = "down" | "up";
 
 export interface GameMode {
-  id: string;
+  id: VisualModeId;
   /** Name shown in the mode picker. */
   name: string;
   /** One-line description shown under the name. */
@@ -88,10 +84,10 @@ export const GAME_MODES: GameMode[] = [
   },
 ];
 
-export const DEFAULT_MODE_ID = "classic";
+export const DEFAULT_MODE_ID: VisualModeId = "mania";
 
 export function getMode(id: string): GameMode {
-  return GAME_MODES.find((m) => m.id === id) ?? GAME_MODES[0]!;
+  return GAME_MODES.find((m) => m.id === id) ?? GAME_MODES[1]!;
 }
 
 /** Color token for a lane in a mode. */

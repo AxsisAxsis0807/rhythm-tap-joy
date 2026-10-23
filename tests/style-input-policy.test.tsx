@@ -58,8 +58,8 @@ afterEach(() => {
 });
 async function game(selected = chart, style: "mania" | "fnf" = "fnf") {
   const hook = renderHook(
-    ({ inputStyle }) => useRhythmGame(selected, { inputStyle, hitSoundVolume: 1 }),
-    { initialProps: { inputStyle: style } },
+    ({ playStyle }) => useRhythmGame(selected, { playStyle, hitSoundVolume: 1 }),
+    { initialProps: { playStyle: style } },
   );
   await waitFor(() => expect(hook.result.current.status).toBe("ready"));
   await act(() => hook.result.current.start());
@@ -169,7 +169,7 @@ it("FNF filters early future notes before choosing among valid same-lane candida
     },
     notes = buildRuntimeNotes(selected);
   expect(findHittableNote(notes, 0, 1, DEFAULT_WINDOWS)?.id).toBe(1);
-  expect(findHittableNote(notes, 0, 1, DEFAULT_WINDOWS, DEFAULT_WINDOWS.good)?.id).toBe(0);
+  expect(findHittableNote(notes, 0, 1, DEFAULT_WINDOWS, "pulse-fnf-v1")?.id).toBe(0);
 });
 it.each(["keyboard", "touch"] as const)(
   "FNF long-note head ignores early %s, then preserves successful hold/tail and other-lane inputs",
@@ -232,31 +232,24 @@ it.each(["keyboard", "touch"] as const)(
     expect(hook.result.current.play.counts.PERFECT).toBe(6);
   },
 );
-it("changing styles refreshes keyboard rules immediately, without recreating the play or widening windows", async () => {
+it("style edits apply on the next run and preserve the active replay policy", async () => {
   const hook = await game(),
     input = source(hook, "keyboard");
+  hook.rerender({ playStyle: "mania" });
   clock.time = 0.85;
   act(() => {
     input.down(0);
     input.up(0);
   });
   expect(hook.result.current.play.counts.MISS).toBe(0);
-  hook.rerender({ inputStyle: "mania" });
+  expect(hook.result.current.runConfiguration?.playStyle).toBe("fnf");
+  await act(() => hook.result.current.start());
   act(() => {
     input.down(0);
     input.up(0);
   });
   expect(hook.result.current.play.counts.MISS).toBe(1);
-  await act(() => hook.result.current.start());
-  hook.rerender({ inputStyle: "fnf" });
-  act(() => {
-    input.down(0);
-    input.up(0);
-  });
-  expect(hook.result.current.play.counts.MISS).toBe(0);
-  clock.time = 1;
-  act(() => input.down(0));
-  expect(hook.result.current.play.counts.PERFECT).toBe(1);
+  expect(hook.result.current.runConfiguration?.playStyle).toBe("mania");
 });
 it("FNF hold cancellation/early release remains a MISS, distinct from an ignored head attack", async () => {
   const selected = {

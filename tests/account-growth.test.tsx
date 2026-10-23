@@ -66,7 +66,7 @@ afterEach(() => {
 it("uses within-level XP rather than total XP and supplies accessible progress", () => {
   show({ ...data, growth: { ...growth, totalXp: "1140" } });
   expect(screen.getByText("140 / 500 XP")).toBeTruthy();
-  expect(screen.getByText("次のLevelまで360 XP")).toBeTruthy();
+  expect(screen.getByText("NEXT LEVEL 360 XP")).toBeTruthy();
   expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("28");
   expect(screen.getByRole("progressbar").getAttribute("aria-valuetext")).toBe("140 / 500 XP");
   fireEvent.click(screen.getByLabelText("LevelとXPの説明"));
@@ -95,7 +95,8 @@ it("keeps profile/home/result consistent at exact and multiple level thresholds"
         ],
       },
     );
-    expect(screen.getAllByText(`Lv. ${g.level}`)).toHaveLength(3);
+    expect(screen.getAllByText(`Lv. ${g.level}`)).toHaveLength(2);
+    expect(screen.getByText(`LEVEL ${g.level}`)).toBeTruthy();
     expect(
       screen.getAllByRole("progressbar").map((bar) => bar.getAttribute("aria-valuetext")),
     ).toEqual([`${g.xpInLevel} / 500 XP`, `${g.xpInLevel} / 500 XP`]);
@@ -165,7 +166,7 @@ it("formats very large XP exactly and computes progress without Number precision
   expect(growthProgress(large).remaining).toBe(1n);
   show({ ...data, growth: large });
   expect(screen.getByText("9,007,199,254,740,993 / 9,007,199,254,740,994 XP")).toBeTruthy();
-  expect(screen.getByText("次のLevelまで1 XP")).toBeTruthy();
+  expect(screen.getByText("NEXT LEVEL 1 XP")).toBeTruthy();
 });
 
 it("refreshes confirmed growth only once for repeated acknowledgements and rerenders", async () => {

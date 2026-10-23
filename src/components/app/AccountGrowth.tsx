@@ -1,3 +1,4 @@
+import { ProfileLevelCard, ProfileCardEditor } from "./ProfileLevelCard";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Info } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -6,6 +7,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/compone
 import { subscribeToPlayResultQueue } from "@/lib/playResultQueue";
 
 import {
+  claimLevelUpAnimation,
   formatXp,
   growthProgress,
   type GrowthSnapshot,
@@ -55,7 +57,7 @@ function XpBar({ growth }: { growth: GrowthSnapshot }) {
       aria-valuemax={100}
       aria-valuenow={percent}
       aria-valuetext={`${formatXp(growth.xpInLevel)} / ${formatXp(growth.xpToNextLevel)} XP`}
-      className="my-3 h-2 overflow-hidden rounded-full bg-white/10"
+      className="my-3 h-1 overflow-hidden rounded-full bg-white/10"
     >
       <div
         className="h-full rounded-full bg-cyan-200/80 motion-safe:transition-[width] motion-reduce:transition-none"
@@ -154,15 +156,38 @@ export function ProfileGrowth({ userId, own = true }: { userId: string; own?: bo
       </div>
     );
   return (
-    <section
-      aria-label="LevelとXP"
-      className="mb-5 w-full min-w-0 rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.05] p-4"
-    >
-      <div className="mb-1 flex items-center justify-between gap-2">
+    <section aria-label="LevelとXP" className="mb-5 w-full min-w-0">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="text-[10px] tracking-[0.2em] text-cyan-100/70">ACCOUNT GROWTH</h2>
-        <GrowthInfo data={data} />
+        <div className="flex items-center gap-2">
+          <GrowthInfo data={data} />
+          {own && data.profile && data.saveProfile && (
+            <ProfileCardEditor
+              preferences={data.profile}
+              saving={data.savingProfile ?? false}
+              onSave={data.saveProfile}
+            />
+          )}
+        </div>
       </div>
-      <ProgressDetails growth={data.growth} />
+      <ProfileLevelCard
+        imageUrl={data.profile?.cardImage?.url}
+        {...(data.profile ? { crop: data.profile.crop } : {})}
+      >
+        <p className="font-display text-3xl text-white">LEVEL {formatXp(data.growth.level)}</p>
+        <XpBar growth={data.growth} />
+        <p className="break-words text-sm text-white">
+          {formatXp(data.growth.xpInLevel)} / {formatXp(data.growth.xpToNextLevel)} XP
+        </p>
+        <p className="mt-2 text-xs text-white/80">
+          NEXT LEVEL {growthProgress(data.growth).remaining.toLocaleString()} XP
+        </p>
+      </ProfileLevelCard>
+      {data.profileError && (
+        <p role="alert" className="mt-2 text-xs text-rose-200">
+          カード設定を読み込めませんでした。
+        </p>
+      )}
     </section>
   );
 }
@@ -200,6 +225,34 @@ export function SupporterStatus({ userId }: { userId: string }) {
         {data.supporter.tier} · {data.supporter.syncState}
       </p>
     </section>
+  );
+}
+function LevelUp({
+  ownerId,
+  reward,
+  reducedMotion,
+}: {
+  ownerId: string;
+  reward: Extract<XpOutcome, { status: "awarded" }>;
+  reducedMotion: boolean;
+}) {
+  const [animate, setAnimate] = useState(false);
+  useEffect(() => {
+    if (!reward.receiptId || reward.previousLevel === reward.growth.level) return;
+    const first = claimLevelUpAnimation(ownerId, reward.receiptId);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (first && !reducedMotion && !media.matches) setAnimate(true);
+    const stop = () => {
+      if (media.matches) setAnimate(false);
+    };
+    media.addEventListener("change", stop);
+    return () => media.removeEventListener("change", stop);
+  }, [ownerId, reward.receiptId, reward.previousLevel, reward.growth.level, reducedMotion]);
+  if (reward.previousLevel === reward.growth.level) return null;
+  return (
+    <p className={`mb-2 text-cyan-100 ${animate && !reducedMotion ? "growth-level-up" : ""}`}>
+      Lv. {formatXp(reward.previousLevel)} → Lv. {formatXp(reward.growth.level)}
+    </p>
   );
 }
 export function ResultXpCard({ userId, playId }: { userId: string | null; playId: string | null }) {
@@ -245,11 +298,12 @@ export function ResultXpCard({ userId, playId }: { userId: string | null; playId
                 </li>
               ))}
           </ul>
-          {reward.previousLevel !== reward.growth.level && (
-            <p className="mb-2 text-cyan-100">
-              Lv. {formatXp(reward.previousLevel)} → Lv. {formatXp(reward.growth.level)}
+          {reward.breakdown.some((row) => BigInt(row.cappedXp ?? "0") > 0n) && (
+            <p className="mb-2 text-xs text-white/65">
+              本日の上限によりXPの一部または全額が加算されていません。初クリア分は翌日に繰り越されません。
             </p>
           )}
+          <LevelUp ownerId={userId} reward={reward} reducedMotion={data.reducedMotion ?? false} />
           <ProgressDetails growth={reward.growth} />
         </>
       )}

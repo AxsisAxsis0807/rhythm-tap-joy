@@ -9,7 +9,12 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { DEFAULT_SETTINGS, sanitizeSettings, useGameSettings } from "@/game/settings";
+import {
+  createGameSettingsStore,
+  DEFAULT_SETTINGS,
+  sanitizeSettings,
+  useGameSettings,
+} from "@/game/settings";
 import {
   inputOverlayLayout,
   inputOverlayMetrics,
@@ -40,12 +45,12 @@ it("migrates v2 left/right placement without losing preferences; bounds new/corr
     keyBindings: ["KeyA", "KeyS", "KeyL", "KeyP"],
   });
   expect(old).toMatchObject({
-    version: 3,
+    version: 5,
     inputOverlayX: 15,
     inputOverlayY: 18,
     inputOverlaySize: 135,
     inputOverlayOpacity: 0.45,
-    keyBindings: ["KeyA", "KeyS", "KeyL", "KeyP"],
+    maniaKeybinds: ["KeyA", "KeyS", "KeyL", "KeyP"],
   });
   expect(sanitizeSettings({ version: 2, inputOverlayPosition: "right" }).inputOverlayX).toBe(85);
   const bounded = sanitizeSettings({
@@ -138,7 +143,7 @@ it("geometry applies each dimension independently and reset does not alter gamep
     preset: "custom",
   });
 });
-it("saves and restores v3 fields only after hydration; device timing remains separate", async () => {
+it("saves and restores v5 fields only after hydration; device timing remains separate", async () => {
   const saved = {
     ...DEFAULT_SETTINGS,
     inputOverlayX: 25.75,
@@ -152,19 +157,13 @@ it("saves and restores v3 fields only after hydration; device timing remains sep
   };
   localStorage.setItem("pulse-lane:game-settings", JSON.stringify(saved));
   localStorage.setItem("pulse-lane:device-settings:v2", JSON.stringify({ timingOffsetMs: 23 }));
-  const first = renderHook(() => useGameSettings());
-  await waitFor(() => expect(first.result.current.loaded).toBe(true));
-  expect(first.result.current.settings).toEqual({ ...saved, timingOffsetMs: 23 });
-  act(() =>
-    first.result.current.setSettings((s) => ({ ...s, inputOverlayX: 88.4, inputOverlayY: 10.1 })),
-  );
-  await waitFor(() =>
-    expect(JSON.parse(localStorage.getItem("pulse-lane:game-settings")!).inputOverlayX).toBe(88.4),
-  );
-  first.unmount();
-  const second = renderHook(() => useGameSettings());
-  await waitFor(() => expect(second.result.current.loaded).toBe(true));
-  expect(second.result.current.settings).toMatchObject({
+  const store = createGameSettingsStore(localStorage);
+  store.hydrate();
+  expect(store.getSnapshot().settings).toEqual({ ...saved, timingOffsetMs: 23 });
+  store.setSettings((s) => ({ ...s, inputOverlayX: 88.4, inputOverlayY: 10.1 }));
+  const secondStore = createGameSettingsStore(localStorage);
+  secondStore.hydrate();
+  expect(secondStore.getSnapshot().settings).toMatchObject({
     inputOverlayX: 88.4,
     inputOverlayY: 10.1,
     inputOverlayKeyWidth: 76,
@@ -207,4 +206,40 @@ it("settings offer labelled number/slider pairs, preview, recenter, local reset 
   fireEvent.click(screen.getByRole("button", { name: "初期設定に戻す", exact: true }));
   expect((screen.getByLabelText("キー表示の幅 数値") as HTMLInputElement).value).toBe("42");
   expect(screen.getByTestId("input-overlay")).toBeTruthy();
+});
+
+it("preserves v4 style keys, preview and device settings through overlay migration", () => {
+  const settings = sanitizeSettings(
+    {
+      version: 4,
+      maniaKeybinds: ["KeyQ", "KeyW", "KeyO", "KeyP"],
+      fnfKeybinds: {
+        primary: ["KeyA", "KeyS", "KeyW", "KeyD"],
+        secondary: ["ArrowLeft", "", "ArrowUp", "ArrowRight"],
+      },
+      autoPreview: false,
+      previewVolume: 0.25,
+      lastPlayedStyle: "fnf",
+      maniaSkin: "classic",
+      inputOverlayPosition: "left",
+    },
+    { timingOffsetMs: 43, laneWidth: 115, touchAreaHeight: 65 },
+  );
+  expect(settings).toMatchObject({
+    version: 5,
+    inputOverlayX: 15,
+    maniaKeybinds: ["KeyQ", "KeyW", "KeyO", "KeyP"],
+    fnfKeybinds: {
+      primary: ["KeyA", "KeyS", "KeyW", "KeyD"],
+      secondary: ["ArrowLeft", "", "ArrowUp", "ArrowRight"],
+    },
+    autoPreview: false,
+    previewVolume: 0.25,
+    lastPlayedStyle: "fnf",
+    maniaSkin: "classic",
+    timingOffsetMs: 43,
+    laneWidth: 115,
+    touchAreaHeight: 65,
+  });
+  expect(sanitizeSettings(settings)).toEqual(settings);
 });

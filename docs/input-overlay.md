@@ -62,7 +62,7 @@ Display defaults to ON, X 85%, Y 18%, scale 100%, key width 42px, key height
 32px, gap 4px, history height 72px, opacity 80%, duration 2 seconds. The
 **入力可視化** settings category exposes sliders and numeric inputs, a labelled
 placement preview, center reset (X/Y 50%) and an overlay-only default reset.
-The Controls category still contains the shared keyboard/touch input test.
+The Input Visualization category contains the keyboard/touch input test, using the style selected for keybind editing in Controls.
 
 Position is the card center, expressed as 0–100% of the gameplay area below the
 HUD, inside safe-area insets and an 8px margin. Dimensions are unscaled CSS px;
@@ -72,7 +72,7 @@ down to fit without changing the saved preference. ResizeObserver and window
 resize update its bounds. The overlay cannot intercept gameplay touch input.
 
 Browser preferences use the existing hydrated localStorage key with general
-settings version 3. Legacy left/right preferences migrate to X 15%/85%; absent
+settings version 5 (preserving version 4 style-specific keys and preview preferences). Legacy left/right preferences migrate to X 15%/85%; absent
 new values get defaults. Device audio timing settings remain version 2 and
 unchanged. No DB migration is needed for these browser display preferences.
 

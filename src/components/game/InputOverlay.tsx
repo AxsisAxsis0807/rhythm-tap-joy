@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { DIRECTIONS, InputLedger } from "@/game/input";
-import type { GameSettings } from "@/game/settings";
+import { resolveKeyMap, type GameSettings } from "@/game/settings";
+import type { PlayStyleId } from "@/game/types";
 import {
   inputOverlayLayout,
   inputOverlayMetrics,
@@ -13,11 +14,13 @@ export function InputOverlay({
   settings,
   test = false,
   preview = false,
+  playStyle = "mania",
 }: {
   inputs: InputLedger;
   settings: GameSettings;
   test?: boolean;
   preview?: boolean;
+  playStyle?: PlayStyleId;
 }) {
   useSyncExternalStore(inputs.subscribe, inputs.snapshot, inputs.snapshot);
   const [now, setNow] = useState(() => performance.now());
@@ -118,7 +121,9 @@ export function InputOverlay({
           >
             <div className="w-full truncate">{label}</div>
             <div className="w-full truncate text-[9px]">
-              {(settings.keyBindings[lane] ?? "").replace(/^Key/, "")}
+              {resolveKeyMap(settings, playStyle)
+                [lane]?.map((k) => k.replace(/^Key/, ""))
+                .join(" / ")}
             </div>
           </div>
         ))}
@@ -127,7 +132,14 @@ export function InputOverlay({
   );
 }
 
-export function InputTest({ settings }: { settings: GameSettings }) {
+export function InputTest({
+  settings,
+  playStyle = "mania",
+}: {
+  settings: GameSettings;
+  playStyle?: PlayStyleId;
+}) {
+  const keySignature = JSON.stringify(resolveKeyMap(settings, playStyle));
   const [inputs] = useState(() => new InputLedger());
   useSyncExternalStore(inputs.subscribe, inputs.snapshot, inputs.snapshot);
   const [enabled, setEnabled] = useState(false);
@@ -143,7 +155,9 @@ export function InputTest({ settings }: { settings: GameSettings }) {
         (e.target instanceof HTMLElement && e.target.closest("input,select,textarea"))
       )
         return;
-      const lane = settings.keyBindings.indexOf(e.code);
+      const lane = (JSON.parse(keySignature) as string[][]).findIndex((keys) =>
+        keys.includes(e.code),
+      );
       if (lane < 0) return;
       e.preventDefault();
       inputs.press(`key:${e.code}`, lane, e.timeStamp);
@@ -166,7 +180,7 @@ export function InputTest({ settings }: { settings: GameSettings }) {
       document.removeEventListener("visibilitychange", hidden);
       clear();
     };
-  }, [enabled, inputs, settings.keyBindings]);
+  }, [enabled, inputs, keySignature]);
   return (
     <div className="py-3">
       <button
@@ -179,7 +193,7 @@ export function InputTest({ settings }: { settings: GameSettings }) {
       {enabled && (
         <>
           <div className="relative h-44 overflow-hidden rounded-lg border border-white/10">
-            <InputOverlayLayer inputs={inputs} settings={settings} />
+            <InputOverlayLayer inputs={inputs} settings={settings} playStyle={playStyle} />
           </div>
           <div className="relative mt-2 h-20 rounded border border-cyan-200/20 bg-black/30">
             <TouchInput
@@ -207,10 +221,12 @@ export function InputOverlayLayer({
   inputs,
   settings,
   preview = false,
+  playStyle = "mania",
 }: {
   inputs: InputLedger;
   settings: GameSettings;
   preview?: boolean;
+  playStyle?: PlayStyleId;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState<OverlayViewport>({ width: 0, height: 0 });
@@ -259,7 +275,12 @@ export function InputOverlayLayer({
           style={{ left: layout.left, top: layout.top, width: layout.width, height: layout.height }}
         >
           <div style={{ transform: `scale(${layout.scale})`, transformOrigin: "top left" }}>
-            <InputOverlay inputs={inputs} settings={settings} preview={preview} />
+            <InputOverlay
+              inputs={inputs}
+              settings={settings}
+              preview={preview}
+              playStyle={playStyle}
+            />
           </div>
         </div>
       )}
@@ -267,7 +288,13 @@ export function InputOverlayLayer({
   );
 }
 
-export function InputOverlayPreview({ settings }: { settings: GameSettings }) {
+export function InputOverlayPreview({
+  settings,
+  playStyle = "mania",
+}: {
+  settings: GameSettings;
+  playStyle?: PlayStyleId;
+}) {
   const [inputs] = useState(() => {
     const input = new InputLedger(),
       now = performance.now();
@@ -293,7 +320,7 @@ export function InputOverlayPreview({ settings }: { settings: GameSettings }) {
             </div>
           ))}
         </div>
-        <InputOverlayLayer inputs={inputs} settings={settings} preview />
+        <InputOverlayLayer inputs={inputs} settings={settings} preview playStyle={playStyle} />
         {!settings.inputOverlayEnabled && (
           <p className="absolute inset-x-0 top-4 text-center text-xs text-white/60">
             入力可視化は非表示です

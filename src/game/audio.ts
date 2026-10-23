@@ -13,6 +13,13 @@ export class AudioClock {
   private playing = false;
   private gain: GainNode | null = null;
   private rate = 1;
+  private generation = 0;
+  private loadController: AbortController | null = null;
+  private readonly ownsContext: boolean;
+
+  constructor(private readonly context?: AudioContext | (() => AudioContext)) {
+    this.ownsContext = !context;
+  }
 
   get duration() {
     return this.buffer?.duration ?? 0;
@@ -23,22 +30,39 @@ export class AudioClock {
   }
 
   async load(url: string): Promise<void> {
+    const generation = ++this.generation;
+    this.loadController?.abort();
+    const controller = new AbortController();
+    this.loadController = controller;
     const Ctx =
       window.AudioContext ??
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    this.ctx ??= new Ctx();
-    this.gain ??= this.ctx.createGain();
-    this.gain.connect(this.ctx.destination);
-    const res = await fetch(url);
+    this.ctx ??= typeof this.context === "function" ? this.context() : (this.context ?? new Ctx());
+    if (!this.gain) {
+      this.gain = this.ctx.createGain();
+      this.gain.connect(this.ctx.destination);
+    }
+    const ctx = this.ctx;
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`Audio download failed (${res.status})`);
     const bytes = await res.arrayBuffer();
-    this.buffer = await this.ctx.decodeAudioData(bytes);
+    const buffer = await ctx.decodeAudioData(bytes);
+    if (generation !== this.generation || this.ctx !== ctx) {
+      throw new DOMException("Audio load cancelled", "AbortError");
+    }
+    this.buffer = buffer;
   }
 
   /** Start playback; `delay` seconds of lead-in before time 0 of the song. */
   async start(delay = 0, offset = 0, playbackRate = this.rate): Promise<void> {
     if (!this.ctx || !this.buffer) throw new Error("Audio not loaded");
-    await this.ctx.resume();
     this.stop();
+    const generation = this.generation;
+    const ctx = this.ctx;
+    await ctx.resume();
+    if (generation !== this.generation || this.ctx !== ctx) {
+      throw new DOMException("Audio start cancelled", "AbortError");
+    }
     const src = this.ctx.createBufferSource();
     src.buffer = this.buffer;
     src.playbackRate.value = playbackRate;
@@ -50,7 +74,7 @@ export class AudioClock {
     this.rate = playbackRate;
     this.playing = true;
     src.onended = () => {
-      this.playing = false;
+      if (this.source === src) this.playing = false;
     };
   }
 
@@ -82,6 +106,7 @@ export class AudioClock {
   }
 
   stop(): void {
+    this.generation += 1;
     if (this.source) {
       this.source.onended = null;
       try {
@@ -109,7 +134,12 @@ export class AudioClock {
 
   dispose(): void {
     this.stop();
-    void this.ctx?.close();
+    this.loadController?.abort();
+    this.loadController = null;
+    this.gain?.disconnect();
+    this.gain = null;
+    this.buffer = null;
+    if (this.ownsContext) void this.ctx?.close();
     this.ctx = null;
   }
 }
