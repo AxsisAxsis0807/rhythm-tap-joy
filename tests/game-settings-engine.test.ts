@@ -12,12 +12,12 @@ describe("settings migration", () => {
       timingOffsetMs: Infinity,
       keyBindings: ["KeyA", "!", "KeyL", "KeyP"],
     });
-    expect(settings.version).toBe(3);
+    expect(settings.version).toBe(4);
     expect(settings.showTouchBorders).toBe(true);
     expect(settings.middleScroll).toBe(true);
     expect(settings.scrollSpeed).toBe(4);
     expect(settings.timingOffsetMs).toBe(0);
-    expect(settings.keyBindings).toEqual(["KeyA", "KeyF", "KeyL", "KeyP"]);
+    expect(settings.maniaKeybinds).toEqual(["KeyA", "KeyF", "KeyL", "KeyP"]);
   });
 
   it("keeps device timing separate from general settings", () => {

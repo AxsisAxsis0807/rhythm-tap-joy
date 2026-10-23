@@ -11,7 +11,7 @@ import type { Chart, PlayStyleId } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { FnfField } from "./FnfField";
-import { useGameSettings } from "@/game/settings";
+import { resolveKeyMap, useGameSettings } from "@/game/settings";
 import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
@@ -54,9 +54,7 @@ export function GameScreen({
     timingOffsetMs: settings.timingOffsetMs,
     volume: settings.masterVolume * settings.musicVolume,
     hitSoundVolume: settings.hitSoundEnabled ? settings.masterVolume * settings.hitSoundVolume : 0,
-    keyMap: settings.keyBindings.map((code, i) => [
-      ...new Set([code, settings.altKeyBindings[i] ?? ""].filter(Boolean)),
-    ]),
+    keyMap: resolveKeyMap(settings, playStyle),
   });
   const {
     status,
@@ -268,7 +266,7 @@ export function GameScreen({
         <div
           className={`input-overlay-slot pointer-events-none z-30 ${settings.inputOverlayPosition === "left" ? "input-overlay-left" : "input-overlay-right"}`}
         >
-          <InputOverlay inputs={game.inputs} settings={settings} />
+          <InputOverlay inputs={game.inputs} settings={settings} playStyle={playStyle} />
         </div>
       )}
 
@@ -331,7 +329,9 @@ export function GameScreen({
                       className="absolute inset-x-0 bottom-0 flex items-center justify-center text-xs tracking-widest text-muted-foreground"
                       style={{ height: `${100 - judge}%` }}
                     >
-                      {settings.keyBindings[lane]?.replace(/^Key/, "") ?? lane + 1}
+                      {resolveKeyMap(settings, playStyle)
+                        [lane]?.map((k) => k.replace(/^Key/, ""))
+                        .join(" / ") ?? lane + 1}
                     </div>
                   )}
 
@@ -500,7 +500,9 @@ export function GameScreen({
           {onModeChange && <ModePicker value={playStyle} onChange={onModeChange} />}
           <p className="text-sm text-muted-foreground">
             4レーンをタップ、または{" "}
-            {settings.keyBindings.map((k) => k.replace(/^Key/, "")).join(" / ")}{" "}
+            {resolveKeyMap(settings, playStyle)
+              .map((keys) => keys.map((k) => k.replace(/^Key/, "")).join(" / "))
+              .join(" · ")}{" "}
             キーで演奏します。スタイルにより早すぎる入力の扱いが異なります。判定幅と得点係数は共通です。
           </p>
           {!isLandscape && (
