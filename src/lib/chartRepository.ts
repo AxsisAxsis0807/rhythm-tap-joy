@@ -6,7 +6,16 @@ import type { Chart } from "@/game/types";
 import { parseChartByType } from "@/game/chartFile";
 import { assertManagedPath, MAX_CHART_BYTES, validateCanonicalChart } from "./chartValidation";
 
-export type SongRow = Database["public"]["Tables"]["songs"]["Row"];
+export type SongRow = Omit<Database["public"]["Tables"]["songs"]["Row"], "metadata_version"> & {
+  metadata_version: number | string;
+  background_asset_id?: string | null;
+};
+export function legacyMetadataVersion(value: number | string): number {
+  const version = typeof value === "string" && /^(0|[1-9]\d*)$/.test(value) ? Number(value) : value;
+  if (typeof version !== "number" || !Number.isSafeInteger(version) || version < 0)
+    throw new Error("旧APIで安全に保存できないversionです。最新の楽曲設定を使用してください。");
+  return version;
+}
 export function normalizeSong(row: SongRow): SongRow {
   return {
     ...row,
@@ -115,6 +124,7 @@ export async function getSongPreview(value: SongRow) {
     audioHash: r.audio_hash,
     permissionAudioHash: r.audio_hash,
     startMs: row.preview_start_ms ?? 0,
+    durationMs: r.duration_ms,
     url: await signed("chart-revision-assets", r.audio_path),
     expiresAt: Date.now() + 3_600_000,
     resolveUrl: async () => ({
@@ -125,14 +135,14 @@ export async function getSongPreview(value: SongRow) {
 }
 export async function updateSongMetadata(input: {
   songId: string;
-  expectedMetadataVersion: number;
+  expectedMetadataVersion: number | string;
   expectedRevisionId: string | null;
   metadata: SongMetadataForm;
 }) {
   const m = input.metadata;
   const { data, error } = await supabase.rpc("update_chart_metadata", {
     p_song_id: input.songId,
-    p_expected_version: input.expectedMetadataVersion,
+    p_expected_version: legacyMetadataVersion(input.expectedMetadataVersion),
     p_expected_revision: input.expectedRevisionId,
     p_title: m.title,
     p_artist: m.artist,

@@ -1,0 +1,20 @@
+[package]
+name = "pulse-aac-decoder"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MPL-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+symphonia-core = "=0.5.4"
+symphonia-codec-aac = "=0.5.4"
+
+[profile.release]
+opt-level = "s"
+lto = true
+panic = "abort"
+codegen-units = 1
+strip = true

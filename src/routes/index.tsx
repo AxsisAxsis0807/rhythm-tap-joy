@@ -6,6 +6,13 @@ import { TEST_CHART } from "@/game/charts/test-chart";
 import { RhythmHub } from "@/components/app/RhythmHub";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { songSettings?: string } =>
+    typeof search["songSettings"] === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      search["songSettings"],
+    )
+      ? { songSettings: search["songSettings"] }
+      : {},
   head: () => ({
     meta: [
       { title: "Pulse Lane — 4レーン音楽ゲーム プロトタイプ" },

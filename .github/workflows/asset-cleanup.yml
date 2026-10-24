@@ -1,0 +1,25 @@
+name: Pulse asset cleanup
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: pulse-asset-cleanup
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    if: vars.PULSE_CLEANUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Claim and clean expired assets
+        env:
+          CLEANUP_URL: ${{ vars.PULSE_CLEANUP_URL }}
+          CLEANUP_TOKEN: ${{ secrets.PULSE_CLEANUP_TOKEN }}
+        run: |
+          case "$CLEANUP_URL" in https://*/api/internal/asset-cleanup) ;; *) exit 1 ;; esac
+          test -n "$CLEANUP_TOKEN"
+          curl --silent --show-error --fail --max-time 120 --request POST \
+            --header "Authorization: Bearer $CLEANUP_TOKEN" \
+            --header "Content-Type: application/json" "$CLEANUP_URL"

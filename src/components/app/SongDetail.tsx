@@ -15,14 +15,12 @@ export function SongDetail({
   explicitSelection = false,
   onStyleChange,
   onStart,
-  onEdit,
 }: {
   song: SongEntry;
   explicitStyle?: PlayStyleId | undefined;
   explicitSelection?: boolean;
   onStyleChange: (style: PlayStyleId) => void;
   onStart: (style: PlayStyleId) => Promise<void>;
-  onEdit?: (() => void) | undefined;
 }) {
   const { settings, setSettings, loaded } = useGameSettings();
   const [previewAsset, setPreviewAsset] =
@@ -62,6 +60,7 @@ export function SongDetail({
             permissionAudioHash: previewAsset.permissionAudioHash,
             allowed: true,
             previewStartMs: previewAsset.startMs,
+            durationMs: previewAsset.durationMs,
           }
         : null,
     [previewAsset, song.id],
@@ -238,15 +237,6 @@ export function SongDetail({
         <p role="alert" className="mt-3 text-sm text-rose-200">
           {error}
         </p>
-      )}
-      {onEdit && (
-        <button
-          type="button"
-          onClick={onEdit}
-          className="mt-3 min-h-11 w-full rounded-xl border border-white/20 px-3 text-sm"
-        >
-          譜面を編集
-        </button>
       )}
     </section>
   );

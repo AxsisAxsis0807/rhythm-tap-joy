@@ -1,4 +1,12 @@
 import { useState } from "react";
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  createMemoryHistory,
+  RouterProvider,
+} from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsPanel } from "@/components/game/SettingsPanel";
@@ -277,6 +285,7 @@ function edge(
       code: (core.configuration.playStyle === "fnf"
         ? ["KeyA", "KeyS", "KeyW", "KeyD"]
         : ["KeyD", "KeyF", "KeyJ", "KeyK"])[lane]!,
+
       bubbles: true,
       cancelable: true,
     });
@@ -475,11 +484,29 @@ for (const input of ["keyboard", "touch"] as const)
         } as SongRow;
         if (entrance === "my-tracks")
           fixtures.user = { id: "owner", email: "test@example.invalid", user_metadata: {} } as User;
+        const rootRoute = createRootRoute();
+        const indexRoute = createRoute({
+          getParentRoute: () => rootRoute,
+          path: "/",
+          validateSearch: () => ({}) as { songSettings?: string },
+          component: () => (
+            <>
+              <HubSettings />
+              <RhythmHub localSongs={[]} />
+            </>
+          ),
+        });
+        const router = createRouter({
+          routeTree: rootRoute.addChildren([indexRoute]),
+          history: createMemoryHistory({ initialEntries: ["/"] }),
+        });
+        await router.load();
         const view = render(
-          <>
-            <HubSettings />
-            <RhythmHub localSongs={[]} />
-          </>,
+          <QueryClientProvider
+            client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+          >
+            <RouterProvider router={router} />
+          </QueryClientProvider>,
         );
         await act(async () => {});
         act(() =>
@@ -495,7 +522,8 @@ for (const input of ["keyboard", "touch"] as const)
           fireEvent.click(view.getByRole("button", { name: /Fixture/ }));
         else {
           fireEvent.click(view.getByRole("button", { name: "Test Player" }));
-          fireEvent.click(view.getByRole("button", { name: "PLAY" }));
+          fireEvent.click(view.getByRole("button", { name: /Fixture.*下書き|Fixture.*公開中/ }));
+          fireEvent.click(view.getByRole("button", { name: "プレイ" }));
         }
         fireEvent.click(view.getByRole("radio", { name: "FNF" }));
         await act(async () => {
@@ -623,6 +651,25 @@ it.each([
   paint();
   expect(core.play.counts.MISS).toBe(expected === "MISS" ? 1 : 0);
 });
+
+it.each(["KeyA", "ArrowLeft"])(
+  "FNF main and alternate binding %s both reach the judgement engine",
+  async (code) => {
+    const view = render(
+      <GameScreen chart={makeChart("4k")} modeId="classic" playStyle="fnf" autoStart />,
+    );
+    act(() => settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false }));
+    await act(async () => {});
+    paint();
+    at(1);
+    const event = new KeyboardEvent("keydown", { code, bubbles: true, cancelable: true });
+    Object.defineProperty(event, "timeStamp", { value: now });
+    fireEvent(window, event);
+    paint();
+    expect(core.play.counts.PERFECT).toBe(1);
+    view.unmount();
+  },
+);
 
 it.each([-200, 0, 200])(
   "calibration %ims is stored with the inverse sign and used by START",

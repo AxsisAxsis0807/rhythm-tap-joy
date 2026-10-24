@@ -1,15 +1,17 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { audioMetadata } from "./audioMetadata";
-import { parseChartByType } from "@/game/chartFile";
-import {
-  assertManagedPath,
-  validateCanonicalChart,
-  validateRevisionSource,
-  MAX_CHART_BYTES,
-} from "./chartValidation";
-import { sha256 } from "./xpContract";
-import { CHART_PARSER_VERSION } from "@/game/runConfiguration";
+import { assertManagedPath, MAX_CHART_BYTES } from "./chartValidation";
+import { MAX_AUDIO_BYTES } from "./waveform";
+import { canonicalJson, sha256 } from "./xpContract";
+import { settingsDatabase } from "./songSettingsDatabase";
+import { saveSongSettingsSchema, settingsMetadata } from "./songSettingsContract";
+import { readSongSettings, saveSettings, SongSettingsError } from "./songSettings.server";
+import { prepareSongSource } from "./songSource.server";
+
+/** Compatibility adapter. It never inserts or publishes a revision itself. */
 export async function createRevision(
+  client: SupabaseClient<Database>,
   actor: string,
   input: {
     songId: string;
@@ -25,137 +27,87 @@ export async function createRevision(
     previewStartMs: number;
   },
 ) {
-  const { data: song, error } = await supabaseAdmin
-    .from("songs")
-    .select("*")
-    .eq("id", input.songId)
-    .eq("user_id", actor)
-    .single();
-  if (error || !song) throw new Error("譜面の所有者のみ変更できます");
-  const prefix = `${actor}/${song.id}/revisions/${input.requestId}/`;
-  if (!input.audioPath.startsWith(prefix) || !input.chartPath.startsWith(prefix))
-    throw new Error("このRevisionのアップロードパスが必要です");
+  const row = await readSongSettings(client, actor, input.songId);
+  const prefix = `${actor}/${row.id}/revisions/${input.requestId}/`;
+  if (input.audioPath !== `${prefix}audio` || input.chartPath !== `${prefix}chart`)
+    throw new SongSettingsError("INVALID_INPUT");
   assertManagedPath(input.audioPath, actor);
   assertManagedPath(input.chartPath, actor);
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from("chart_revisions")
-    .select("*")
-    .eq("id", input.requestId)
-    .maybeSingle();
-  if (existingError) throw new Error(existingError.message);
-  if (song.current_revision_id === input.requestId && existing?.song_id === song.id) return song;
-  if (
-    song.metadata_version !== input.expectedVersion ||
-    song.current_revision_id !== input.expectedRevision
-  )
-    throw new Error("409: 譜面が更新されています。最新内容を確認してください");
-  const download = async (path: string, max: number) => {
-    const { data, error } = await supabaseAdmin.storage.from("songs").download(path);
-    if (error || !data) throw new Error(error?.message ?? "アップロードを取得できませんでした");
-    if (data.size > max) throw new Error("ファイルサイズが上限を超えています");
-    return new Uint8Array(await data.arrayBuffer());
-  };
-  const [chartBytes, audioBytes] = await Promise.all([
-    download(input.chartPath, MAX_CHART_BYTES),
-    download(input.audioPath, 100 * 1024 * 1024),
-  ]);
-  const { durationMs, mime } = audioMetadata(audioBytes);
-  const text = new TextDecoder().decode(chartBytes);
-  validateRevisionSource(text);
-  const parsed = parseChartByType(text, input.chartType, input.side);
-  const chart = validateCanonicalChart(
-    {
-      id: song.id,
-      title: song.title,
-      artist: song.artist,
-      difficultyName: song.difficulty_name,
-      audioUrl: "",
-      bpm: parsed.bpm,
-      offset: parsed.offset,
-      laneCount: parsed.laneCount,
-      notes: parsed.notes,
-      ...(parsed.fnf ? { fnf: parsed.fnf } : {}),
+  // A deterministic, separate source operation binds every legacy request field.
+  const digest = await sha256(new TextEncoder().encode(canonicalJson(input)));
+  const sourceId = `${digest.slice(0, 8)}-${digest.slice(8, 12)}-5${digest.slice(13, 16)}-8${digest.slice(17, 20)}-${digest.slice(20, 32)}`;
+  const prior = await settingsDatabase(supabaseAdmin).rpc("get_owner_song_operation", {
+    p_actor: actor,
+    p_id: input.requestId,
+  });
+  if (prior.error) throw new SongSettingsError("RETRYABLE_TRANSPORT", true);
+  const stored =
+    prior.data && typeof prior.data === "object" && !Array.isArray(prior.data)
+      ? prior.data["candidate"]
+      : null;
+  const original =
+    stored && typeof stored === "object" && !Array.isArray(stored)
+      ? saveSongSettingsSchema.safeParse(stored["payload"])
+      : null;
+  const payload = saveSongSettingsSchema.parse({
+    songId: input.songId,
+    requestId: input.requestId,
+    expectedVersion: String(input.expectedVersion),
+    expectedRevisionId: input.expectedRevision,
+    metadata: {
+      ...(original?.success ? original.data.metadata : settingsMetadata(row)),
+      previewStartMs: input.previewStartMs,
     },
-    durationMs,
-  );
-  if (input.previewStartMs >= durationMs)
-    throw new Error("試聴開始位置を新しい音源の範囲内で指定してください");
-  const canonical = new TextEncoder().encode(JSON.stringify(chart));
-  const chartHash = await sha256(canonical),
-    audioHash = await sha256(audioBytes);
-  if (
-    existing &&
-    (existing.song_id !== song.id ||
-      existing.chart_hash !== chartHash ||
-      existing.audio_hash !== audioHash ||
-      existing.preview_allowed !== input.previewAllowed)
-  )
-    throw new Error("409: 同じRevision IDに異なる内容を保存できません");
-  const chartPath = `${song.id}/${input.requestId}/chart.json`,
-    audioPath = `${song.id}/${input.requestId}/audio`;
-  if (!existing) {
-    // A failed pointer CAS retains both the old revision and the new immutable snapshot.
-    const write = async (path: string, bytes: Uint8Array, mime: string, hash: string) => {
-      const { error } = await supabaseAdmin.storage
-        .from("chart-revision-assets")
-        .upload(path, bytes, { contentType: mime, upsert: false });
-      if (error) {
-        const { data: prior, error: readError } = await supabaseAdmin.storage
-          .from("chart-revision-assets")
-          .download(path);
-        if (readError || !prior || (await sha256(await prior.arrayBuffer())) !== hash)
-          throw new Error(error.message);
-      }
+    background: { action: "keep" },
+    gameplay: { action: "prepared-replacement", sourceOperationId: sourceId },
+    rightsConfirmation: { confirmed: true, sourceOperationId: sourceId },
+    previewConsent: { allowed: input.previewAllowed, sourceOperationId: sourceId },
+  });
+  if (!original?.success) {
+    const size = async (path: string, max: number) => {
+      const result = await supabaseAdmin.storage.from("songs").info(path);
+      const bytes = result.data?.size;
+      if (result.error || !bytes || !Number.isSafeInteger(bytes) || bytes > max)
+        throw new SongSettingsError("INVALID_INPUT");
+      return bytes;
     };
-    await write(chartPath, canonical, "application/json", chartHash);
-    await write(audioPath, audioBytes, mime, audioHash);
-    const { data: latest, error: latestError } = await supabaseAdmin
-      .from("chart_revisions")
-      .select("revision_number")
-      .eq("chart_key", song.id)
-      .order("revision_number", { ascending: false })
-      .limit(1);
-    if (latestError) throw new Error(latestError.message);
-    const { error: insertError } = await supabaseAdmin.from("chart_revisions").insert({
-      id: input.requestId,
-      song_id: song.id,
-      chart_key: song.id,
-      revision_number: (latest?.[0]?.revision_number ?? 0) + 1,
-      chart_path: chartPath,
-      audio_path: audioPath,
-      chart_hash: chartHash,
-      audio_hash: audioHash,
-      parser_version: CHART_PARSER_VERSION,
-      duration_ms: durationMs,
-      note_count: chart.notes.length,
-      lane_count: 4,
-      fnf_side: chart.fnf?.playerSide ?? null,
-      rights_confirmed_by: actor,
-      preview_allowed: input.previewAllowed,
-    });
-    if (insertError)
-      throw new Error(
-        insertError.code === "23505"
-          ? "409: Revision作成が競合しました。再読み込みしてください。"
-          : insertError.message,
-      );
-  }
-  const { data: published, error: publishError } = await supabaseAdmin.rpc(
-    "publish_chart_revision",
-    {
-      p_actor: actor,
-      p_song_id: song.id,
-      p_revision_id: input.requestId,
-      p_expected_revision: input.expectedRevision,
-      p_expected_version: input.expectedVersion,
-      p_preview_start_ms: input.previewStartMs,
-    },
-  );
-  if (publishError)
-    throw new Error(
-      publishError.code === "40001"
-        ? "409: 更新が競合しました。元のRevisionは保持されています。"
-        : publishError.message,
+    const [audioBytes, chartBytes] = await Promise.all([
+      size(input.audioPath, MAX_AUDIO_BYTES),
+      size(input.chartPath, MAX_CHART_BYTES),
+    ]);
+    await prepareSongSource(
+      client,
+      actor,
+      {
+        songId: row.id,
+        operationId: sourceId,
+        expectedVersion: String(input.expectedVersion),
+        expectedRevisionId: input.expectedRevision,
+      },
+      {
+        bucket: "songs",
+        audioPath: input.audioPath,
+        chartPath: input.chartPath,
+        chartType: input.chartType,
+        side: input.side,
+        audioBytes,
+        chartBytes,
+      },
     );
-  return published;
+  }
+  const receipt = await saveSettings(client, actor, payload);
+  // Preserve the old response's legacy fields; all mutable settings come from the text-version receipt.
+  const legacy = await supabaseAdmin
+    .from("songs")
+    .select("*")
+    .eq("id", row.id)
+    .eq("user_id", actor)
+    .single();
+  if (legacy.error || !legacy.data) throw new SongSettingsError("RETRYABLE_TRANSPORT", true);
+  return {
+    ...legacy.data,
+    ...receipt.song,
+    metadata_version: Number(receipt.version),
+    fnf_side: receipt.song.fnf_side ?? legacy.data.fnf_side,
+  };
 }
