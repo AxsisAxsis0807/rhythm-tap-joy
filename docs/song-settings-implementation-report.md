@@ -1,5 +1,8 @@
 # Song Settings 実装・検証記録
 
+> 最新の仕上げ判定: [2026-10-24再検証](song-settings-finish-2026-10-24.md) / [verification JSON](song-settings-finish-verification.json)。以下は以前の検証記録として保持する。
+
+
 記録日: 2026-10-17 JST。**公開完了ではない。** 本番権限・実端末・実デプロイ先の検証が不足しているため、追加した機能を本番で有効にしない。
 
 ## 対象と main の差分

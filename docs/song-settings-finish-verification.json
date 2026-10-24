@@ -1,0 +1,382 @@
+{
+  "recordedAt": "2026-10-24T00:12:31.530147+00:00",
+  "dateJst": "2026-10-24",
+  "mainCommit": "cbf05d6f3fc46d1b43bf076a397d4499d0aece14",
+  "testedCodeCommit": "f8f7e87e77dbf92ee7bbc40c26b896cb9b5cbbf3",
+  "historicalEvidence": "song-settings-verification.json",
+  "comparison": {
+    "pr5Merged": true,
+    "mainMergedWithoutConflict": true,
+    "mainMergeContentChanges": 0,
+    "gameplayCoreReplayXpAndStyleSettingsMatchMain": true
+  },
+  "unit": {
+    "passed": 291,
+    "skippedRealStorage": 7,
+    "realServiceTestsSeparatelyPassed": 7
+  },
+  "typecheck": {
+    "app": "passed",
+    "songSettingsTests": "passed including new gates tests",
+    "songSettingsE2e": "passed"
+  },
+  "build": "passed; no deploy",
+  "lint": {
+    "fullErrors": 158,
+    "fullWarnings": 7,
+    "changedErrors": 0,
+    "changedWarnings": 0
+  },
+  "nativePostgres": {
+    "version": "17.11",
+    "localMigrations": 22,
+    "multiConnectionCas": "passed",
+    "sameRequestOneReceipt": "passed",
+    "cleanupSaveRaces": 4,
+    "scoreXpUnchanged": "passed",
+    "production": false
+  },
+  "storage": {
+    "version": "1.82.1",
+    "postgrest": "16.4",
+    "verification": "passed",
+    "realServiceTestsPassed": 7,
+    "jwtSource": "locally signed fixture JWTs",
+    "production": false,
+    "startupRace": "fixed: wait for Storage HTTP readiness before baseline GRANT"
+  },
+  "gateTests": {
+    "testsPassed": 4,
+    "environmentDatabaseFlagCombinations": 128,
+    "failClosedAndCleanupCredentials": "passed"
+  },
+  "goTrue": {
+    "production": false,
+    "goTrue": "v2.197.0",
+    "fullApplicationMiddleware": false,
+    "results": [
+      {
+        "case": "email signup with local auto-confirm",
+        "result": "pass"
+      },
+      {
+        "case": "password sign-in",
+        "result": "pass"
+      },
+      {
+        "case": "SDK getClaims with actual GoTrue-issued JWT",
+        "result": "pass"
+      },
+      {
+        "case": "refresh and same-owner session",
+        "result": "pass"
+      },
+      {
+        "case": "tampered JWT rejected",
+        "result": "pass"
+      },
+      {
+        "case": "expired JWT rejected",
+        "result": "pass"
+      },
+      {
+        "case": "wrong password rejected",
+        "result": "pass"
+      },
+      {
+        "case": "logout revokes refresh session",
+        "result": "pass"
+      }
+    ]
+  },
+  "browser": {
+    "environment": "built Chromium fixture harness; persistence transport simulated",
+    "results": [
+      {
+        "case": "desktop",
+        "viewport": [
+          1280,
+          900
+        ],
+        "modalBounds": {
+          "x": 200,
+          "y": 245.5,
+          "width": 880,
+          "height": 409
+        },
+        "result": "pass"
+      },
+      {
+        "case": "small",
+        "viewport": [
+          320,
+          568
+        ],
+        "modalBounds": {
+          "x": 12,
+          "y": 67.5,
+          "width": 296,
+          "height": 433
+        },
+        "result": "pass"
+      },
+      {
+        "case": "phone",
+        "viewport": [
+          390,
+          844
+        ],
+        "modalBounds": {
+          "x": 12,
+          "y": 215.5,
+          "width": 366,
+          "height": 413
+        },
+        "result": "pass"
+      },
+      {
+        "case": "landscape",
+        "viewport": [
+          844,
+          390
+        ],
+        "modalBounds": {
+          "x": 12,
+          "y": 12,
+          "width": 820,
+          "height": 366
+        },
+        "result": "pass"
+      },
+      {
+        "case": "real waveform Worker / short preview end / null reset / timing confirmation",
+        "result": "pass"
+      },
+      {
+        "case": "lost response reconciles one committed receipt",
+        "result": "pass"
+      },
+      {
+        "case": "50 modal/Worker/audio/focus/profile/scroll-lock cycles",
+        "result": "pass"
+      },
+      {
+        "case": "native touch single/double tap",
+        "result": "pass"
+      },
+      {
+        "case": "browser codec wav",
+        "result": "pass",
+        "durationMs": 1125,
+        "impulseMs": 500,
+        "mediaDurationMs": 1125
+      },
+      {
+        "case": "browser codec mp3",
+        "result": "pass",
+        "durationMs": 1125,
+        "impulseMs": 500,
+        "mediaDurationMs": 1125
+      },
+      {
+        "case": "browser codec ogg",
+        "result": "pass",
+        "durationMs": 1125,
+        "impulseMs": 500,
+        "mediaDurationMs": 1125
+      },
+      {
+        "case": "browser codec opus",
+        "result": "pass",
+        "durationMs": 1125,
+        "impulseMs": 500,
+        "mediaDurationMs": 1131.5
+      },
+      {
+        "case": "browser codec m4a",
+        "result": "pass",
+        "durationMs": 1125,
+        "impulseMs": 500,
+        "mediaDurationMs": 1125
+      },
+      {
+        "case": "browser codec webm",
+        "result": "pass",
+        "durationMs": 1125,
+        "impulseMs": 500,
+        "mediaDurationMs": 1133
+      }
+    ]
+  },
+  "localWorkerd": {
+    "compatibilityDate": "2026-10-13",
+    "productionCompatibilityDate": "2026-10-16",
+    "note": "Local artifact test; not a deployed target/plan verification. Only an export was added to expose the production analysis function.",
+    "results": [
+      {
+        "case": "wav",
+        "milliseconds": 164,
+        "durationMs": 1125,
+        "format": "wav",
+        "hash": "78126cf09253126e488105558bfd698a4a0120560ca3c7d4609815e2b0055145",
+        "peaks": 226
+      },
+      {
+        "case": "mp3",
+        "milliseconds": 171,
+        "durationMs": 1125,
+        "format": "mp3",
+        "hash": "6741c7898a0e85b76f608472f78416f8c9c869ba96213336a9d0c8c1e2f9bf1f",
+        "peaks": 226
+      },
+      {
+        "case": "ogg",
+        "milliseconds": 307,
+        "durationMs": 1125,
+        "format": "ogg-vorbis",
+        "hash": "445f31d9329f7bb16ff1427effef545f78797ccff58cbba50f3ae8c1c932bb9b",
+        "peaks": 226
+      },
+      {
+        "case": "opus",
+        "milliseconds": 195,
+        "durationMs": 1125,
+        "format": "ogg-opus",
+        "hash": "15db1ae3ef4cdf048fe67cdbfd6c79d66fdd67069efb18630b8e9da2c86d3746",
+        "peaks": 226
+      },
+      {
+        "case": "m4a",
+        "milliseconds": 290,
+        "durationMs": 1125,
+        "format": "mp4-aac",
+        "hash": "ab80611a61738bee403d5d3098b7cc3ffa38717768cf142d1cf6857c95cd7d3a",
+        "peaks": 226
+      },
+      {
+        "case": "webm",
+        "milliseconds": 80,
+        "durationMs": 1125,
+        "format": "webm-opus",
+        "hash": "6d831d4eafff3c1aaa2d5c5cb14959dde45dea85b82d768aae13a130cac83909",
+        "peaks": 226
+      },
+      {
+        "case": "jpg",
+        "mime": "image/jpeg",
+        "width": 16,
+        "height": 9,
+        "hash": "20c51957cdf7fa4371422e64c5994ab914c45a85ca591cf55e2f9296a1120467",
+        "bytes": 272
+      },
+      {
+        "case": "png",
+        "mime": "image/jpeg",
+        "width": 16,
+        "height": 9,
+        "hash": "20c51957cdf7fa4371422e64c5994ab914c45a85ca591cf55e2f9296a1120467",
+        "bytes": 272
+      },
+      {
+        "case": "webp",
+        "mime": "image/jpeg",
+        "width": 16,
+        "height": 9,
+        "hash": "c235ee446fb853a1bbebb7f563479180db272404af7af21efd9b0cb3c41a72ef",
+        "bytes": 272
+      },
+      {
+        "case": "100 MiB streaming PCM boundary",
+        "milliseconds": 13831,
+        "durationMs": 546133,
+        "bytes": 104857600
+      },
+      {
+        "case": "100 MiB + 1 declared WAV rejected",
+        "status": 422
+      },
+      {
+        "case": "unsupported image rejected",
+        "status": 422
+      }
+    ]
+  },
+  "supabaseCli": {
+    "version": "2.121.0",
+    "configDirectory": "ignored work/ via SUPABASE_HOME",
+    "start": "stopped before disk exhaustion; incomplete",
+    "reset": "not run; stack unavailable",
+    "lint": "not run; stack unavailable",
+    "registry": "public.ecr.aws denied; CLI automatically tried permitted ghcr.io images"
+  },
+  "publicReadOnlyProbes": [
+    {
+      "path": "/auth/v1/health",
+      "httpStatus": 403,
+      "note": "No elevated credentials used"
+    },
+    {
+      "path": "/rest/v1/",
+      "httpStatus": 403,
+      "note": "No elevated credentials used"
+    }
+  ],
+  "remainingAcceptance": [
+    {
+      "id": "production-migrations-flags",
+      "status": "unverified",
+      "reason": "No ready administrator/service credentials; public-key health/OpenAPI probes returned HTTP 403, layer unknown",
+      "required": "Read-only administrator preflight, migration history and schema/bucket/trigger/grant comparison; inspect deployed env flags without exposing secrets"
+    },
+    {
+      "id": "S09",
+      "status": "partial-local-only",
+      "reason": "Local workerd tests passed; deployed Cloudflare account/plan and CPU/memory, 64 MiB mobile working set and long/VBR track matrix unavailable",
+      "required": "Approved staging target with the same artifact hash; record date/plan/CPU/memory and actual device waveform/playhead measurements"
+    },
+    {
+      "id": "S10",
+      "status": "partial-local-only",
+      "reason": "Cleanup credentials, real deletion/retry and leases tested locally; workflow exists only in PR, no actual cron or alert monitoring tested",
+      "required": "After separate rollout approval, configure scheduler and verify real cron, retry/dead-letter metrics and failure notification"
+    },
+    {
+      "id": "D14-cli",
+      "status": "incomplete",
+      "reason": "Supabase CLI 2.121.0 works with SUPABASE_HOME under work/. Full local stack startup was stopped at about 2.4 GiB free disk while PostgreSQL layers were expanding; reset/lint not run",
+      "required": "Larger isolated runner; run start, db reset --local, db lint --local, fresh and previous-schema/legacy-data upgrade. Never reset production"
+    },
+    {
+      "id": "auth-full-application",
+      "status": "partial-local-only",
+      "reason": "Eight GoTrue 2.197.0 email/JWT/refresh/logout checks passed; full requireSupabaseAuth/server-function/account-switch routes, OAuth/MFA/mail and production auth unverified",
+      "required": "Authenticated staging using production-equivalent middleware/config and two fixture accounts; include revoked/expired credentials and account switching"
+    },
+    {
+      "id": "I01-I12-and-section-16.5",
+      "status": "partial",
+      "reason": "Chromium fixture harness passed; Firefox/WebKit, real iPhone Safari, assistive technology, software keyboard/notch/lock, offline/two-tab/account-switch combinations not fully verified",
+      "required": "Record OS/device/browser versions and outcomes for every remaining acceptance combination; browser emulation is not real-device evidence"
+    },
+    {
+      "id": "production-rollout-smoke",
+      "status": "not-performed",
+      "reason": "No production migration/deploy/flag activation or mutation attempted",
+      "required": "Separate approval, backup/rollback review, verified deploy SHA and controlled production smoke"
+    }
+  ],
+  "decision": {
+    "keepDraft": true,
+    "readyForReview": false,
+    "mergeApproved": false,
+    "reason": "Conflict-free local integration and passing automated checks do not satisfy mandatory deployed/runtime/auth/device/operations acceptance criteria"
+  },
+  "productionActions": {
+    "migrationApplied": false,
+    "deployed": false,
+    "flagsChanged": false,
+    "schedulerTriggered": false,
+    "dataMutated": false,
+    "merged": false
+  }
+}

@@ -27,7 +27,10 @@
   "browser": [
     {
       "case": "desktop",
-      "viewport": [1280, 900],
+      "viewport": [
+        1280,
+        900
+      ],
       "modalBounds": {
         "x": 200,
         "y": 245.5,
@@ -38,7 +41,10 @@
     },
     {
       "case": "small",
-      "viewport": [320, 568],
+      "viewport": [
+        320,
+        568
+      ],
       "modalBounds": {
         "x": 12,
         "y": 67.5,
@@ -49,7 +55,10 @@
     },
     {
       "case": "phone",
-      "viewport": [390, 844],
+      "viewport": [
+        390,
+        844
+      ],
       "modalBounds": {
         "x": 12,
         "y": 215.5,
@@ -60,7 +69,10 @@
     },
     {
       "case": "landscape",
-      "viewport": [844, 390],
+      "viewport": [
+        844,
+        390
+      ],
       "modalBounds": {
         "x": 12,
         "y": 12,
@@ -234,5 +246,11 @@
     "real iPhone Safari / Firefox / WebKit / assistive technology matrix",
     "Supabase CLI start/reset/lint and GoTrue full-auth flow",
     "remaining acceptance matrix in implementation report"
-  ]
+  ],
+  "latestFollowUp": {
+    "dateJst": "2026-10-24",
+    "report": "song-settings-finish-2026-10-24.md",
+    "verification": "song-settings-finish-verification.json",
+    "note": "The fields above remain historical evidence; do not treat them as the latest test run or production verification."
+  }
 }

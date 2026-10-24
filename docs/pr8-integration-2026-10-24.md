@@ -1,5 +1,8 @@
 # PR #8 / #5 統合・公開判定記録
 
+> 最新の仕上げ判定: [2026-10-24再検証](song-settings-finish-2026-10-24.md) / [verification JSON](song-settings-finish-verification.json)。以下は以前の検証記録として保持する。
+
+
 2026-10-24 JST。基準 main: `32e239d0488d938c4319e3330ee83ff37a2b8a37`。
 元 #8 head: `5dacc93063817146cf2d8854aef9625bb823ab8a`。
 mainを取り込み、履歴を書き換えず #5 の修正も merge した。
