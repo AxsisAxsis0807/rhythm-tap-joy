@@ -161,7 +161,25 @@ try {
 }
 for (const suffix of ["db", "rest", "api"])
   docker(["network", "connect", loopback, `${prefix}-${suffix}`]);
+// storage.objects exists before Storage finishes its migration transaction.
+// Waiting only for that table can race the baseline GRANT with migration DDL
+// and deadlock in pg_class. The HTTP listener starts after migrations finish.
 for (let attempt = 0; attempt < 100; attempt++) {
+  let healthy = false;
+  try {
+    const response = await fetch("http://127.0.0.1:55441/status", {
+      signal: AbortSignal.timeout(2000),
+    });
+    healthy = response.ok;
+    await response.body?.cancel();
+  } catch {
+    // Connection refusal is expected while the isolated service migrates.
+  }
+  if (!healthy) {
+    if (attempt === 99) throw new Error("Storage API did not become ready after migrations");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    continue;
+  }
   const result = docker([
     "exec",
     `${prefix}-db`,
