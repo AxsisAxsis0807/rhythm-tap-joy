@@ -51,6 +51,7 @@ import {
   SupporterStatus,
 } from "./AccountGrowth";
 import { Menu, Settings } from "lucide-react";
+import { AdMaxBanner } from "./AdMaxBanner";
 
 type HubScreen =
   | "home"
@@ -576,6 +577,7 @@ function HomeScreen({
           </p>
         )}
       </section>
+      <AdMaxBanner />
     </main>
   );
 }
@@ -1172,6 +1174,7 @@ function ProfileScreen({
           )}
         </div>
       </div>
+      <AdMaxBanner />
     </main>
   );
 }
