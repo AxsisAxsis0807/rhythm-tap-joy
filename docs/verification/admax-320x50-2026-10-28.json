@@ -1,0 +1,672 @@
+{
+  "kind": "local synthetic scripts; not live AdMax",
+  "results": [
+    {
+      "key": "319-success",
+      "mode": "success",
+      "viewport": {
+        "width": 319,
+        "height": 740
+      },
+      "screen": "home",
+      "scroll": 319,
+      "client": 319,
+      "ad": null,
+      "nav": null,
+      "scriptRequests": 0
+    },
+    {
+      "key": "319-success",
+      "mode": "success",
+      "viewport": {
+        "width": 319,
+        "height": 740
+      },
+      "screen": "profile",
+      "scroll": 319,
+      "client": 319,
+      "ad": null,
+      "nav": null,
+      "scriptRequests": 0
+    },
+    {
+      "key": "319-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 319,
+        "height": 740
+      },
+      "screen": "home",
+      "scroll": 319,
+      "client": 319,
+      "ad": null,
+      "nav": null,
+      "scriptRequests": 0
+    },
+    {
+      "key": "319-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 319,
+        "height": 740
+      },
+      "screen": "profile",
+      "scroll": 319,
+      "client": 319,
+      "ad": null,
+      "nav": null,
+      "scriptRequests": 0
+    },
+    {
+      "key": "319-error",
+      "mode": "error",
+      "viewport": {
+        "width": 319,
+        "height": 740
+      },
+      "screen": "home",
+      "scroll": 319,
+      "client": 319,
+      "ad": null,
+      "nav": null,
+      "scriptRequests": 0
+    },
+    {
+      "key": "319-error",
+      "mode": "error",
+      "viewport": {
+        "width": 319,
+        "height": 740
+      },
+      "screen": "profile",
+      "scroll": 319,
+      "client": 319,
+      "ad": null,
+      "nav": null,
+      "scriptRequests": 0
+    },
+    {
+      "key": "320-success",
+      "mode": "success",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "screen": "home",
+      "scroll": 320,
+      "client": 320,
+      "ad": {
+        "x": 0,
+        "y": 578,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 684,
+        "width": 320,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "320-success",
+      "mode": "success",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "screen": "profile",
+      "scroll": 320,
+      "client": 320,
+      "ad": {
+        "x": 0,
+        "y": 578,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 684,
+        "width": 320,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "320-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "screen": "home",
+      "scroll": 320,
+      "client": 320,
+      "ad": {
+        "x": 0,
+        "y": 578,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 684,
+        "width": 320,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "320-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "screen": "profile",
+      "scroll": 320,
+      "client": 320,
+      "ad": {
+        "x": 0,
+        "y": 578,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 684,
+        "width": 320,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "320-error",
+      "mode": "error",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "screen": "home",
+      "scroll": 320,
+      "client": 320,
+      "ad": {
+        "x": 0,
+        "y": 578,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 684,
+        "width": 320,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "320-error",
+      "mode": "error",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "screen": "profile",
+      "scroll": 320,
+      "client": 320,
+      "ad": {
+        "x": 0,
+        "y": 578,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 684,
+        "width": 320,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "390-success",
+      "mode": "success",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "screen": "home",
+      "scroll": 390,
+      "client": 390,
+      "ad": {
+        "x": 35,
+        "y": 682,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 788,
+        "width": 390,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "390-success",
+      "mode": "success",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "screen": "profile",
+      "scroll": 390,
+      "client": 390,
+      "ad": {
+        "x": 35,
+        "y": 682,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 788,
+        "width": 390,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "390-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "screen": "home",
+      "scroll": 390,
+      "client": 390,
+      "ad": {
+        "x": 35,
+        "y": 682,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 788,
+        "width": 390,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "390-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "screen": "profile",
+      "scroll": 390,
+      "client": 390,
+      "ad": {
+        "x": 35,
+        "y": 682,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 788,
+        "width": 390,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "390-error",
+      "mode": "error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "screen": "home",
+      "scroll": 390,
+      "client": 390,
+      "ad": {
+        "x": 35,
+        "y": 682,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 788,
+        "width": 390,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "390-error",
+      "mode": "error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "screen": "profile",
+      "scroll": 390,
+      "client": 390,
+      "ad": {
+        "x": 35,
+        "y": 682,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 788,
+        "width": 390,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "844-success",
+      "mode": "success",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "screen": "home",
+      "scroll": 844,
+      "client": 844,
+      "ad": {
+        "x": 262,
+        "y": 228,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 334,
+        "width": 844,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "844-success",
+      "mode": "success",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "screen": "profile",
+      "scroll": 844,
+      "client": 844,
+      "ad": {
+        "x": 262,
+        "y": 228,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 334,
+        "width": 844,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "844-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "screen": "home",
+      "scroll": 844,
+      "client": 844,
+      "ad": {
+        "x": 262,
+        "y": 228,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 334,
+        "width": 844,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "844-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "screen": "profile",
+      "scroll": 844,
+      "client": 844,
+      "ad": {
+        "x": 262,
+        "y": 228,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 334,
+        "width": 844,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "844-error",
+      "mode": "error",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "screen": "home",
+      "scroll": 844,
+      "client": 844,
+      "ad": {
+        "x": 262,
+        "y": 228,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 334,
+        "width": 844,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "844-error",
+      "mode": "error",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "screen": "profile",
+      "scroll": 844,
+      "client": 844,
+      "ad": {
+        "x": 262,
+        "y": 228,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 334,
+        "width": 844,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "1280-success",
+      "mode": "success",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "screen": "home",
+      "scroll": 1280,
+      "client": 1280,
+      "ad": {
+        "x": 480,
+        "y": 738,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 844,
+        "width": 1280,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "1280-success",
+      "mode": "success",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "screen": "profile",
+      "scroll": 1280,
+      "client": 1280,
+      "ad": {
+        "x": 480,
+        "y": 738,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 844,
+        "width": 1280,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "1280-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "screen": "home",
+      "scroll": 1280,
+      "client": 1280,
+      "ad": {
+        "x": 480,
+        "y": 738,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 844,
+        "width": 1280,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "1280-blocked",
+      "mode": "blocked",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "screen": "profile",
+      "scroll": 1280,
+      "client": 1280,
+      "ad": {
+        "x": 480,
+        "y": 738,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 844,
+        "width": 1280,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "1280-error",
+      "mode": "error",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "screen": "home",
+      "scroll": 1280,
+      "client": 1280,
+      "ad": {
+        "x": 480,
+        "y": 738,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 844,
+        "width": 1280,
+        "height": 56
+      },
+      "scriptRequests": 1
+    },
+    {
+      "key": "1280-error",
+      "mode": "error",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "screen": "profile",
+      "scroll": 1280,
+      "client": 1280,
+      "ad": {
+        "x": 480,
+        "y": 738,
+        "width": 320,
+        "height": 50
+      },
+      "nav": {
+        "x": 0,
+        "y": 844,
+        "width": 1280,
+        "height": 56
+      },
+      "scriptRequests": 2
+    },
+    {
+      "key": "pending",
+      "mode": "delayed",
+      "screen": "select",
+      "frames": 0,
+      "loadedEvents": 0
+    }
+  ]
+}

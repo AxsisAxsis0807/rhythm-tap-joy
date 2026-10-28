@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { AdMaxBanner, ADMAX_DOCUMENT } from "@/components/app/AdMaxBanner";
+import { AdMaxBanner, ADMAX_DOCUMENT, ADMAX_BANNER_SIZE } from "@/components/app/AdMaxBanner";
 
 let resize: ResizeObserverCallback;
 const disconnect = vi.fn();
@@ -22,29 +22,29 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
-const size = { width: 300, height: 250 };
+const size = ADMAX_BANNER_SIZE;
 function width(value: number) {
   act(() =>
     resize([{ contentRect: { width: value } } as ResizeObserverEntry], {} as ResizeObserver),
   );
 }
-it("makes no ad document or request before the account settings are confirmed", () => {
-  const view = render(<AdMaxBanner />);
+it("supports disabling the slot without loading an ad", () => {
+  const view = render(<AdMaxBanner size={null} />);
   expect(view.container.innerHTML).toBe("");
 });
 it("does not crop, scale or load a creative on a narrower screen", () => {
   const view = render(<AdMaxBanner size={size} />);
-  width(299);
+  width(319);
   expect(view.queryByTitle("広告 — 忍者AdMax")).toBeNull();
-  width(300);
+  width(320);
   const frame = view.getByTitle("広告 — 忍者AdMax");
-  expect(frame.getAttribute("width")).toBe("300");
-  expect(frame.getAttribute("height")).toBe("250");
+  expect(frame.getAttribute("width")).toBe("320");
+  expect(frame.getAttribute("height")).toBe("50");
   expect(frame.getAttribute("srcdoc")).toBe(ADMAX_DOCUMENT);
   expect(document.querySelectorAll('script[src*="adm.shinobi.jp"]')).toHaveLength(0);
   width(500);
   expect(view.getByTitle("広告 — 忍者AdMax")).toBe(frame);
-  width(299);
+  width(319);
   expect(view.queryByTitle("広告 — 忍者AdMax")).toBeNull();
 });
 it("keeps one isolated document across rerenders, and removes it on navigation", () => {
@@ -80,4 +80,26 @@ it("does not make other content depend on ad load success or retry failed ads", 
   act(() => frame.dispatchEvent(new Event("error")));
   expect(view.getByRole("button", { name: "Play" })).toBeTruthy();
   expect(view.getByTitle("広告 — 忍者AdMax")).toBe(frame);
+});
+
+it("uses the owner-confirmed 320x50 size by default and preserves the supplied script token", () => {
+  const view = render(<AdMaxBanner />);
+  width(320);
+  expect(ADMAX_BANNER_SIZE).toEqual({ width: 320, height: 50 });
+  const frame = view.getByTitle("広告 — 忍者AdMax");
+  expect(frame.getAttribute("width")).toBe("320");
+  expect(frame.getAttribute("height")).toBe("50");
+  expect(ADMAX_DOCUMENT.match(/<script /g)).toHaveLength(1);
+  expect(ADMAX_DOCUMENT).toContain("https://adm.shinobi.jp/s/cb996f4b2cbc2c0b8adc2c12ad721c8f");
+});
+it("omits ads when ResizeObserver is unavailable without preventing the rest of the page", () => {
+  vi.stubGlobal("ResizeObserver", undefined);
+  const view = render(
+    <>
+      <button>Play</button>
+      <AdMaxBanner />
+    </>,
+  );
+  expect(view.queryByTitle("広告 — 忍者AdMax")).toBeNull();
+  expect(view.getByRole("button", { name: "Play" })).toBeTruthy();
 });

@@ -577,7 +577,9 @@ function HomeScreen({
           </p>
         )}
       </section>
-      <AdMaxBanner />
+      <div className="-mx-4 md:mx-0">
+        <AdMaxBanner />
+      </div>
     </main>
   );
 }
@@ -1174,7 +1176,9 @@ function ProfileScreen({
           )}
         </div>
       </div>
-      <AdMaxBanner />
+      <div className="-mx-4 md:mx-0">
+        <AdMaxBanner />
+      </div>
     </main>
   );
 }

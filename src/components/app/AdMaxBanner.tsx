@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 export type AdMaxBannerSize = { width: number; height: number };
 
-// Set only after confirming this tag's inline size and overlay/category settings.
-// See docs/admax.md. A tag URL does not encode its format or dimensions.
-export const ADMAX_BANNER_SIZE: AdMaxBannerSize | null = null;
+// Owner-confirmed slot 1237257: PulseLane_SP_320x50. No resizing or overlay.
+// The numeric management slot ID is not the script token; keep the supplied tag below.
+export const ADMAX_BANNER_SIZE: AdMaxBannerSize = { width: 320, height: 50 };
 
 export const ADMAX_DOCUMENT = `<!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
