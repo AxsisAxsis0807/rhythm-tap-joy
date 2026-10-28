@@ -1,0 +1,146 @@
+[
+  {
+    "viewport": {
+      "width": 320,
+      "height": 740
+    },
+    "mode": "unverified",
+    "screen": "home",
+    "scroll": 320,
+    "client": 320,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 740
+    },
+    "mode": "unverified",
+    "screen": "profile",
+    "scroll": 320,
+    "client": 320,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 740
+    },
+    "mode": "blocked",
+    "screen": "home",
+    "scroll": 320,
+    "client": 320,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 740
+    },
+    "mode": "blocked",
+    "screen": "profile",
+    "scroll": 320,
+    "client": 320,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "mode": "unverified",
+    "screen": "home",
+    "scroll": 390,
+    "client": 390,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "mode": "unverified",
+    "screen": "profile",
+    "scroll": 390,
+    "client": 390,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "mode": "blocked",
+    "screen": "home",
+    "scroll": 390,
+    "client": 390,
+    "frames": 1,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "mode": "blocked",
+    "screen": "profile",
+    "scroll": 390,
+    "client": 390,
+    "frames": 1,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "mode": "unverified",
+    "screen": "home",
+    "scroll": 1280,
+    "client": 1280,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "mode": "unverified",
+    "screen": "profile",
+    "scroll": 1280,
+    "client": 1280,
+    "frames": 0,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "mode": "blocked",
+    "screen": "home",
+    "scroll": 1280,
+    "client": 1280,
+    "frames": 1,
+    "requests": 0
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "mode": "blocked",
+    "screen": "profile",
+    "scroll": 1280,
+    "client": 1280,
+    "frames": 1,
+    "requests": 0
+  }
+]
