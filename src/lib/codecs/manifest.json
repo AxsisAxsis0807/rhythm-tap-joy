@@ -1,0 +1,22 @@
+[
+  {
+    "name": "mpg123",
+    "bytes": 99479,
+    "sha256": "f0e9e8848367320ccb757e4092f0d6809668cfe38f43139d47b447151d7dff6b"
+  },
+  {
+    "name": "opus",
+    "bytes": 93685,
+    "sha256": "8b67eda2a46e478f65c24c467dae9eac26293efae6484bfe762b9d1086058b4b"
+  },
+  {
+    "name": "vorbis",
+    "bytes": 71224,
+    "sha256": "fc062044fde03dfbe64db152fb4a9301636917f7ebf207bc1137debb11df4481"
+  },
+  {
+    "name": "aac",
+    "bytes": 117259,
+    "sha256": "57b355d7577c70099020a7455d7e1838a95d6ad029487741e605c543209e669a"
+  }
+]

@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiInternalAssetCleanupRouteImport } from './routes/api/internal/asset-cleanup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiInternalAssetCleanupRoute = ApiInternalAssetCleanupRouteImport.update({
+  id: '/api/internal/asset-cleanup',
+  path: '/api/internal/asset-cleanup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/internal/asset-cleanup': typeof ApiInternalAssetCleanupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/internal/asset-cleanup': typeof ApiInternalAssetCleanupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/internal/asset-cleanup': typeof ApiInternalAssetCleanupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/internal/asset-cleanup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/internal/asset-cleanup'
+  id: '__root__' | '/' | '/api/internal/asset-cleanup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiInternalAssetCleanupRoute: typeof ApiInternalAssetCleanupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/internal/asset-cleanup': {
+      id: '/api/internal/asset-cleanup'
+      path: '/api/internal/asset-cleanup'
+      fullPath: '/api/internal/asset-cleanup'
+      preLoaderRoute: typeof ApiInternalAssetCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiInternalAssetCleanupRoute: ApiInternalAssetCleanupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

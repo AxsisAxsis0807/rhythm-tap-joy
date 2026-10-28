@@ -7,6 +7,27 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    resolve: {
+      alias: {
+        "@wasm-audio-decoders/opus-ml": new URL(
+          "./src/lib/codecs/opusMlUnavailable.ts",
+          import.meta.url,
+        ).pathname,
+      },
+    },
+    plugins: [
+      {
+        name: "song-settings-server-wasm",
+        enforce: "pre",
+        async resolveId(source, importer, options) {
+          if (!options.ssr || !source.endsWith(".wasm?module")) return null;
+          const resolved = await this.resolve(source.slice(0, -7), importer, { skipSelf: true });
+          return resolved ? { id: `${resolved.id}?module`, external: "absolute" as const } : null;
+        },
+      },
+    ],
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
