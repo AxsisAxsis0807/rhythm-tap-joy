@@ -24,7 +24,7 @@
 
 ## 実施済み検証と全標本
 
-- 変更前production build成功。変更前の出力public assetsを `work/performance/baseline/public` に保存。build/testログとbaseline.jsonも同directoryに保存（workはgit対象外）。アーカイブのSHA-256一覧は検証記録JSONに収録。これは端末性能baselineの取得完了を意味しない。
+- 変更前production build成功。変更前の出力public assetsを `work/performance/baseline/public` に保存。build/testログとbaseline.jsonも同directoryに保存（workはgit対象外）。変更前public assets・baseline.json・build/testログは [verification/pulse-production-baseline.zip](verification/pulse-production-baseline.zip) にも保存。server bundleと計測traceは含まない。アーカイブのSHA-256一覧は検証記録JSONに収録。これは端末性能baselineの取得完了を意味しない。
 - 変更前 `npm test`: 22 files / 248 tests成功。変更後: 23 files / 256 tests成功。
 - `npm run typecheck` / `npm run build`: 成功。buildには既存の非推奨API・chunk size等の警告あり。
 - 変更範囲ESLint: 0 errors / 0 warnings。`git diff --check`成功。
