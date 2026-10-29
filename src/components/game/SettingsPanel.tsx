@@ -5,7 +5,13 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { getMode } from "@/game/modes";
 import { InputTest, InputOverlayPreview } from "./InputOverlay";
-import { isBindableKey, DEFAULT_SETTINGS, type GameSettings, type LaneKeys } from "@/game/settings";
+import {
+  applyRenderingPreset,
+  isBindableKey,
+  DEFAULT_SETTINGS,
+  type GameSettings,
+  type LaneKeys,
+} from "@/game/settings";
 import { resetInputOverlay } from "@/game/inputOverlayLayout";
 
 type Category = "play" | "controls" | "input" | "audio" | "visual" | "comfort";
@@ -39,7 +45,7 @@ export function SettingsPanel({
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const set = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) =>
-    onChange({ ...settings, [key]: value, preset: "custom" });
+    onChange({ ...settings, [key]: value, preset: "custom", renderingPreset: "custom" });
   useEffect(() => {
     if (!open) return;
     returnFocus.current = document.activeElement as HTMLElement;
@@ -544,6 +550,25 @@ export function SettingsPanel({
 
             {show("comfort", "軽量 アニメーション FPS") && (
               <Group title="パフォーマンス">
+                <SelectRow
+                  label="描画プリセット"
+                  value={settings.renderingPreset}
+                  onChange={(value) =>
+                    value === "custom"
+                      ? set("renderingPreset", "custom")
+                      : (value === "standard" || value === "light" || value === "recording") &&
+                        onChange(applyRenderingPreset(settings, value))
+                  }
+                  options={[
+                    ["standard", "Standard"],
+                    ["light", "Light"],
+                    ["recording", "Recording"],
+                    ["custom", "Custom"],
+                  ]}
+                />
+                <p className="text-xs text-white/50">
+                  Lightは装飾と入力表示を省略。Recordingは装飾を省略し入力表示を維持します。判定・音声・速度は変わりません。
+                </p>
                 <ToggleRow
                   label="軽量モード"
                   description="装飾と一部のエフェクトを減らします。端末のFPS向上を保証するものではありません。"

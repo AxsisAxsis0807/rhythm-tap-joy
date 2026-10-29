@@ -29,6 +29,7 @@ export function FnfField({
   scrollTime,
   activeLanes,
   middleScroll,
+  glow = true,
 }: {
   chart: Chart;
   mode: GameMode;
@@ -37,6 +38,7 @@ export function FnfField({
   scrollTime: number;
   activeLanes: Set<number>;
   middleScroll: boolean;
+  glow?: boolean;
 }) {
   const fnf = chart.fnf;
   const opponent = useMemo(() => {
@@ -84,6 +86,7 @@ export function FnfField({
                 >
                   <NoteSprite
                     mode={mode}
+                    glow={glow}
                     lane={lane}
                     fluid
                     receptor
@@ -107,7 +110,7 @@ export function FnfField({
                       className="absolute left-1/2 w-[80%] max-w-[76px] -translate-x-1/2 -translate-y-1/2"
                       style={{ top: `${top}%` }}
                     >
-                      <NoteSprite mode={mode} lane={lane} fluid />
+                      <NoteSprite mode={mode} lane={lane} fluid glow={glow} />
                     </div>
                   );
                 })}

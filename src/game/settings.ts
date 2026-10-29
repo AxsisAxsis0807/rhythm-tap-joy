@@ -67,7 +67,10 @@ export type ScrollDirectionSetting = "mode" | "down" | "up";
 export type NoteShapeSetting = "mode" | "bar" | "circle" | "arrow";
 export type SettingsPreset = "simple" | "readable" | "effects" | "custom";
 
+export type RenderingPreset = "standard" | "light" | "recording" | "custom";
+
 export interface GameSettings {
+  renderingPreset: RenderingPreset;
   version: 5;
   autoPreview: boolean;
   previewVolume: number;
@@ -118,6 +121,7 @@ export interface GameSettings {
 
 export const DEFAULT_SETTINGS: GameSettings = {
   version: 5,
+  renderingPreset: "standard",
   autoPreview: true,
   previewVolume: 0.5,
   lastPlayedStyle: null,
@@ -190,6 +194,11 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     values.includes(v as T) ? (v as T) : fallback;
   return {
     ...DEFAULT_SETTINGS,
+    renderingPreset: pick(
+      s.renderingPreset,
+      ["standard", "light", "recording", "custom"],
+      "custom",
+    ),
     autoPreview: bool(s.autoPreview, true),
     previewVolume: clamp(s.previewVolume, 0, 1, 0.5),
     lastPlayedStyle:
@@ -294,6 +303,35 @@ export function applyPreset(
     hitEffects: true,
     glowEffects: true,
     screenShake: false,
+  };
+}
+
+/** Rendering only: never changes timing, travel, audio, keys or touch geometry. */
+export function applyRenderingPreset(
+  s: GameSettings,
+  renderingPreset: Exclude<RenderingPreset, "custom">,
+): GameSettings {
+  const light = renderingPreset !== "standard";
+  return {
+    ...s,
+    renderingPreset,
+    lightweightMode: light,
+    reducedMotion: light,
+    glowEffects: !light,
+    hitEffects: !light,
+    screenShake: false,
+    backgroundEffects: !light,
+    inputOverlayEnabled: renderingPreset !== "light",
+  };
+}
+
+/** One policy for both fields and all decorative rendering. */
+export function effectiveRendering(s: GameSettings) {
+  return {
+    glow: s.glowEffects && !s.lightweightMode,
+    hitPing: s.hitEffects && !s.lightweightMode && !s.reducedMotion,
+    shake: s.screenShake && !s.lightweightMode && !s.reducedMotion,
+    background: s.backgroundEffects && !s.lightweightMode,
   };
 }
 

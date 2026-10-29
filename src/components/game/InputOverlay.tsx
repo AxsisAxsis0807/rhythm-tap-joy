@@ -217,17 +217,23 @@ export function InputTest({
 }
 
 /** Independent, click-through layer. It never participates in lane layout. */
-export function InputOverlayLayer({
-  inputs,
-  settings,
-  preview = false,
-  playStyle = "mania",
-}: {
+type InputOverlayLayerProps = {
   inputs: InputLedger;
   settings: GameSettings;
   preview?: boolean;
   playStyle?: PlayStyleId;
-}) {
+};
+
+export function InputOverlayLayer(props: InputOverlayLayerProps) {
+  return props.settings.inputOverlayEnabled ? <MountedInputOverlayLayer {...props} /> : null;
+}
+
+function MountedInputOverlayLayer({
+  inputs,
+  settings,
+  preview = false,
+  playStyle = "mania",
+}: InputOverlayLayerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState<OverlayViewport>({ width: 0, height: 0 });
   useEffect(() => {
