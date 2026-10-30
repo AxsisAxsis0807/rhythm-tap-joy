@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preview:production": "npx --yes wrangler@4.156.0 dev --local --ip 127.0.0.1 --config .output/server/wrangler.json"
   },
   "overrides": {
     "rolldown": "1.2.1"
