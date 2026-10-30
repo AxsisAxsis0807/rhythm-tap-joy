@@ -9,7 +9,7 @@ import type { Chart, PlayStyleId } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { FnfField } from "./FnfField";
-import { resolveKeyMap, useGameSettings } from "@/game/settings";
+import { effectiveRendering, resolveKeyMap, useGameSettings } from "@/game/settings";
 import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
@@ -37,6 +37,7 @@ export function GameScreen({
   onExit?: () => void;
 }) {
   const { settings, setSettings, saveError } = useGameSettings();
+  const drawing = effectiveRendering(settings);
   const mode = getMode(modeId);
   const fnfDisplay = playStyle === "fnf" && Boolean(chart.fnf);
   const game = useRhythmGame(chart, {
@@ -182,18 +183,19 @@ export function GameScreen({
     : 100;
   const progress = duration ? Math.min(1, Math.max(0, songTime / duration)) : 0;
   const timingErrors = play.timingErrorsMs;
-  const averageError = timingErrors.length
-    ? timingErrors.reduce((sum, value) => sum + value, 0) / timingErrors.length
-    : null;
+  const averageError =
+    status === "finished" && timingErrors.length
+      ? timingErrors.reduce((sum, value) => sum + value, 0) / timingErrors.length
+      : null;
 
   const showOverlay = status !== "playing";
 
   return (
     <div
-      className={`relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none ${settings.reducedMotion ? "[&_*]:!animate-none [&_*]:!transition-none" : ""} ${settings.screenShake && showJudge && last?.judgement === "MISS" ? "animate-game-shake" : ""}`}
+      className={`relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background select-none ${settings.reducedMotion ? "[&_*]:!animate-none [&_*]:!transition-none" : ""} ${drawing.shake && showJudge && last?.judgement === "MISS" ? "animate-game-shake" : ""}`}
       style={{ overscrollBehavior: "none", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {settings.backgroundEffects && !settings.lightweightMode && (
+      {drawing.background && (
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,oklch(0.62_0.12_205/.12),transparent_55%)]"
@@ -254,7 +256,9 @@ export function GameScreen({
         data-testid="gameplay-area"
         className="relative flex min-h-0 flex-1 justify-center overflow-hidden"
       >
-        <InputOverlayLayer inputs={game.inputs} settings={settings} playStyle={playStyle} />
+        {settings.inputOverlayEnabled && (
+          <InputOverlayLayer inputs={game.inputs} settings={settings} playStyle={playStyle} />
+        )}
         {fnfDisplay ? (
           <FnfField
             chart={chart}
@@ -264,6 +268,7 @@ export function GameScreen({
             scrollTime={scrollTime}
             activeLanes={activeLanes}
             middleScroll={settings.middleScroll}
+            glow={drawing.glow}
           />
         ) : (
           <div
@@ -287,7 +292,7 @@ export function GameScreen({
                   {/* Judgement line + receptor */}
                   <div
                     data-testid={`judge-line-${lane}`}
-                    className={`absolute inset-x-0 z-10 h-[3px] bg-judge-line ${settings.glowEffects && !settings.lightweightMode ? "shadow-glow" : ""}`}
+                    className={`absolute inset-x-0 z-10 h-[3px] bg-judge-line ${drawing.glow ? "shadow-glow" : ""}`}
                     style={{
                       top: `${judge}%`,
                       opacity: mode.receptors ? 0.35 : 1,
@@ -301,6 +306,7 @@ export function GameScreen({
                     >
                       <NoteSprite
                         mode={renderMode}
+                        glow={drawing.glow}
                         lane={lane}
                         receptor
                         pressed={activeLanes.has(lane)}
@@ -335,7 +341,7 @@ export function GameScreen({
                           transform: `scale(${settings.noteScale / 100})`,
                         }}
                       >
-                        <NoteSprite mode={renderMode} lane={lane} />
+                        <NoteSprite mode={renderMode} lane={lane} glow={drawing.glow} />
                       </div>
                     ) : (
                       <div
@@ -347,7 +353,7 @@ export function GameScreen({
                           transform: `scale(${settings.noteScale / 100})`,
                         }}
                       >
-                        <NoteSprite mode={renderMode} lane={lane} />
+                        <NoteSprite mode={renderMode} lane={lane} glow={drawing.glow} />
                       </div>
                     );
                   })}
@@ -360,15 +366,12 @@ export function GameScreen({
               className="pointer-events-none absolute inset-x-0 z-20 flex flex-col items-center gap-1"
               style={{ top: `${mode.popupPct}%` }}
             >
-              {showJudge &&
-                settings.hitEffects &&
-                !settings.lightweightMode &&
-                last?.judgement !== "MISS" && (
-                  <i
-                    aria-hidden="true"
-                    className="absolute size-24 animate-ping rounded-full border border-cyan-200/30"
-                  />
-                )}
+              {showJudge && drawing.hitPing && last?.judgement !== "MISS" && (
+                <i
+                  aria-hidden="true"
+                  className="absolute size-24 animate-ping rounded-full border border-cyan-200/30"
+                />
+              )}
               {play.combo > 1 && (
                 <>
                   <span className="font-display text-4xl tabular-nums text-combo drop-shadow sm:text-5xl">

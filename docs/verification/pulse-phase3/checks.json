@@ -1,0 +1,593 @@
+{
+  "sourceUnchangedFromPhase2": true,
+  "finalTests": 257,
+  "candidateTests": 259,
+  "logs": {
+    "tests.log": "\n> test\n> vitest run\n\n\n RUN  v5.0.3 /workspace/rhythm-tap-joy\n\n\n Test Files  24 passed (24)\n      Tests  259 passed (259)\n   Start at  10:35:04\n   Duration  37.48s (tests 59%, environment 33%, import 6%, transform 2%)\n\nEnvironment  jsdom was created 24 times · 11.51s total, 33% of tracked time\n             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)\n             learn more: https://vitest.dev/guide/improving-performance#test-environments\n\n",
+    "typecheck.log": "\n> typecheck\n> tsc --noEmit\n\n",
+    "production-build.log": "\n> build\n> vite build\n\nThe plugin \"vite-tsconfig-paths\" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.\nvite v8.1.5 building client environment for production...\n\u001b[2K\ntransforming...[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:26:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:36:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:46:26 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:72:27 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/admin.functions.ts:6:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/chart.functions.ts:8:36 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n✓ 2086 modules transformed.\nrendering chunks...\ncomputing gzip size...\n.output/public/assets/routes-Baa8-mUh.css    1.94 kB │ gzip:   0.80 kB\n.output/public/assets/styles-pA8NaHHE.css  120.04 kB │ gzip:  19.46 kB\n.output/public/assets/routes-DkrioHe2.js   398.01 kB │ gzip: 120.74 kB\n.output/public/assets/index-D8SKdV2w.js    560.60 kB │ gzip: 165.66 kB\n\n✓ built in 1.11s\n[plugin builtin:vite-reporter] \n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\nvite v8.1.5 building ssr environment for production...\n\u001b[2K\ntransforming...[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/admin.functions.ts?tss-serverfn-split:6:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:26:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:36:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:46:26 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:72:27 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/chart.functions.ts?tss-serverfn-split:8:36 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n✓ 84 modules transformed.\nrendering chunks...\ncomputing gzip size...\nnode_modules/.nitro/vite/services/ssr/assets/styles-pA8NaHHE.css                     120.04 kB │ gzip: 19.46 kB\nnode_modules/.nitro/vite/services/ssr/assets/empty-plugin-adapters-Ctl8lMk6.js         0.25 kB │ gzip:  0.17 kB\nnode_modules/.nitro/vite/services/ssr/assets/routes-BVYPHbuD.js                        0.37 kB │ gzip:  0.26 kB\nnode_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-D72QuUzx.js    0.54 kB │ gzip:  0.31 kB\nnode_modules/.nitro/vite/services/ssr/assets/createMiddleware-BD9XxpCu.js              0.85 kB │ gzip:  0.34 kB\nnode_modules/.nitro/vite/services/ssr/assets/admin.functions-D0cqgDBD.js               1.30 kB │ gzip:  0.70 kB\nnode_modules/.nitro/vite/services/ssr/assets/client.server-KzwUIAkW.js                 1.73 kB │ gzip:  0.78 kB\nnode_modules/.nitro/vite/services/ssr/assets/chart.functions-BUVoakxj.js               2.04 kB │ gzip:  0.96 kB\nnode_modules/.nitro/vite/services/ssr/assets/createCsrfMiddleware-pJgMtTKx.js          2.47 kB │ gzip:  0.88 kB\nnode_modules/.nitro/vite/services/ssr/assets/auth-middleware-OFaorz5C.js               3.03 kB │ gzip:  1.25 kB\nnode_modules/.nitro/vite/services/ssr/assets/xpRules-iXAZwaxp.js                       3.62 kB │ gzip:  1.69 kB\nnode_modules/.nitro/vite/services/ssr/assets/xpContract-O7MXKplA.js                    4.00 kB │ gzip:  1.54 kB\nnode_modules/.nitro/vite/services/ssr/index.js                                         4.61 kB │ gzip:  1.92 kB\nnode_modules/.nitro/vite/services/ssr/assets/xp.functions-DQzu14Gl.js                  6.13 kB │ gzip:  1.97 kB\nnode_modules/.nitro/vite/services/ssr/assets/router-4U7nQ0yM.js                        6.88 kB │ gzip:  2.39 kB\nnode_modules/.nitro/vite/services/ssr/assets/start-CD4GHL0z.js                         8.61 kB │ gzip:  2.97 kB\nnode_modules/.nitro/vite/services/ssr/assets/runConfiguration-DFDIOG4D.js              9.80 kB │ gzip:  3.72 kB\nnode_modules/.nitro/vite/services/ssr/assets/xpWorker.server-JDyLZZ53.js               9.94 kB │ gzip:  3.34 kB\nnode_modules/.nitro/vite/services/ssr/assets/createServerFn-Dl0cObD2.js               13.04 kB │ gzip:  3.71 kB\nnode_modules/.nitro/vite/services/ssr/assets/chartRevision.server-Bh4S7Mji.js         16.47 kB │ gzip:  5.62 kB\nnode_modules/.nitro/vite/services/ssr/assets/server-DqCphz4r.js                       62.60 kB │ gzip: 16.37 kB\n\n✓ built in 304ms\n\n[nitro] ◐ Building [Nitro] (preset: cloudflare-module, compatibility: 2026-10-30)\n[nitro] ✔ Generated public .output/public\nvite v8.1.5 building nitro environment for production...\n\n WARN  inlineDynamicImports option is ignored because the codeSplitting option is specified.\n\n\u001b[2K\ntransforming...✓ 319 modules transformed.\nrendering chunks...\ncomputing gzip size...\n.output/server/_ssr/empty-plugin-adapters-Ctl8lMk6.mjs    0.25 kB │ gzip:   0.18 kB\n.output/server/_ssr/routes-BVYPHbuD.mjs                   0.61 kB │ gzip:   0.35 kB\n.output/server/_tanstack-start-manifest_v-D72QuUzx.mjs    0.62 kB │ gzip:   0.36 kB\n.output/server/_chunks/ssr-renderer.mjs                   0.65 kB │ gzip:   0.38 kB\n.output/server/_ssr/createMiddleware-BD9XxpCu.mjs         0.86 kB │ gzip:   0.35 kB\n.output/server/_runtime.mjs                               1.18 kB │ gzip:   0.57 kB\n.output/server/_libs/hookable.mjs                         1.19 kB │ gzip:   0.53 kB\n.output/server/_ssr/admin.functions-D0cqgDBD.mjs          1.45 kB │ gzip:   0.78 kB\n.output/server/_ssr/client.server-KzwUIAkW.mjs            1.85 kB │ gzip:   0.85 kB\n.output/server/_ssr/chart.functions-BUVoakxj.mjs          2.29 kB │ gzip:   1.06 kB\n.output/server/_ssr/createCsrfMiddleware-pJgMtTKx.mjs     2.48 kB │ gzip:   0.88 kB\n.output/server/_ssr/auth-middleware-OFaorz5C.mjs          3.04 kB │ gzip:   1.26 kB\n.output/server/_ssr/xpRules-iXAZwaxp.mjs                  3.69 kB │ gzip:   1.75 kB\n.output/server/_ssr/xpContract-O7MXKplA.mjs               4.38 kB │ gzip:   1.66 kB\n.output/server/_ssr/ssr.mjs                               4.57 kB │ gzip:   1.94 kB\n.output/server/_ssr/xp.functions-DQzu14Gl.mjs             6.33 kB │ gzip:   2.06 kB\n.output/server/_ssr/router-4U7nQ0yM.mjs                   7.51 kB │ gzip:   2.50 kB\n.output/server/_ssr/start-CD4GHL0z.mjs                    8.45 kB │ gzip:   2.95 kB\n.output/server/_ssr/runConfiguration-DFDIOG4D.mjs         9.77 kB │ gzip:   3.72 kB\n.output/server/_libs/h3-v2+rou3+srvx.mjs                  9.97 kB │ gzip:   3.08 kB\n.output/server/_ssr/xpWorker.server-JDyLZZ53.mjs         10.01 kB │ gzip:   3.40 kB\n.output/server/index.mjs                                 10.25 kB │ gzip:   3.29 kB\n.output/server/_ssr/createServerFn-Dl0cObD2.mjs          12.41 kB │ gzip:   3.71 kB\n.output/server/_libs/tanstack__history.mjs               12.53 kB │ gzip:   3.73 kB\n.output/server/_libs/supabase__functions-js.mjs          12.59 kB │ gzip:   3.48 kB\n.output/server/_ssr/chartRevision.server-Bh4S7Mji.mjs    16.45 kB │ gzip:   5.66 kB\n.output/server/_libs/h3+rou3+srvx.mjs                    16.68 kB │ gzip:   4.82 kB\n.output/server/_libs/react+tanstack__react-query.mjs     17.77 kB │ gzip:   4.67 kB\n.output/server/_libs/@tanstack/router-core+[...].mjs     29.98 kB │ gzip:   8.02 kB\n.output/server/_libs/supabase__supabase-js.mjs           37.92 kB │ gzip:  11.20 kB\n.output/server/_libs/tanstack__query-core.mjs            48.57 kB │ gzip:  10.72 kB\n.output/server/_libs/supabase__phoenix.mjs               50.56 kB │ gzip:  12.79 kB\n.output/server/_ssr/server-DqCphz4r.mjs                  61.14 kB │ gzip:  16.25 kB\n.output/server/_libs/supabase__realtime-js+unenv.mjs     82.03 kB │ gzip:  20.88 kB\n.output/server/_libs/zod.mjs                            100.33 kB │ gzip:  17.37 kB\n.output/server/_libs/supabase__postgrest-js.mjs         110.18 kB │ gzip:  23.16 kB\n.output/server/_libs/@supabase/storage-js+[...].mjs     126.34 kB │ gzip:  23.53 kB\n.output/server/_libs/supabase__auth-js+tslib.mjs        320.49 kB │ gzip:  64.69 kB\n.output/server/_libs/@tanstack/react-router+[...].mjs   756.38 kB │ gzip: 159.78 kB\n\n✓ built in 305ms\n[nitro] ℹ Using auto generated worker name: axsisaxsis0807-rhythm-tap-joy\nℹ Generated .output/server/wrangler.json\nℹ Generated .wrangler/deploy/config.json\nℹ Generated .output/public/_headers\nℹ Generated .output/nitro.json\n\n[nitro] ✔ You can preview this build using npx vite preview\n[nitro] ✔ You can deploy this build using npx nitro deploy --prebuilt\n",
+    "lint.log": "",
+    "core-equivalence.log": "60 identical core/replay/verifier samples\n",
+    "candidate-render.log": "168 identical renderer snapshots (IDs, order, position/scale expressions, sprites, receptor state)\n",
+    "candidate-geometry.log": "72 equal browser geometry snapshots; 48 equal finite-difference velocity cases\n",
+    "final-tests.log": "\n> test\n> vitest run\n\n\n RUN  v5.0.3 /workspace/rhythm-tap-joy\n\n\n Test Files  23 passed (23)\n      Tests  257 passed (257)\n   Start at  10:55:14\n   Duration  41.40s (tests 65%, environment 28%, import 5%, transform 2%)\n\nEnvironment  jsdom was created 23 times · 10.80s total, 28% of tracked time\n             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)\n             learn more: https://vitest.dev/guide/improving-performance#test-environments\n\n",
+    "final-typecheck.log": "\n> typecheck\n> tsc --noEmit\n\n",
+    "final-production-build.log": "\n> build\n> vite build\n\nThe plugin \"vite-tsconfig-paths\" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.\nvite v8.1.5 building client environment for production...\n\u001b[2K\ntransforming...[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/admin.functions.ts:6:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:26:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:36:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:46:26 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts:72:27 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:client] /workspace/rhythm-tap-joy/src/lib/chart.functions.ts:8:36 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n✓ 2085 modules transformed.\nrendering chunks...\ncomputing gzip size...\n.output/public/assets/routes-Baa8-mUh.css    1.94 kB │ gzip:   0.80 kB\n.output/public/assets/styles-pA8NaHHE.css  120.04 kB │ gzip:  19.46 kB\n.output/public/assets/routes-BruQ4qLG.js   397.79 kB │ gzip: 120.67 kB\n.output/public/assets/index-QwAOy_Yr.js    560.60 kB │ gzip: 165.66 kB\n\n[plugin builtin:vite-reporter] \n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n✓ built in 941ms\nvite v8.1.5 building ssr environment for production...\n\u001b[2K\ntransforming...[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/admin.functions.ts?tss-serverfn-split:6:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:26:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:36:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:46:26 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/xp.functions.ts?tss-serverfn-split:72:27 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n[plugin tanstack-start-core::server-fn:ssr] /workspace/rhythm-tap-joy/src/lib/chart.functions.ts?tss-serverfn-split:8:36 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.\n✓ 84 modules transformed.\nrendering chunks...\ncomputing gzip size...\nnode_modules/.nitro/vite/services/ssr/assets/styles-pA8NaHHE.css                     120.04 kB │ gzip: 19.46 kB\nnode_modules/.nitro/vite/services/ssr/assets/empty-plugin-adapters-Ctl8lMk6.js         0.25 kB │ gzip:  0.17 kB\nnode_modules/.nitro/vite/services/ssr/assets/routes-BVYPHbuD.js                        0.37 kB │ gzip:  0.26 kB\nnode_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-Dv6phEg_.js    0.54 kB │ gzip:  0.31 kB\nnode_modules/.nitro/vite/services/ssr/assets/createMiddleware-BD9XxpCu.js              0.85 kB │ gzip:  0.34 kB\nnode_modules/.nitro/vite/services/ssr/assets/admin.functions-D0cqgDBD.js               1.30 kB │ gzip:  0.70 kB\nnode_modules/.nitro/vite/services/ssr/assets/client.server-KzwUIAkW.js                 1.73 kB │ gzip:  0.78 kB\nnode_modules/.nitro/vite/services/ssr/assets/chart.functions-BUVoakxj.js               2.04 kB │ gzip:  0.96 kB\nnode_modules/.nitro/vite/services/ssr/assets/createCsrfMiddleware-pJgMtTKx.js          2.47 kB │ gzip:  0.88 kB\nnode_modules/.nitro/vite/services/ssr/assets/auth-middleware-OFaorz5C.js               3.03 kB │ gzip:  1.25 kB\nnode_modules/.nitro/vite/services/ssr/assets/xpRules-iXAZwaxp.js                       3.62 kB │ gzip:  1.69 kB\nnode_modules/.nitro/vite/services/ssr/assets/xpContract-O7MXKplA.js                    4.00 kB │ gzip:  1.54 kB\nnode_modules/.nitro/vite/services/ssr/index.js                                         4.61 kB │ gzip:  1.92 kB\nnode_modules/.nitro/vite/services/ssr/assets/xp.functions-DQzu14Gl.js                  6.13 kB │ gzip:  1.97 kB\nnode_modules/.nitro/vite/services/ssr/assets/router-4U7nQ0yM.js                        6.88 kB │ gzip:  2.39 kB\nnode_modules/.nitro/vite/services/ssr/assets/start-CD4GHL0z.js                         8.61 kB │ gzip:  2.97 kB\nnode_modules/.nitro/vite/services/ssr/assets/runConfiguration-DFDIOG4D.js              9.80 kB │ gzip:  3.72 kB\nnode_modules/.nitro/vite/services/ssr/assets/xpWorker.server-JDyLZZ53.js               9.94 kB │ gzip:  3.34 kB\nnode_modules/.nitro/vite/services/ssr/assets/createServerFn-Dl0cObD2.js               13.04 kB │ gzip:  3.71 kB\nnode_modules/.nitro/vite/services/ssr/assets/chartRevision.server-Bh4S7Mji.js         16.47 kB │ gzip:  5.62 kB\nnode_modules/.nitro/vite/services/ssr/assets/server-BgcoFsGl.js                       62.60 kB │ gzip: 16.37 kB\n\n✓ built in 267ms\n\n[nitro] ◐ Building [Nitro] (preset: cloudflare-module, compatibility: 2026-10-30)\n[nitro] ✔ Generated public .output/public\nvite v8.1.5 building nitro environment for production...\n\n WARN  inlineDynamicImports option is ignored because the codeSplitting option is specified.\n\n\u001b[2K\ntransforming...✓ 319 modules transformed.\nrendering chunks...\ncomputing gzip size...\n.output/server/_ssr/empty-plugin-adapters-Ctl8lMk6.mjs    0.25 kB │ gzip:   0.18 kB\n.output/server/_ssr/routes-BVYPHbuD.mjs                   0.61 kB │ gzip:   0.35 kB\n.output/server/_tanstack-start-manifest_v-Dv6phEg_.mjs    0.62 kB │ gzip:   0.36 kB\n.output/server/_chunks/ssr-renderer.mjs                   0.65 kB │ gzip:   0.38 kB\n.output/server/_ssr/createMiddleware-BD9XxpCu.mjs         0.86 kB │ gzip:   0.35 kB\n.output/server/_runtime.mjs                               1.18 kB │ gzip:   0.57 kB\n.output/server/_libs/hookable.mjs                         1.19 kB │ gzip:   0.53 kB\n.output/server/_ssr/admin.functions-D0cqgDBD.mjs          1.45 kB │ gzip:   0.78 kB\n.output/server/_ssr/client.server-KzwUIAkW.mjs            1.85 kB │ gzip:   0.85 kB\n.output/server/_ssr/chart.functions-BUVoakxj.mjs          2.29 kB │ gzip:   1.06 kB\n.output/server/_ssr/createCsrfMiddleware-pJgMtTKx.mjs     2.48 kB │ gzip:   0.88 kB\n.output/server/_ssr/auth-middleware-OFaorz5C.mjs          3.04 kB │ gzip:   1.26 kB\n.output/server/_ssr/xpRules-iXAZwaxp.mjs                  3.69 kB │ gzip:   1.75 kB\n.output/server/_ssr/xpContract-O7MXKplA.mjs               4.38 kB │ gzip:   1.66 kB\n.output/server/_ssr/ssr.mjs                               4.57 kB │ gzip:   1.94 kB\n.output/server/_ssr/xp.functions-DQzu14Gl.mjs             6.33 kB │ gzip:   2.06 kB\n.output/server/_ssr/router-4U7nQ0yM.mjs                   7.51 kB │ gzip:   2.50 kB\n.output/server/_ssr/start-CD4GHL0z.mjs                    8.45 kB │ gzip:   2.95 kB\n.output/server/_ssr/runConfiguration-DFDIOG4D.mjs         9.77 kB │ gzip:   3.72 kB\n.output/server/_libs/h3-v2+rou3+srvx.mjs                  9.97 kB │ gzip:   3.08 kB\n.output/server/_ssr/xpWorker.server-JDyLZZ53.mjs         10.01 kB │ gzip:   3.40 kB\n.output/server/index.mjs                                 10.25 kB │ gzip:   3.28 kB\n.output/server/_ssr/createServerFn-Dl0cObD2.mjs          12.41 kB │ gzip:   3.71 kB\n.output/server/_libs/tanstack__history.mjs               12.53 kB │ gzip:   3.73 kB\n.output/server/_libs/supabase__functions-js.mjs          12.59 kB │ gzip:   3.48 kB\n.output/server/_ssr/chartRevision.server-Bh4S7Mji.mjs    16.45 kB │ gzip:   5.66 kB\n.output/server/_libs/h3+rou3+srvx.mjs                    16.68 kB │ gzip:   4.82 kB\n.output/server/_libs/react+tanstack__react-query.mjs     17.77 kB │ gzip:   4.67 kB\n.output/server/_libs/@tanstack/router-core+[...].mjs     29.98 kB │ gzip:   8.02 kB\n.output/server/_libs/supabase__supabase-js.mjs           37.92 kB │ gzip:  11.20 kB\n.output/server/_libs/tanstack__query-core.mjs            48.57 kB │ gzip:  10.72 kB\n.output/server/_libs/supabase__phoenix.mjs               50.56 kB │ gzip:  12.79 kB\n.output/server/_ssr/server-BgcoFsGl.mjs                  61.14 kB │ gzip:  16.25 kB\n.output/server/_libs/supabase__realtime-js+unenv.mjs     82.03 kB │ gzip:  20.88 kB\n.output/server/_libs/zod.mjs                            100.33 kB │ gzip:  17.37 kB\n.output/server/_libs/supabase__postgrest-js.mjs         110.18 kB │ gzip:  23.16 kB\n.output/server/_libs/@supabase/storage-js+[...].mjs     126.34 kB │ gzip:  23.53 kB\n.output/server/_libs/supabase__auth-js+tslib.mjs        320.49 kB │ gzip:  64.69 kB\n.output/server/_libs/@tanstack/react-router+[...].mjs   756.38 kB │ gzip: 159.78 kB\n\n✓ built in 266ms\n[nitro] ℹ Using auto generated worker name: axsisaxsis0807-rhythm-tap-joy\nℹ Generated .output/server/wrangler.json\nℹ Generated .wrangler/deploy/config.json\nℹ Generated .output/public/_headers\nℹ Generated .output/nitro.json\n\n[nitro] ✔ You can preview this build using npx vite preview\n[nitro] ✔ You can deploy this build using npx nitro deploy --prebuilt\n",
+    "final-lint.log": "",
+    "final-render.log": "168 identical renderer snapshots (IDs, order, position/scale expressions, sprites, receptor state)\n",
+    "final-geometry.log": "72 equal browser geometry snapshots; 48 equal finite-difference velocity cases\n",
+    "final-core.log": "60 identical core/replay/verifier samples\n",
+    "prepare-lint.log": "",
+    "prepare-check.log": "/workspace/rhythm-tap-joy/work/phase3/Check/.output\n"
+  },
+  "nativeTimelineSummary": {
+    "source": "work/phase3/native-clean/run-1-A-mania.trace.json.gz",
+    "note": "Diagnostic only; includes profiler setup/warmup. Nested event durations overlap and must not be added.",
+    "mainThreads": [
+      "6206:6206"
+    ],
+    "eventTypes": [
+      {
+        "name": "FunctionCall",
+        "count": 8160,
+        "totalMs": 1166.3889999999985
+      },
+      {
+        "name": "UpdateLayoutTree",
+        "count": 1192,
+        "totalMs": 638.3479999999994
+      },
+      {
+        "name": "Paint",
+        "count": 31502,
+        "totalMs": 631.3359999998261
+      },
+      {
+        "name": "FireAnimationFrame",
+        "count": 2386,
+        "totalMs": 373.24899999999946
+      },
+      {
+        "name": "PrePaint",
+        "count": 1496,
+        "totalMs": 352.5919999999989
+      },
+      {
+        "name": "Layout",
+        "count": 1192,
+        "totalMs": 316.60300000000024
+      },
+      {
+        "name": "RunMicrotasks",
+        "count": 2390,
+        "totalMs": 168.91199999999958
+      },
+      {
+        "name": "Layerize",
+        "count": 796,
+        "totalMs": 158.89300000000028
+      },
+      {
+        "name": "EventDispatch",
+        "count": 928,
+        "totalMs": 68.94200000000015
+      },
+      {
+        "name": "V8.GC_MC_INCREMENTAL",
+        "count": 734,
+        "totalMs": 63.19900000000005
+      },
+      {
+        "name": "HitTest",
+        "count": 726,
+        "totalMs": 34.55900000000001
+      },
+      {
+        "name": "MajorGC",
+        "count": 7,
+        "totalMs": 25.634
+      },
+      {
+        "name": "V8.GC_MARK_COMPACTOR",
+        "count": 7,
+        "totalMs": 25.204999999999995
+      },
+      {
+        "name": "V8.StackGuard",
+        "count": 138,
+        "totalMs": 15.846000000000002
+      },
+      {
+        "name": "V8.HandleInterrupts",
+        "count": 137,
+        "totalMs": 15.049999999999999
+      },
+      {
+        "name": "V8.GC_MC_INCREMENTAL_EMBEDDER_TRACING",
+        "count": 571,
+        "totalMs": 9.918999999999961
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE",
+        "count": 14,
+        "totalMs": 9.033999999999999
+      },
+      {
+        "name": "V8.GC_MC_INCREMENTAL_START",
+        "count": 7,
+        "totalMs": 7.946000000000001
+      },
+      {
+        "name": "V8.GC_MC_MARK",
+        "count": 7,
+        "totalMs": 6.898
+      },
+      {
+        "name": "MinorGC",
+        "count": 7,
+        "totalMs": 6.38
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_UPDATE_POINTERS",
+        "count": 7,
+        "totalMs": 6.097
+      },
+      {
+        "name": "V8.GC_MC_MARK_FULL_CLOSURE_PARALLEL",
+        "count": 7,
+        "totalMs": 5.982
+      },
+      {
+        "name": "V8.GC_SCAVENGER",
+        "count": 7,
+        "totalMs": 5.17
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE",
+        "count": 7,
+        "totalMs": 4.962000000000001
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_UPDATE_POINTERS_TO_NEW_ROOTS",
+        "count": 7,
+        "totalMs": 3.8409999999999993
+      },
+      {
+        "name": "V8.BytecodeBudgetInterrupt",
+        "count": 169,
+        "totalMs": 3.532999999999991
+      },
+      {
+        "name": "V8.GC_MC_CLEAR",
+        "count": 7,
+        "totalMs": 3.513
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_JOIN_JOB",
+        "count": 7,
+        "totalMs": 2.707
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_COPY",
+        "count": 7,
+        "totalMs": 2.6460000000000004
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_PARALLEL_PHASE",
+        "count": 7,
+        "totalMs": 2.5839999999999996
+      },
+      {
+        "name": "V8.GC_MC_MARK_WEAK_CLOSURE_EPHEMERON_MARKING",
+        "count": 36,
+        "totalMs": 2.4559999999999986
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_COPY_PARALLEL",
+        "count": 7,
+        "totalMs": 2.186
+      },
+      {
+        "name": "V8.GC_HEAP_ENSURE_SWEEPING_COMPLETED",
+        "count": 28,
+        "totalMs": 2.159
+      },
+      {
+        "name": "V8.GC_MC_FINISH",
+        "count": 7,
+        "totalMs": 2.0169999999999995
+      },
+      {
+        "name": "V8.GC_MC_MARK_EMBEDDER_TRACING",
+        "count": 34,
+        "totalMs": 1.8259999999999992
+      },
+      {
+        "name": "V8.GC_MC_SWEEP_START_JOBS",
+        "count": 7,
+        "totalMs": 1.569
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_WEAK_GLOBAL_HANDLES_IDENTIFY",
+        "count": 7,
+        "totalMs": 1.2819999999999998
+      },
+      {
+        "name": "V8.GC_HEAP_EMBEDDER_TRACING_EPILOGUE",
+        "count": 7,
+        "totalMs": 1.1880000000000002
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_UPDATE_POINTERS_SLOTS_MAIN",
+        "count": 7,
+        "totalMs": 1.101
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_WEAK_REFERENCES_TRIVIAL",
+        "count": 6,
+        "totalMs": 1.0379999999999998
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_UPDATE_POINTERS_POINTER_TABLES",
+        "count": 7,
+        "totalMs": 1.0110000000000001
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_ROOTS",
+        "count": 7,
+        "totalMs": 0.9329999999999999
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_PARALLEL",
+        "count": 5,
+        "totalMs": 0.906
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_UPDATE_POINTERS_PARALLEL",
+        "count": 7,
+        "totalMs": 0.6259999999999999
+      },
+      {
+        "name": "Major concurrent marking rescheduled",
+        "count": 438,
+        "totalMs": 0.5970000000000004
+      },
+      {
+        "name": "V8.GC_MC_MARK_ROOTS",
+        "count": 21,
+        "totalMs": 0.5970000000000001
+      },
+      {
+        "name": "V8.GC_TIME_TO_SAFEPOINT",
+        "count": 18,
+        "totalMs": 0.43000000000000005
+      },
+      {
+        "name": "V8.GC_MC_SWEEP",
+        "count": 28,
+        "totalMs": 0.426
+      },
+      {
+        "name": "V8.GC_SCAVENGER_TRACED_HANDLES_COMPUTE_WEAKNESS_PARALLEL",
+        "count": 4,
+        "totalMs": 0.41400000000000003
+      },
+      {
+        "name": "V8.GC_MC_MARK_EMBEDDER_PROLOGUE",
+        "count": 14,
+        "totalMs": 0.39
+      },
+      {
+        "name": "V8.GC_MC_FINISH_SWEEP_ARRAY_BUFFERS",
+        "count": 7,
+        "totalMs": 0.386
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_WEAK_GLOBAL_HANDLES_PROCESS",
+        "count": 7,
+        "totalMs": 0.30100000000000005
+      },
+      {
+        "name": "V8.GC_HEAP_EXTERNAL_PROLOGUE",
+        "count": 14,
+        "totalMs": 0.29800000000000004
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_WEAK_GLOBAL_HANDLES",
+        "count": 5,
+        "totalMs": 0.272
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_STRING_TABLE",
+        "count": 15,
+        "totalMs": 0.2640000000000001
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_WEAK_REFERENCES_NON_TRIVIAL",
+        "count": 7,
+        "totalMs": 0.193
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_EPILOGUE",
+        "count": 7,
+        "totalMs": 0.17400000000000002
+      },
+      {
+        "name": "V8.GC_MC_INCREMENTAL_EXTERNAL_PROLOGUE",
+        "count": 7,
+        "totalMs": 0.169
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_MAPS",
+        "count": 6,
+        "totalMs": 0.15700000000000003
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_FINALIZE",
+        "count": 7,
+        "totalMs": 0.138
+      },
+      {
+        "name": "V8.InvokeApiInterruptCallbacks",
+        "count": 3,
+        "totalMs": 0.134
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_SWEEP_TRUSTED_POINTER_TABLE",
+        "count": 5,
+        "totalMs": 0.11300000000000002
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_COLLECT_OLD_TO_NEW_PAGES",
+        "count": 7,
+        "totalMs": 0.108
+      },
+      {
+        "name": "V8.GC_SCAVENGER_TRACED_HANDLES_RESET_PARALLEL",
+        "count": 5,
+        "totalMs": 0.098
+      },
+      {
+        "name": "V8.GC_HEAP_EPILOGUE_SAFEPOINT",
+        "count": 14,
+        "totalMs": 0.083
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_SWEEP_JS_DISPATCH_TABLE",
+        "count": 3,
+        "totalMs": 0.079
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_PROLOGUE",
+        "count": 7,
+        "totalMs": 0.07899999999999999
+      },
+      {
+        "name": "V8.BytecodeBudgetInterruptWithStackCheck",
+        "count": 7,
+        "totalMs": 0.071
+      },
+      {
+        "name": "V8.GC_HEAP_EXTERNAL_EPILOGUE",
+        "count": 14,
+        "totalMs": 0.065
+      },
+      {
+        "name": "V8.GC_HEAP_EPILOGUE",
+        "count": 14,
+        "totalMs": 0.05800000000000001
+      },
+      {
+        "name": "V8.GC_HEAP_EXTERNAL_WEAK_GLOBAL_HANDLES",
+        "count": 7,
+        "totalMs": 0.05800000000000001
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SWEEP_ARRAY_BUFFERS",
+        "count": 7,
+        "totalMs": 0.054000000000000006
+      },
+      {
+        "name": "V8.GC_MC_PROLOGUE",
+        "count": 7,
+        "totalMs": 0.053000000000000005
+      },
+      {
+        "name": "V8.GC_MC_COMPLETE_SWEEPING",
+        "count": 6,
+        "totalMs": 0.051000000000000004
+      },
+      {
+        "name": "V8.GC_SCAVENGER_FREE_REMEMBERED_SET",
+        "count": 7,
+        "totalMs": 0.045
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_SWEEP_EXTERNAL_POINTER_TABLE",
+        "count": 1,
+        "totalMs": 0.045
+      },
+      {
+        "name": "V8.GC_HEAP_PROLOGUE",
+        "count": 12,
+        "totalMs": 0.04300000000000001
+      },
+      {
+        "name": "V8.GC_MC_MARK_RETAIN_MAPS",
+        "count": 7,
+        "totalMs": 0.04100000000000001
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_WEAK_COLLECTIONS",
+        "count": 6,
+        "totalMs": 0.034999999999999996
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_EXTERNAL_STRING_TABLE",
+        "count": 1,
+        "totalMs": 0.032
+      },
+      {
+        "name": "V8.GC_MC_MARK_FULL_CLOSURE_SERIAL",
+        "count": 7,
+        "totalMs": 0.028
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_UPDATE_POINTERS_WEAK",
+        "count": 7,
+        "totalMs": 0.024999999999999998
+      },
+      {
+        "name": "V8.GC_HEAP_EXTERNAL_SECOND_PASS_CALLBACKS",
+        "count": 7,
+        "totalMs": 0.021000000000000005
+      },
+      {
+        "name": "V8.GC_MC_MARK_FINISH_INCREMENTAL",
+        "count": 7,
+        "totalMs": 0.021
+      },
+      {
+        "name": "ClearStringTableJob started",
+        "count": 18,
+        "totalMs": 0.01800000000000001
+      },
+      {
+        "name": "Major concurrent marking started",
+        "count": 13,
+        "totalMs": 0.017000000000000005
+      },
+      {
+        "name": "ClearTrustedWeakRefJob started",
+        "count": 5,
+        "totalMs": 0.017
+      },
+      {
+        "name": "V8.GC_SCAVENGER_SCAVENGE_RESTORE_AND_QUARANTINE_PINNED",
+        "count": 7,
+        "totalMs": 0.016
+      },
+      {
+        "name": "V8.GC_SCAVENGER_RESIZE_NEW_SPACE",
+        "count": 7,
+        "totalMs": 0.015000000000000003
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_UPDATE_POINTERS_CLIENT_HEAPS",
+        "count": 7,
+        "totalMs": 0.014000000000000002
+      },
+      {
+        "name": "V8.GC_HEAP_PROLOGUE_SAFEPOINT",
+        "count": 9,
+        "totalMs": 0.012000000000000004
+      },
+      {
+        "name": "V8.GC_MC_INCREMENTAL_EXTERNAL_EPILOGUE",
+        "count": 7,
+        "totalMs": 0.011000000000000001
+      },
+      {
+        "name": "V8.GC_MC_MARK_CLIENT_HEAPS",
+        "count": 7,
+        "totalMs": 0.009000000000000001
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_CLEAN_UP",
+        "count": 7,
+        "totalMs": 0.009000000000000001
+      },
+      {
+        "name": "V8.GC_CONSERVATIVE_STACK_SCANNING",
+        "count": 7,
+        "totalMs": 0.008
+      },
+      {
+        "name": "ComputeWeaknessProcessor start",
+        "count": 7,
+        "totalMs": 0.007
+      },
+      {
+        "name": "Parallel scavenge started",
+        "count": 7,
+        "totalMs": 0.007
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_FLUSHABLE_BYTECODE",
+        "count": 4,
+        "totalMs": 0.007
+      },
+      {
+        "name": "PageEvacuationJob started",
+        "count": 7,
+        "totalMs": 0.007
+      },
+      {
+        "name": "PointersUpdatingJob started",
+        "count": 7,
+        "totalMs": 0.007
+      },
+      {
+        "name": "V8.GC_MC_SWEEP_NEW_LO",
+        "count": 7,
+        "totalMs": 0.007
+      },
+      {
+        "name": "V8.GC_MC_EVACUATE_REBALANCE",
+        "count": 7,
+        "totalMs": 0.007
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_SWEEP_WASM_CODE_POINTER_TABLE",
+        "count": 5,
+        "totalMs": 0.007
+      },
+      {
+        "name": "ClearWeaknessProcessor start",
+        "count": 6,
+        "totalMs": 0.006
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_WEAK_REFERENCES_TRUSTED",
+        "count": 6,
+        "totalMs": 0.006
+      },
+      {
+        "name": "ClearTrivialWeakRefJob started",
+        "count": 5,
+        "totalMs": 0.005
+      },
+      {
+        "name": "ConcurrentMarking::RunMajor Finished",
+        "count": 2,
+        "totalMs": 0.005
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_JS_WEAK_REFERENCES",
+        "count": 3,
+        "totalMs": 0.004
+      },
+      {
+        "name": "V8.GC_MC_EPILOGUE",
+        "count": 4,
+        "totalMs": 0.004
+      },
+      {
+        "name": "V8.GC_SCAVENGER_COMPLETE_SWEEP_ARRAY_BUFFERS",
+        "count": 1,
+        "totalMs": 0.003
+      },
+      {
+        "name": "ClearNonTrivialWeakRefs started",
+        "count": 3,
+        "totalMs": 0.003
+      },
+      {
+        "name": "V8.GC_MC_CLEAR_FLUSHED_JS_FUNCTIONS",
+        "count": 2,
+        "totalMs": 0.002
+      }
+    ]
+  },
+  "productionPreviewHttpStatus": 200
+}

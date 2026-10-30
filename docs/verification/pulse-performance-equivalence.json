@@ -1,0 +1,2045 @@
+{
+  "fixed": "dfc071d017edfc4b358450c546f36ea50875ce76",
+  "samples": [
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": -0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "7d5f41d171079a8ba4d37a069702510cb697663cf82f65ca5f3e02ba06c1ec24",
+        "events": 3762,
+        "bytes": 424061,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "7d5f41d171079a8ba4d37a069702510cb697663cf82f65ca5f3e02ba06c1ec24",
+        "events": 3762,
+        "bytes": 424061,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": -0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "24b6071e2e9ab85bd5c1dce48892d49112b7aaafd8cae7b6119d0de9f764bafa",
+        "events": 3776,
+        "bytes": 425548,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "24b6071e2e9ab85bd5c1dce48892d49112b7aaafd8cae7b6119d0de9f764bafa",
+        "events": 3776,
+        "bytes": 425548,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": -0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "1847c2843b37c6d49c435ae55313a0df661f9d22ea661f6fe68f1bac6c51640f",
+        "events": 3762,
+        "bytes": 423606,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "1847c2843b37c6d49c435ae55313a0df661f9d22ea661f6fe68f1bac6c51640f",
+        "events": 3762,
+        "bytes": 423606,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": -0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "197d29278c14cb2d56ae720c2141f0f3b1be7aeeec6871ba2bf9bc6cecb23b9d",
+        "events": 3776,
+        "bytes": 425247,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "197d29278c14cb2d56ae720c2141f0f3b1be7aeeec6871ba2bf9bc6cecb23b9d",
+        "events": 3776,
+        "bytes": 425247,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": 0,
+      "hold": false,
+      "baseline": {
+        "hash": "d6179a4abf73a75a67fc8dfba79c5af06d3b463588398db845382aa7892dfec6",
+        "events": 3762,
+        "bytes": 423405,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "d6179a4abf73a75a67fc8dfba79c5af06d3b463588398db845382aa7892dfec6",
+        "events": 3762,
+        "bytes": 423405,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": 0,
+      "hold": true,
+      "baseline": {
+        "hash": "4a1f2bbec060bd58df6b77b119ab9728e1636d722532c5fbd00966ff7344b74a",
+        "events": 3776,
+        "bytes": 424889,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "4a1f2bbec060bd58df6b77b119ab9728e1636d722532c5fbd00966ff7344b74a",
+        "events": 3776,
+        "bytes": 424889,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": 0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "21152af0eb96b0f80ce61aa600bf579a621e06631a5fc5dbb96a2a23c0c456d5",
+        "events": 3762,
+        "bytes": 423761,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "21152af0eb96b0f80ce61aa600bf579a621e06631a5fc5dbb96a2a23c0c456d5",
+        "events": 3762,
+        "bytes": 423761,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": 0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "767fcdeddf59f0c8811f8d1f39a01e819a5de7aa18321140452163d863f0420f",
+        "events": 3776,
+        "bytes": 425400,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "767fcdeddf59f0c8811f8d1f39a01e819a5de7aa18321140452163d863f0420f",
+        "events": 3776,
+        "bytes": 425400,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": 0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "715862de3b6a7f0673d0366a648a5399889d6243d435917084263ab2e5668053",
+        "events": 3762,
+        "bytes": 423602,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "715862de3b6a7f0673d0366a648a5399889d6243d435917084263ab2e5668053",
+        "events": 3762,
+        "bytes": 423602,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 60,
+      "delta": 0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "fdcc210a92b8d6345e1306badae5b0aedc564b37d0705db9eae744b5815f2c48",
+        "events": 3776,
+        "bytes": 425639,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "fdcc210a92b8d6345e1306badae5b0aedc564b37d0705db9eae744b5815f2c48",
+        "events": 3776,
+        "bytes": 425639,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": -0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "2f1d74d94e1b3a358ef38d52daecedd6a9c695e66f34fb086e32c57d0f2bd4d7",
+        "events": 8970,
+        "bytes": 1089928,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "2f1d74d94e1b3a358ef38d52daecedd6a9c695e66f34fb086e32c57d0f2bd4d7",
+        "events": 8970,
+        "bytes": 1089928,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": -0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "330ba8e9c6430d6a2e88295651e718a0fb55b2caa86a187d8d8c1bd26da03413",
+        "events": 8984,
+        "bytes": 1091415,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "330ba8e9c6430d6a2e88295651e718a0fb55b2caa86a187d8d8c1bd26da03413",
+        "events": 8984,
+        "bytes": 1091415,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": -0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "95066dfea4e70a696d21ced1f03b704d2608c127edd853e91c9b76038f69e5f6",
+        "events": 8970,
+        "bytes": 1089473,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "95066dfea4e70a696d21ced1f03b704d2608c127edd853e91c9b76038f69e5f6",
+        "events": 8970,
+        "bytes": 1089473,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": -0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "7c822451e47dc7fe6cf3d9a28424ad42dcd390a86f5cd3551ba2d25f860c38b7",
+        "events": 8984,
+        "bytes": 1091114,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "7c822451e47dc7fe6cf3d9a28424ad42dcd390a86f5cd3551ba2d25f860c38b7",
+        "events": 8984,
+        "bytes": 1091114,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": 0,
+      "hold": false,
+      "baseline": {
+        "hash": "8a1b611f1bb9d30abfb3c5e95a1f4a5baf03a56cf8351fac67241f203c770da2",
+        "events": 8970,
+        "bytes": 1089272,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "8a1b611f1bb9d30abfb3c5e95a1f4a5baf03a56cf8351fac67241f203c770da2",
+        "events": 8970,
+        "bytes": 1089272,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": 0,
+      "hold": true,
+      "baseline": {
+        "hash": "395bd428a5d7dcd82d24453416f2ae6116ab0fdc1b0556b001c887e59d2a851f",
+        "events": 8984,
+        "bytes": 1090756,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "395bd428a5d7dcd82d24453416f2ae6116ab0fdc1b0556b001c887e59d2a851f",
+        "events": 8984,
+        "bytes": 1090756,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": 0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "557758fbc5dd136a45c12be94cf37130b6dba1d2b47d4b106853f7e64a4ef8fd",
+        "events": 8970,
+        "bytes": 1089628,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "557758fbc5dd136a45c12be94cf37130b6dba1d2b47d4b106853f7e64a4ef8fd",
+        "events": 8970,
+        "bytes": 1089628,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": 0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "a3dcd3e9031e21f2cdb0dee476759b62f92906469d308c5d97405021feed55bc",
+        "events": 8984,
+        "bytes": 1091267,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "a3dcd3e9031e21f2cdb0dee476759b62f92906469d308c5d97405021feed55bc",
+        "events": 8984,
+        "bytes": 1091267,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": 0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "d17b7eea63169e252a3e2a944565a247404701892110901a4ecadb23efb7e66e",
+        "events": 8970,
+        "bytes": 1089469,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "d17b7eea63169e252a3e2a944565a247404701892110901a4ecadb23efb7e66e",
+        "events": 8970,
+        "bytes": 1089469,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "mania",
+      "side": "shared",
+      "hz": 144,
+      "delta": 0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "9af1f919db96bb71ab156ad1ac1f4a653d63abc5620362fb72c28ca258ebf69b",
+        "events": 8984,
+        "bytes": 1091506,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "9af1f919db96bb71ab156ad1ac1f4a653d63abc5620362fb72c28ca258ebf69b",
+        "events": 8984,
+        "bytes": 1091506,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": -0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "e8007c198d2d0e071e977641128fbf82b22881ab80df1d6fefa46837543079a9",
+        "events": 3762,
+        "bytes": 424053,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "e8007c198d2d0e071e977641128fbf82b22881ab80df1d6fefa46837543079a9",
+        "events": 3762,
+        "bytes": 424053,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": -0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "9c998ee559b8205821ec4230e7d7619761690174e6e78ebcad86e0042fdb1542",
+        "events": 3776,
+        "bytes": 425540,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "9c998ee559b8205821ec4230e7d7619761690174e6e78ebcad86e0042fdb1542",
+        "events": 3776,
+        "bytes": 425540,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": -0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "33983d0006646618982419c49d389de85bdc5f99c2552e0def06e04335a9ccb1",
+        "events": 3762,
+        "bytes": 423598,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "33983d0006646618982419c49d389de85bdc5f99c2552e0def06e04335a9ccb1",
+        "events": 3762,
+        "bytes": 423598,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": -0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "4d9c33422dec7709f77e3c78059ac387a8f2162506cf3e3dd4b21edae6e2d0f1",
+        "events": 3776,
+        "bytes": 425239,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "4d9c33422dec7709f77e3c78059ac387a8f2162506cf3e3dd4b21edae6e2d0f1",
+        "events": 3776,
+        "bytes": 425239,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": 0,
+      "hold": false,
+      "baseline": {
+        "hash": "3dc3972c8876e7ea4dbceaf9e0fe8e7644cc6081278926bd2a49bd271eeddb25",
+        "events": 3762,
+        "bytes": 423397,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "3dc3972c8876e7ea4dbceaf9e0fe8e7644cc6081278926bd2a49bd271eeddb25",
+        "events": 3762,
+        "bytes": 423397,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": 0,
+      "hold": true,
+      "baseline": {
+        "hash": "14015ceafbab2e01810d538fc197b74405106ac49b408cdb76acfb3dcad45409",
+        "events": 3776,
+        "bytes": 424881,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "14015ceafbab2e01810d538fc197b74405106ac49b408cdb76acfb3dcad45409",
+        "events": 3776,
+        "bytes": 424881,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": 0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "faacd32e9b9069587f0b8c8eeabab53f9ff2be71db3c427178ec73ad3d7f2eaf",
+        "events": 3762,
+        "bytes": 423753,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "faacd32e9b9069587f0b8c8eeabab53f9ff2be71db3c427178ec73ad3d7f2eaf",
+        "events": 3762,
+        "bytes": 423753,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": 0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "89a6d3dd27a285903558bee6228023198e55eaa88d9ae5a83be5604d746c452a",
+        "events": 3776,
+        "bytes": 425392,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "89a6d3dd27a285903558bee6228023198e55eaa88d9ae5a83be5604d746c452a",
+        "events": 3776,
+        "bytes": 425392,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": 0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "868470bac37459e19c44ad442a2adaf2197edffa6be5a37a776ef18cbbe4b84a",
+        "events": 3762,
+        "bytes": 423594,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "868470bac37459e19c44ad442a2adaf2197edffa6be5a37a776ef18cbbe4b84a",
+        "events": 3762,
+        "bytes": 423594,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 60,
+      "delta": 0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "d933436b8f6df775bf162962534be291b744f92d66214a78b7b146b23c111762",
+        "events": 3776,
+        "bytes": 425631,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "d933436b8f6df775bf162962534be291b744f92d66214a78b7b146b23c111762",
+        "events": 3776,
+        "bytes": 425631,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": -0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "e041d3422f6397846c746757ffdff1b0efa196d7af89cb2468009de423020758",
+        "events": 8970,
+        "bytes": 1089920,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "e041d3422f6397846c746757ffdff1b0efa196d7af89cb2468009de423020758",
+        "events": 8970,
+        "bytes": 1089920,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": -0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "f75d7276e08e9576004d4073ad27a3dc2cba47bf607e642d15c44d72b66a7571",
+        "events": 8984,
+        "bytes": 1091407,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "f75d7276e08e9576004d4073ad27a3dc2cba47bf607e642d15c44d72b66a7571",
+        "events": 8984,
+        "bytes": 1091407,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": -0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "625da53092e5aa89cb062f0e0acedc2dfbdf0553164df003ac0fc3126428955f",
+        "events": 8970,
+        "bytes": 1089465,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "625da53092e5aa89cb062f0e0acedc2dfbdf0553164df003ac0fc3126428955f",
+        "events": 8970,
+        "bytes": 1089465,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": -0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "afa6e743e31fa23a4383ecea69be93fa254dbd146983f84ef5d7b888c399c984",
+        "events": 8984,
+        "bytes": 1091106,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "afa6e743e31fa23a4383ecea69be93fa254dbd146983f84ef5d7b888c399c984",
+        "events": 8984,
+        "bytes": 1091106,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": 0,
+      "hold": false,
+      "baseline": {
+        "hash": "87265c6d8d3ee5f681adc940829045ebc9702ee682bd6bdd7501a4c658342d55",
+        "events": 8970,
+        "bytes": 1089264,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "87265c6d8d3ee5f681adc940829045ebc9702ee682bd6bdd7501a4c658342d55",
+        "events": 8970,
+        "bytes": 1089264,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": 0,
+      "hold": true,
+      "baseline": {
+        "hash": "f54aa1dffee525057c969d7d488818a88fd6e8478db1001eafd7c63f817340e6",
+        "events": 8984,
+        "bytes": 1090748,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "f54aa1dffee525057c969d7d488818a88fd6e8478db1001eafd7c63f817340e6",
+        "events": 8984,
+        "bytes": 1090748,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": 0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "6f203ef592f51334f70b97749ea58f821c5814a987953a45b6d3075479c014c0",
+        "events": 8970,
+        "bytes": 1089620,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "6f203ef592f51334f70b97749ea58f821c5814a987953a45b6d3075479c014c0",
+        "events": 8970,
+        "bytes": 1089620,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": 0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "b5a32840a4e4ee83aedac2a0c6a3dd48b68c815e9433544db8d44341611683f4",
+        "events": 8984,
+        "bytes": 1091259,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "b5a32840a4e4ee83aedac2a0c6a3dd48b68c815e9433544db8d44341611683f4",
+        "events": 8984,
+        "bytes": 1091259,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": 0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "93d8117f98da37919985654d0cdd7882abdc8c03f2e6741fd13d605cb2eaf70b",
+        "events": 8970,
+        "bytes": 1089461,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "93d8117f98da37919985654d0cdd7882abdc8c03f2e6741fd13d605cb2eaf70b",
+        "events": 8970,
+        "bytes": 1089461,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "left",
+      "hz": 144,
+      "delta": 0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "9e185f2b98c9053af6e5b81648bf6be5f40fb968355ccc3683c3052158e664b2",
+        "events": 8984,
+        "bytes": 1091498,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "9e185f2b98c9053af6e5b81648bf6be5f40fb968355ccc3683c3052158e664b2",
+        "events": 8984,
+        "bytes": 1091498,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": -0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "790fd52849766cee089b923ebf869112e5f669114e7f7010c5c8c330d182a5b9",
+        "events": 3762,
+        "bytes": 424054,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "790fd52849766cee089b923ebf869112e5f669114e7f7010c5c8c330d182a5b9",
+        "events": 3762,
+        "bytes": 424054,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": -0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "20f27011cb25122b491af7226dcf691f418d265e1a920007707417c6e37fd504",
+        "events": 3776,
+        "bytes": 425541,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "20f27011cb25122b491af7226dcf691f418d265e1a920007707417c6e37fd504",
+        "events": 3776,
+        "bytes": 425541,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": -0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "20472f7dc390e7484e103aa35a7972bbe52a9d8298f21bba9d11b4d4f6681683",
+        "events": 3762,
+        "bytes": 423599,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "20472f7dc390e7484e103aa35a7972bbe52a9d8298f21bba9d11b4d4f6681683",
+        "events": 3762,
+        "bytes": 423599,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": -0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "5e6f8b4cb9e72c85d9b4e08c721516dedff44a71840cfbae58bddc159cca875f",
+        "events": 3776,
+        "bytes": 425240,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "5e6f8b4cb9e72c85d9b4e08c721516dedff44a71840cfbae58bddc159cca875f",
+        "events": 3776,
+        "bytes": 425240,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": 0,
+      "hold": false,
+      "baseline": {
+        "hash": "570997d98a043a90469e3de8e2c027832d2c2fbfc232a6df8b2a93770ac1b131",
+        "events": 3762,
+        "bytes": 423398,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "570997d98a043a90469e3de8e2c027832d2c2fbfc232a6df8b2a93770ac1b131",
+        "events": 3762,
+        "bytes": 423398,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": 0,
+      "hold": true,
+      "baseline": {
+        "hash": "1f87e160a2177eb49facdffed061dce8c4cd4f2f6927c62153816db257366c66",
+        "events": 3776,
+        "bytes": 424882,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "1f87e160a2177eb49facdffed061dce8c4cd4f2f6927c62153816db257366c66",
+        "events": 3776,
+        "bytes": 424882,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": 0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "6c154362c1dd8471e6ede2eee41d9d8d9167130691abe3cb903ef906ed846db6",
+        "events": 3762,
+        "bytes": 423754,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "6c154362c1dd8471e6ede2eee41d9d8d9167130691abe3cb903ef906ed846db6",
+        "events": 3762,
+        "bytes": 423754,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": 0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "9d771278588efa886ef0966ee61cbbf3d91dd0480d72a74fd6c1fa28087b002c",
+        "events": 3776,
+        "bytes": 425393,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "9d771278588efa886ef0966ee61cbbf3d91dd0480d72a74fd6c1fa28087b002c",
+        "events": 3776,
+        "bytes": 425393,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": 0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "2e4042db88e9392d493d808fb264981aa0484ebb717d1d8e73df2c6c75e316d6",
+        "events": 3762,
+        "bytes": 423595,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "2e4042db88e9392d493d808fb264981aa0484ebb717d1d8e73df2c6c75e316d6",
+        "events": 3762,
+        "bytes": 423595,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 60,
+      "delta": 0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "4f9a1cef49868f522033081fc4c0923bc0761dbaac62862563ad8c6db554b18c",
+        "events": 3776,
+        "bytes": 425632,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "4f9a1cef49868f522033081fc4c0923bc0761dbaac62862563ad8c6db554b18c",
+        "events": 3776,
+        "bytes": 425632,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": -0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "f9982b323620f98007eb01902332507ad30dcf0098d46557cb544f8ce15a4e3c",
+        "events": 8970,
+        "bytes": 1089921,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "f9982b323620f98007eb01902332507ad30dcf0098d46557cb544f8ce15a4e3c",
+        "events": 8970,
+        "bytes": 1089921,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": -0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "92d1611a322b9e390130010be2190c1d0dd2b6cc67ee395827d663593a7cf63e",
+        "events": 8984,
+        "bytes": 1091408,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "92d1611a322b9e390130010be2190c1d0dd2b6cc67ee395827d663593a7cf63e",
+        "events": 8984,
+        "bytes": 1091408,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": -0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "162940b8af63dcaa2e785a7966d585977c43e62d1906051072cf304948ee951b",
+        "events": 8970,
+        "bytes": 1089466,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "162940b8af63dcaa2e785a7966d585977c43e62d1906051072cf304948ee951b",
+        "events": 8970,
+        "bytes": 1089466,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": -0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "f4456ad80ad5cf76b9af0437b9a5a4f1abac447eab044910e9e26e23b82701aa",
+        "events": 8984,
+        "bytes": 1091107,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "f4456ad80ad5cf76b9af0437b9a5a4f1abac447eab044910e9e26e23b82701aa",
+        "events": 8984,
+        "bytes": 1091107,
+        "score": 6084,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 7
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": 0,
+      "hold": false,
+      "baseline": {
+        "hash": "1d0229fd74fbd30885e85e2abca50db007d947360e59a30c2a75ad006af32175",
+        "events": 8970,
+        "bytes": 1089265,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "1d0229fd74fbd30885e85e2abca50db007d947360e59a30c2a75ad006af32175",
+        "events": 8970,
+        "bytes": 1089265,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": 0,
+      "hold": true,
+      "baseline": {
+        "hash": "7ae43a4023c186d89d9fef8e15af4b63c7e366ea5c9356afbca1d3e14f50bebe",
+        "events": 8984,
+        "bytes": 1090749,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "7ae43a4023c186d89d9fef8e15af4b63c7e366ea5c9356afbca1d3e14f50bebe",
+        "events": 8984,
+        "bytes": 1090749,
+        "score": 20420,
+        "counts": {
+          "PERFECT": 20,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": 0.14,
+      "hold": false,
+      "baseline": {
+        "hash": "0e753db1541324f254cbcc38834d2fa1e4911dc8fc07cbf84820fcca05c60e90",
+        "events": 8970,
+        "bytes": 1089621,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "0e753db1541324f254cbcc38834d2fa1e4911dc8fc07cbf84820fcca05c60e90",
+        "events": 8970,
+        "bytes": 1089621,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": 0.14,
+      "hold": true,
+      "baseline": {
+        "hash": "5b0f36279e52dd2704f3de406067a4fe94ae570a7088a70768c5a23abc2b290b",
+        "events": 8984,
+        "bytes": 1091260,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "current": {
+        "hash": "5b0f36279e52dd2704f3de406067a4fe94ae570a7088a70768c5a23abc2b290b",
+        "events": 8984,
+        "bytes": 1091260,
+        "score": 6420,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 20,
+          "MISS": 0
+        },
+        "eligible": true
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": 0.2,
+      "hold": false,
+      "baseline": {
+        "hash": "aedfee0c818bf8a0014762096a170f4cf38edf5097e75388668d7daae596bd8d",
+        "events": 8970,
+        "bytes": 1089462,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "aedfee0c818bf8a0014762096a170f4cf38edf5097e75388668d7daae596bd8d",
+        "events": 8970,
+        "bytes": 1089462,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    },
+    {
+      "style": "fnf",
+      "side": "right",
+      "hz": 144,
+      "delta": 0.2,
+      "hold": true,
+      "baseline": {
+        "hash": "3a95fa0860718afec3051996af852fdf445f0697fceaa8957658a1171c54f32f",
+        "events": 8984,
+        "bytes": 1091499,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "current": {
+        "hash": "3a95fa0860718afec3051996af852fdf445f0697fceaa8957658a1171c54f32f",
+        "events": 8984,
+        "bytes": 1091499,
+        "score": 0,
+        "counts": {
+          "PERFECT": 0,
+          "GREAT": 0,
+          "GOOD": 0,
+          "MISS": 20
+        },
+        "eligible": false
+      },
+      "equal": true
+    }
+  ]
+}

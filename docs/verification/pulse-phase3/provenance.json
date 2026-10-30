@@ -1,0 +1,590 @@
+{
+  "main": "dfc071d017edfc4b358450c546f36ea50875ce76",
+  "phase2": "47049059b1ff5cf88924db6c1062ca57d53dd17a",
+  "decision": "Both rendering candidates reverted; no reproducible performance gain demonstrated",
+  "variants": {
+    "A": {
+      "sourceCommit": "47049059b1ff5cf88924db6c1062ca57d53dd17a",
+      "nitro": {
+        "date": "2026-10-30T10:26:12.137Z",
+        "preset": "cloudflare-module",
+        "framework": {
+          "name": "nitro",
+          "version": "3.0.260603-beta"
+        },
+        "versions": {
+          "nitro": "3.0.260603-beta"
+        },
+        "serverEntry": "server/index.mjs",
+        "publicDir": "public",
+        "commands": {
+          "preview": "npx wrangler --cwd ./ dev",
+          "deploy": "npx wrangler --cwd ./ deploy"
+        },
+        "config": {
+          "cloudflare": {
+            "deployConfig": true,
+            "nodeCompat": true
+          }
+        }
+      },
+      "assetAndServerHashes": {
+        "nitro.json": "7fa2f0ba5ce7f1f13b063781ce58e60c05a26777c442ee658cd0f4ea5d50d605",
+        "package-lock.json": "04aa29e6ad5c6ce21c2c76c03e58fed8fabb50302c681bcb87d5d2f2952ac079",
+        "package.json": "f8ac46a1418fb2a7fd30470a75cbf5778f782f7c9803432bae7ec61a2d745d9e",
+        "public/_headers": "8986b1072b0e2a0646b4787388991bb50bc2b87b69a037d8531a62ff4d2c2ff3",
+        "public/assets/index-qJQGkNd7.js": "24277a3b1226af5ec4f49a00f373184bb17dfc68416d63e8bb815ff3be752833",
+        "public/assets/index-qJQGkNd7.js.map": "715746210b73cc06b1c3ec09548bce26dc5cf55c3b4edecab50a6e9f35502a50",
+        "public/assets/routes-Baa8-mUh.css": "997655105b41406edfec3ff0f7d2e37f5025def59da6fa1267cd44666c8b54db",
+        "public/assets/routes-DzOpVm1g.js": "45fe3b1a0ce1f02f0740769d8f4b8696c7b058de16a27ba632a14eef8c4182a8",
+        "public/assets/routes-DzOpVm1g.js.map": "a303ff91ed88ba02a3a08117d5979491fec497e864a58ac572ca596ce649b91d",
+        "public/assets/styles-pA8NaHHE.css": "dca204f1a383decfef0396b786555bb1b3b8f4e58cf75a9cb0a56ccbc572f37f",
+        "public/audio/performance-local.wav": "fdf53194108f294d0e1b27262654b6c8c24aae9d5e8542a8757575c43968f3cb",
+        "public/audio/test-track.mp3": "5e27444f05f73fd335ee1f64bb0e880ca8db998a249018e9404c42cdade54776",
+        "public/favicon.ico": "dd821076a9b03adc2173c93956226aea3d92482d7578fc4339c5d3a2e9c24586",
+        "public/robots.txt": "a3d27b3ca5ce32341fa9f96f01169b521b1657c05d1860c45d1e53a6258e9e8b",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-shm": "a990793a65ffbc387c7f38b7a2fcd6160931db62415dec3ec459e78954ef5202",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-wal": "ae0f8c652ea0612d099a22088c4e38bdd30ac937211d13c90117e95e84d6bf4e",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite-shm": "93504e9d3227bc21b293db1ea049c7c186be76fb4b7e4a5b485556e9dfb3b1da",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite-wal": "4b7238bac75dced2d3e6db825f15de957ed3a056da48b83eecfa67ba1084f27b",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite-shm": "21762c292d17308ee32606a257a5ca1c6524b5ffa564ce1018b00814eda4a74e",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite-wal": "49add70cf5b9d94f2ee41d9b06ba79e4f9e0ed0874cf1f51ca8fe12c4b2bf32a",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-shm": "995857f70d09cc0ad84b0a60f3d0dababec8c2bd02436363741915c0f5d6bb2a",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-wal": "e182f148a3edee669d9b5ec28a773920100792d548b8151971afc004f5f1542d",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-shm": "d9916a10ed3182b7b68a409cea523360a4313291ae8f8f9dcfd2d5747fcdde10",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-wal": "baa815dd322da3f5adfeef0a0fac317f96997cb122a7e3f60a8ca41cf7d8ad01",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-shm": "a8b2a243a5f76c5785528537513072d99d6a32fc23006eba792643b623c61158",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-wal": "a13367af7fb66224e4726934aaf69f414d24fb63b68c4a62c04970ffef89ea74",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite-shm": "98db4e5260f54b749ddbe1c31ee79af6764bca8992db7a0130dba961927a2460",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite-wal": "47992281d6472d7b1c9f2826e72f0d17de0f1a4d4f6d3e1d6af261f793eeb638",
+        "server/_chunks/ssr-renderer.mjs": "f5b91bf7a6a5f7e2a30e50df5647203f09cdf4de08548d6b293a7b59450c91c1",
+        "server/_libs/@supabase/storage-js+[...].mjs": "9f4ee887c15b0f0532a42a44154cfe40df170d7c440d411a15b2e565dcb00ebb",
+        "server/_libs/@tanstack/react-router+[...].mjs": "f6f914df389f7f668754cdd472f3cbd5ee4657d1ee8bc6b381a2d607f0d19715",
+        "server/_libs/@tanstack/router-core+[...].mjs": "f1eb0df235e23b93bedab91b4751102ccbe89db956d26b1f2c8c280306cd4501",
+        "server/_libs/h3+rou3+srvx.mjs": "102b7d3f46403a9b8915130779840ba9bc7875505fa3f2c71f37758bdd7dd46c",
+        "server/_libs/h3-v2+rou3+srvx.mjs": "1092278600f146b5201e92ab5a1ff28f138c7c5d5c719f35440425d3101c352a",
+        "server/_libs/hookable.mjs": "9f5449ee1a84f6e889430de7119554598fdbbb4ee53da2e11f9c229af0a69b4f",
+        "server/_libs/react+tanstack__react-query.mjs": "8c69dba5d23b55fb56c201d3e3e614dbf33a34205670029e3224cf8b8b57aa58",
+        "server/_libs/supabase__auth-js+tslib.mjs": "3d5e35327c8442679aa2aa57a930c91cc12ea34485da4fece048d6c6e91bdc3e",
+        "server/_libs/supabase__functions-js.mjs": "5817cdf6ae0f318dd3b45e10be7b80a6e4bfc6262d30217546eda1b12c5b340b",
+        "server/_libs/supabase__phoenix.mjs": "46ba92b364ee527557ab9708722a335d29327ac922ee844f5ea632dc19f0818d",
+        "server/_libs/supabase__postgrest-js.mjs": "d6cdddd5280b1b8930dd20c0a9d2adcf9035e8f8d7cc7d0aa9fc060f61bc7c7e",
+        "server/_libs/supabase__realtime-js+unenv.mjs": "64b13dc3cb041c47e3928f395c2cb479bd984e5f678a23f6a40b042582d92781",
+        "server/_libs/supabase__supabase-js.mjs": "f6653e28cc866f6560ea6a33141946731e46a519e6d854429ac162db1b2ed4e7",
+        "server/_libs/tanstack__history.mjs": "f734652104fa896ea2f82dbe1a01fa920a4a42976f7223ff5b43647c7451dbaf",
+        "server/_libs/tanstack__query-core.mjs": "694de2f6c71efa2cb109cc55e4a875b7d1556d419016dfedaf25b76ffdada862",
+        "server/_libs/zod.mjs": "cce747464cfbcdf3f01525f233cb1e486d39e76e34e864f6a580a85fb864e924",
+        "server/_runtime.mjs": "5d847676e890d2d0e8664006e0d0bdaf390ffc81b2edb71c17956c311b30c5c4",
+        "server/_ssr/admin.functions-D0cqgDBD.mjs": "a8a9ded9862139a347754cff657da179a70bb3ee93f92b5da0297c538abfdde7",
+        "server/_ssr/auth-middleware-OFaorz5C.mjs": "7504a8aaee21727a329e12a71f4345130850cf2a4ef6f3210a3645424abe9447",
+        "server/_ssr/chart.functions-BUVoakxj.mjs": "894aaee6981fbe69f86135a45715485a7742498ead13bd6df4858a924e21aae6",
+        "server/_ssr/chartRevision.server-Bh4S7Mji.mjs": "fa65799a191bf80b7d3e0f8ec1004a019370035e5019f9fdf509ec6a23bec5bd",
+        "server/_ssr/client.server-KzwUIAkW.mjs": "a3dee2d524e2bc1705fa67028325049e9a8b8bb7a63acc4667aba6364e734e04",
+        "server/_ssr/createCsrfMiddleware-pJgMtTKx.mjs": "371da2e6519f0aa1a0fdd186556ec9f22f29844162870346632834f5f0844ca2",
+        "server/_ssr/createMiddleware-BD9XxpCu.mjs": "cfa2f7f46e3f432c473c865ffec29e3a949ded99512b70b7a9c2534cd417ea01",
+        "server/_ssr/createServerFn-Dl0cObD2.mjs": "f8e51d74efe27fdc9886898cadd9185597e065adbd144e6406fb2ea624dbebb1",
+        "server/_ssr/empty-plugin-adapters-Ctl8lMk6.mjs": "0e8b5a43c616825e3379bab1233137a8e19c58decbe744a2da9e90bb213071a3",
+        "server/_ssr/router-4U7nQ0yM.mjs": "dd8c77868bcf879ec7e15099a4b9416cfd62ab7497748125c78f2fab3b0b2b81",
+        "server/_ssr/routes-BVYPHbuD.mjs": "c09bac9e388cb8af45aeaac80012bd0818ca7540f584f74ebf836a67d135ec81",
+        "server/_ssr/runConfiguration-DFDIOG4D.mjs": "67f9b7351ad7c172da8d9f18ba8d331b334ea4b60912ac98235a96b4d987d1ab",
+        "server/_ssr/server-okxm7ccr.mjs": "68f500f0ff0a556ab7b0909ee7d6153e8bf91856beebbeb361bdc8f414f201b6",
+        "server/_ssr/ssr.mjs": "e1be2435b8d32a34c11ebb474ea6a33c3c0583a5b4ba10b7298e8e1a66a87634",
+        "server/_ssr/start-CD4GHL0z.mjs": "fee6e91ec3fe2ce577e4bcc6c09ba5433321756cee38c6ba97ad41f911db7676",
+        "server/_ssr/xp.functions-DQzu14Gl.mjs": "f28fc188f706dab8adec56c7bc9e68516f3bdd296a04a70a5c6524e5dbb983c5",
+        "server/_ssr/xpContract-O7MXKplA.mjs": "f08c14c35c56c9ff4524d74ff57e870e19049dced8a903a94fccdf63cbe83aaa",
+        "server/_ssr/xpRules-iXAZwaxp.mjs": "b3c3c237335d2b77db50b20e39112745aef6c53ec07eeb7eaa22753c91978c24",
+        "server/_ssr/xpWorker.server-JDyLZZ53.mjs": "d0829374457d5460dbb8827771bba2531be55caa8e5e702d24a4e78bdef943cb",
+        "server/_tanstack-start-manifest_v-Ae-nEbPM.mjs": "e271d6cd8cd1ed031b08702f6cb31f80bec1d6eac32cbceb367cb13bc7a973fd",
+        "server/index.mjs": "428407779a8fd36457f93f47b3543431d918ef2a46de679e3745b76b9df1e0b6",
+        "server/wrangler.json": "e3901e444d2e580619008736fd550762f1b8ced33facf89beddc1e648c965884"
+      },
+      "sourceMapProof": {
+        "src/components/game/GameScreen.tsx": {
+          "sourceSha256": "7c3faf75eb8a2b55984165de78ffd2896fe15cda94d1db7adde2b88467c470ca",
+          "matchesCommit": true
+        },
+        "src/components/game/FnfField.tsx": {
+          "sourceSha256": "94c8163c13364a0eaf5202c7ec40f3da81138d3a5b3deda7eeeb8aaf0d389bb2",
+          "matchesCommit": true
+        },
+        "src/components/game/NoteSprite.tsx": {
+          "sourceSha256": "aeaf68f9a4c4de5c16e083349da8482507b1b8faaa65190ec0c799a659e42b90",
+          "matchesCommit": true
+        }
+      }
+    },
+    "B": {
+      "sourceCommit": "4fca98098703c983279c91d4cf32cb53e458a41a",
+      "nitro": {
+        "date": "2026-10-30T10:29:27.169Z",
+        "preset": "cloudflare-module",
+        "framework": {
+          "name": "nitro",
+          "version": "3.0.260603-beta"
+        },
+        "versions": {
+          "nitro": "3.0.260603-beta"
+        },
+        "serverEntry": "server/index.mjs",
+        "publicDir": "public",
+        "commands": {
+          "preview": "npx wrangler --cwd ./ dev",
+          "deploy": "npx wrangler --cwd ./ deploy"
+        },
+        "config": {
+          "cloudflare": {
+            "deployConfig": true,
+            "nodeCompat": true
+          }
+        }
+      },
+      "assetAndServerHashes": {
+        "nitro.json": "40a1421862df2626a2c9a3162c8cfcfd3e5bc65de754c3183a333831ab2a7bde",
+        "package-lock.json": "04aa29e6ad5c6ce21c2c76c03e58fed8fabb50302c681bcb87d5d2f2952ac079",
+        "package.json": "f8ac46a1418fb2a7fd30470a75cbf5778f782f7c9803432bae7ec61a2d745d9e",
+        "public/_headers": "8986b1072b0e2a0646b4787388991bb50bc2b87b69a037d8531a62ff4d2c2ff3",
+        "public/assets/index-BVI3Ur5m.js": "70ac0973f5a4e240f996c11749f31d5c5f21b4f936c393324baf633b4e3e85ed",
+        "public/assets/index-BVI3Ur5m.js.map": "2f51e0df783ac2de8b357ea25570e88d0077118bd022b6bfe7d7ee0cea24dd6a",
+        "public/assets/routes-Baa8-mUh.css": "997655105b41406edfec3ff0f7d2e37f5025def59da6fa1267cd44666c8b54db",
+        "public/assets/routes-DjIb95Z1.js": "3a3249a6e93b1af416ce41e196747eb3e01cf984ac079cdb039346d0adf75b69",
+        "public/assets/routes-DjIb95Z1.js.map": "e8216848cb7e0e587b013fe4b0dc77fe3afa2093c3867be28fdec659818df2a9",
+        "public/assets/styles-pA8NaHHE.css": "dca204f1a383decfef0396b786555bb1b3b8f4e58cf75a9cb0a56ccbc572f37f",
+        "public/audio/performance-local.wav": "fdf53194108f294d0e1b27262654b6c8c24aae9d5e8542a8757575c43968f3cb",
+        "public/audio/test-track.mp3": "5e27444f05f73fd335ee1f64bb0e880ca8db998a249018e9404c42cdade54776",
+        "public/favicon.ico": "dd821076a9b03adc2173c93956226aea3d92482d7578fc4339c5d3a2e9c24586",
+        "public/robots.txt": "a3d27b3ca5ce32341fa9f96f01169b521b1657c05d1860c45d1e53a6258e9e8b",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-shm": "196fbfafd3d19fa1c0e75dcda80a6d434c42578bd4e22c336e1d24da33e44a78",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-wal": "e1dce6e667f6b132bd11e155f03a8822ddbceab6f813f6832ff49d10651153fd",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite-shm": "c050d6d5c1b26f1f7c87fe47324029d17434ea998848bbec80e52edd7b0df634",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite-wal": "4fbebfc457ca3a45e9a7926bb5d0a678d3447f2a0a3e084cbb74e0b92cbf85e7",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite-shm": "aabc4aa933682336b270c305725dd38e6778d7ae1230fe68db1a52978c3b8b44",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite-wal": "9fdd7019ad6ac6d192e3f6af1a6a331d715004a0248cbd2bd40813a7451f7c05",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-shm": "2f9622917ad9a5b76a55b8e7287f4208715e7747f091d0da3056c3904370c12e",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-wal": "49facef559d1e4c62aa78dd9a6fc809eff205017fdda410c97810ea45caed7d3",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-shm": "1e5e404e3da25095863ba138d889952fddc439dcdeead14f59e3655818045d60",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-wal": "5682f8c9610b771ff8ef597ad3cf2da61b6a8e24eddc8318ccf08fd3f5901f15",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-shm": "87d3e42d531607a78388f4eb99ef8d6435025e80dad1be7c70bb263ed52af016",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-wal": "4be03c57e2f957fa6c8132ac01405ca289bb16c6083a18687ac1492f2406db6a",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite-shm": "f96601437cdd735500b6be65d16cd3ed7b0f35a540406078baf26349148a95e6",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite-wal": "a8611bd396f914ef298b21fccdeb67d175c14c080205a0a02e5c01fb4e48467a",
+        "server/_chunks/ssr-renderer.mjs": "f5b91bf7a6a5f7e2a30e50df5647203f09cdf4de08548d6b293a7b59450c91c1",
+        "server/_libs/@supabase/storage-js+[...].mjs": "9f4ee887c15b0f0532a42a44154cfe40df170d7c440d411a15b2e565dcb00ebb",
+        "server/_libs/@tanstack/react-router+[...].mjs": "f6f914df389f7f668754cdd472f3cbd5ee4657d1ee8bc6b381a2d607f0d19715",
+        "server/_libs/@tanstack/router-core+[...].mjs": "f1eb0df235e23b93bedab91b4751102ccbe89db956d26b1f2c8c280306cd4501",
+        "server/_libs/h3+rou3+srvx.mjs": "102b7d3f46403a9b8915130779840ba9bc7875505fa3f2c71f37758bdd7dd46c",
+        "server/_libs/h3-v2+rou3+srvx.mjs": "1092278600f146b5201e92ab5a1ff28f138c7c5d5c719f35440425d3101c352a",
+        "server/_libs/hookable.mjs": "9f5449ee1a84f6e889430de7119554598fdbbb4ee53da2e11f9c229af0a69b4f",
+        "server/_libs/react+tanstack__react-query.mjs": "8c69dba5d23b55fb56c201d3e3e614dbf33a34205670029e3224cf8b8b57aa58",
+        "server/_libs/supabase__auth-js+tslib.mjs": "3d5e35327c8442679aa2aa57a930c91cc12ea34485da4fece048d6c6e91bdc3e",
+        "server/_libs/supabase__functions-js.mjs": "5817cdf6ae0f318dd3b45e10be7b80a6e4bfc6262d30217546eda1b12c5b340b",
+        "server/_libs/supabase__phoenix.mjs": "46ba92b364ee527557ab9708722a335d29327ac922ee844f5ea632dc19f0818d",
+        "server/_libs/supabase__postgrest-js.mjs": "d6cdddd5280b1b8930dd20c0a9d2adcf9035e8f8d7cc7d0aa9fc060f61bc7c7e",
+        "server/_libs/supabase__realtime-js+unenv.mjs": "64b13dc3cb041c47e3928f395c2cb479bd984e5f678a23f6a40b042582d92781",
+        "server/_libs/supabase__supabase-js.mjs": "f6653e28cc866f6560ea6a33141946731e46a519e6d854429ac162db1b2ed4e7",
+        "server/_libs/tanstack__history.mjs": "f734652104fa896ea2f82dbe1a01fa920a4a42976f7223ff5b43647c7451dbaf",
+        "server/_libs/tanstack__query-core.mjs": "694de2f6c71efa2cb109cc55e4a875b7d1556d419016dfedaf25b76ffdada862",
+        "server/_libs/zod.mjs": "cce747464cfbcdf3f01525f233cb1e486d39e76e34e864f6a580a85fb864e924",
+        "server/_runtime.mjs": "5d847676e890d2d0e8664006e0d0bdaf390ffc81b2edb71c17956c311b30c5c4",
+        "server/_ssr/admin.functions-D0cqgDBD.mjs": "a8a9ded9862139a347754cff657da179a70bb3ee93f92b5da0297c538abfdde7",
+        "server/_ssr/auth-middleware-OFaorz5C.mjs": "7504a8aaee21727a329e12a71f4345130850cf2a4ef6f3210a3645424abe9447",
+        "server/_ssr/chart.functions-BUVoakxj.mjs": "894aaee6981fbe69f86135a45715485a7742498ead13bd6df4858a924e21aae6",
+        "server/_ssr/chartRevision.server-Bh4S7Mji.mjs": "fa65799a191bf80b7d3e0f8ec1004a019370035e5019f9fdf509ec6a23bec5bd",
+        "server/_ssr/client.server-KzwUIAkW.mjs": "a3dee2d524e2bc1705fa67028325049e9a8b8bb7a63acc4667aba6364e734e04",
+        "server/_ssr/createCsrfMiddleware-pJgMtTKx.mjs": "371da2e6519f0aa1a0fdd186556ec9f22f29844162870346632834f5f0844ca2",
+        "server/_ssr/createMiddleware-BD9XxpCu.mjs": "cfa2f7f46e3f432c473c865ffec29e3a949ded99512b70b7a9c2534cd417ea01",
+        "server/_ssr/createServerFn-Dl0cObD2.mjs": "f8e51d74efe27fdc9886898cadd9185597e065adbd144e6406fb2ea624dbebb1",
+        "server/_ssr/empty-plugin-adapters-Ctl8lMk6.mjs": "0e8b5a43c616825e3379bab1233137a8e19c58decbe744a2da9e90bb213071a3",
+        "server/_ssr/router-4U7nQ0yM.mjs": "dd8c77868bcf879ec7e15099a4b9416cfd62ab7497748125c78f2fab3b0b2b81",
+        "server/_ssr/routes-BVYPHbuD.mjs": "c09bac9e388cb8af45aeaac80012bd0818ca7540f584f74ebf836a67d135ec81",
+        "server/_ssr/runConfiguration-DFDIOG4D.mjs": "67f9b7351ad7c172da8d9f18ba8d331b334ea4b60912ac98235a96b4d987d1ab",
+        "server/_ssr/server-B5dCrvNy.mjs": "1b265f1db5aaaa570356a777e1c6053491da6c78e522a3bbfd744388c0889004",
+        "server/_ssr/ssr.mjs": "2e44b9785ace89ff39e8c5ee5ce7db2ce8a6f55c1fcb78c7ed700dcb6c161868",
+        "server/_ssr/start-CD4GHL0z.mjs": "fee6e91ec3fe2ce577e4bcc6c09ba5433321756cee38c6ba97ad41f911db7676",
+        "server/_ssr/xp.functions-DQzu14Gl.mjs": "f28fc188f706dab8adec56c7bc9e68516f3bdd296a04a70a5c6524e5dbb983c5",
+        "server/_ssr/xpContract-O7MXKplA.mjs": "f08c14c35c56c9ff4524d74ff57e870e19049dced8a903a94fccdf63cbe83aaa",
+        "server/_ssr/xpRules-iXAZwaxp.mjs": "b3c3c237335d2b77db50b20e39112745aef6c53ec07eeb7eaa22753c91978c24",
+        "server/_ssr/xpWorker.server-JDyLZZ53.mjs": "d0829374457d5460dbb8827771bba2531be55caa8e5e702d24a4e78bdef943cb",
+        "server/_tanstack-start-manifest_v-Dy93Qf_P.mjs": "200165fc533cf5210a5784dce99182622cec99bf950805891f41f917f28c855b",
+        "server/index.mjs": "ceaaec8a8930eea3e5be1c2841765e55f576f44f211fda9ce6cd228cb76baefd",
+        "server/wrangler.json": "e3901e444d2e580619008736fd550762f1b8ced33facf89beddc1e648c965884"
+      },
+      "sourceMapProof": {
+        "src/components/game/GameScreen.tsx": {
+          "sourceSha256": "7c3faf75eb8a2b55984165de78ffd2896fe15cda94d1db7adde2b88467c470ca",
+          "matchesCommit": true
+        },
+        "src/components/game/FnfField.tsx": {
+          "sourceSha256": "94c8163c13364a0eaf5202c7ec40f3da81138d3a5b3deda7eeeb8aaf0d389bb2",
+          "matchesCommit": true
+        },
+        "src/components/game/NoteSprite.tsx": {
+          "sourceSha256": "17ee1ed5e656dc84db2262f11af4a82c51bf1c154100281625e779a1be9a5794",
+          "matchesCommit": true
+        }
+      }
+    },
+    "C": {
+      "sourceCommit": "650e7386c75dc49708ab7c3759b51fb24963ea13",
+      "nitro": {
+        "date": "2026-10-30T10:30:52.846Z",
+        "preset": "cloudflare-module",
+        "framework": {
+          "name": "nitro",
+          "version": "3.0.260603-beta"
+        },
+        "versions": {
+          "nitro": "3.0.260603-beta"
+        },
+        "serverEntry": "server/index.mjs",
+        "publicDir": "public",
+        "commands": {
+          "preview": "npx wrangler --cwd ./ dev",
+          "deploy": "npx wrangler --cwd ./ deploy"
+        },
+        "config": {
+          "cloudflare": {
+            "deployConfig": true,
+            "nodeCompat": true
+          }
+        }
+      },
+      "assetAndServerHashes": {
+        "nitro.json": "06c9e7a1120af9701c79cc5d53732e1b291836feff923487aa5223e95af9ee10",
+        "package-lock.json": "04aa29e6ad5c6ce21c2c76c03e58fed8fabb50302c681bcb87d5d2f2952ac079",
+        "package.json": "f8ac46a1418fb2a7fd30470a75cbf5778f782f7c9803432bae7ec61a2d745d9e",
+        "public/_headers": "8986b1072b0e2a0646b4787388991bb50bc2b87b69a037d8531a62ff4d2c2ff3",
+        "public/assets/index-W9p804GC.js": "1096acfeea0c63cd6f309ebf3aa22c2a592693caa4cab1011b8b29355668fe8d",
+        "public/assets/index-W9p804GC.js.map": "308e50b329a0166664c4dfcbb3dc096111588f5a0191bd9414ddb89c9d8dfaef",
+        "public/assets/routes-Baa8-mUh.css": "997655105b41406edfec3ff0f7d2e37f5025def59da6fa1267cd44666c8b54db",
+        "public/assets/routes-DSUBrTTR.js": "33ef96e15a0d90ec64a3f7a0069a38f1f7c0cf9eeef2efc4d66f1a0313fb6d00",
+        "public/assets/routes-DSUBrTTR.js.map": "1a65fcc2ce8538742e162129f2bba2203291feda99ccbe9240d4d2ce7735ad51",
+        "public/assets/styles-pA8NaHHE.css": "dca204f1a383decfef0396b786555bb1b3b8f4e58cf75a9cb0a56ccbc572f37f",
+        "public/audio/performance-local.wav": "fdf53194108f294d0e1b27262654b6c8c24aae9d5e8542a8757575c43968f3cb",
+        "public/audio/test-track.mp3": "5e27444f05f73fd335ee1f64bb0e880ca8db998a249018e9404c42cdade54776",
+        "public/favicon.ico": "dd821076a9b03adc2173c93956226aea3d92482d7578fc4339c5d3a2e9c24586",
+        "public/robots.txt": "a3d27b3ca5ce32341fa9f96f01169b521b1657c05d1860c45d1e53a6258e9e8b",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-shm": "96707cff8daeb5d66b68b5eaf166d2b7c382f5f748381eab6a7afb12e86bdf20",
+        "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-wal": "1a70f1a9eec7d4c4a5551b815e84cdacb0f068a2941faf2b00be3fe51b26544e",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite-shm": "d53b4f23e28dd2ecc0268a17a47a8703945e2f5daa2300a720161122c8b73fb7",
+        "server/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/metadata.sqlite-wal": "bb0b14e916cfb1a86e82daa884f67e1a9f26152cde468d8ba0153b75385772e2",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite-shm": "c13c85cc76715f7fcedcc7f57054b7b052ac9c3e4a755ee8c5801d8cf8bb29ce",
+        "server/.wrangler/state/v3/flagship/miniflare-flagship-FlagshipObject/metadata.sqlite-wal": "4b1214da2e704c32ab2db19b7318fb53e35fa311fd598bde689f9b7a5cde4ef2",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-shm": "413db0ea20534b30a36ef0d2653da12ae93c9a9249fd00f8e60b9a7282896c12",
+        "server/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-wal": "21b43b02375228696e9434dbf08e382cbb0c6e8809fa68a5af6bb4a9786fa1ef",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-shm": "90deb6ae710a71c5545d66560faa9dbaff0b691e492b65074f8dba49e502e148",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-wal": "3af781bfc79794c859c782bda7394eb3a1fed5ad708e011738da287e864415ca",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-shm": "62961b30f67145e15af1579b8fbf327068ac51420f3dc6b8563fa7acd4a4d1f7",
+        "server/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-wal": "13eaf6b1efb5a399b6568e0974e2d862bce979e2c94ef863f6a8fea89fa9e734",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite": "97e8d54f8a7255106f66cf1b213c4a4d7b558d21310b1c2bfedc3d0d526dddda",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite-shm": "60e4908b685b3f508f9488f8e565e173c05feb37a49fba19f360d35cea1ec034",
+        "server/.wrangler/state/v3/r2/miniflare-R2BucketObject/metadata.sqlite-wal": "ba95409f5b79c6de8c96fac66f7e7676e0b0eb4706a8b3c288f7f77473d807fa",
+        "server/_chunks/ssr-renderer.mjs": "f5b91bf7a6a5f7e2a30e50df5647203f09cdf4de08548d6b293a7b59450c91c1",
+        "server/_libs/@supabase/storage-js+[...].mjs": "9f4ee887c15b0f0532a42a44154cfe40df170d7c440d411a15b2e565dcb00ebb",
+        "server/_libs/@tanstack/react-router+[...].mjs": "f6f914df389f7f668754cdd472f3cbd5ee4657d1ee8bc6b381a2d607f0d19715",
+        "server/_libs/@tanstack/router-core+[...].mjs": "f1eb0df235e23b93bedab91b4751102ccbe89db956d26b1f2c8c280306cd4501",
+        "server/_libs/h3+rou3+srvx.mjs": "102b7d3f46403a9b8915130779840ba9bc7875505fa3f2c71f37758bdd7dd46c",
+        "server/_libs/h3-v2+rou3+srvx.mjs": "1092278600f146b5201e92ab5a1ff28f138c7c5d5c719f35440425d3101c352a",
+        "server/_libs/hookable.mjs": "9f5449ee1a84f6e889430de7119554598fdbbb4ee53da2e11f9c229af0a69b4f",
+        "server/_libs/react+tanstack__react-query.mjs": "8c69dba5d23b55fb56c201d3e3e614dbf33a34205670029e3224cf8b8b57aa58",
+        "server/_libs/supabase__auth-js+tslib.mjs": "3d5e35327c8442679aa2aa57a930c91cc12ea34485da4fece048d6c6e91bdc3e",
+        "server/_libs/supabase__functions-js.mjs": "5817cdf6ae0f318dd3b45e10be7b80a6e4bfc6262d30217546eda1b12c5b340b",
+        "server/_libs/supabase__phoenix.mjs": "46ba92b364ee527557ab9708722a335d29327ac922ee844f5ea632dc19f0818d",
+        "server/_libs/supabase__postgrest-js.mjs": "d6cdddd5280b1b8930dd20c0a9d2adcf9035e8f8d7cc7d0aa9fc060f61bc7c7e",
+        "server/_libs/supabase__realtime-js+unenv.mjs": "64b13dc3cb041c47e3928f395c2cb479bd984e5f678a23f6a40b042582d92781",
+        "server/_libs/supabase__supabase-js.mjs": "f6653e28cc866f6560ea6a33141946731e46a519e6d854429ac162db1b2ed4e7",
+        "server/_libs/tanstack__history.mjs": "f734652104fa896ea2f82dbe1a01fa920a4a42976f7223ff5b43647c7451dbaf",
+        "server/_libs/tanstack__query-core.mjs": "694de2f6c71efa2cb109cc55e4a875b7d1556d419016dfedaf25b76ffdada862",
+        "server/_libs/zod.mjs": "cce747464cfbcdf3f01525f233cb1e486d39e76e34e864f6a580a85fb864e924",
+        "server/_runtime.mjs": "5d847676e890d2d0e8664006e0d0bdaf390ffc81b2edb71c17956c311b30c5c4",
+        "server/_ssr/admin.functions-D0cqgDBD.mjs": "a8a9ded9862139a347754cff657da179a70bb3ee93f92b5da0297c538abfdde7",
+        "server/_ssr/auth-middleware-OFaorz5C.mjs": "7504a8aaee21727a329e12a71f4345130850cf2a4ef6f3210a3645424abe9447",
+        "server/_ssr/chart.functions-BUVoakxj.mjs": "894aaee6981fbe69f86135a45715485a7742498ead13bd6df4858a924e21aae6",
+        "server/_ssr/chartRevision.server-Bh4S7Mji.mjs": "fa65799a191bf80b7d3e0f8ec1004a019370035e5019f9fdf509ec6a23bec5bd",
+        "server/_ssr/client.server-KzwUIAkW.mjs": "a3dee2d524e2bc1705fa67028325049e9a8b8bb7a63acc4667aba6364e734e04",
+        "server/_ssr/createCsrfMiddleware-pJgMtTKx.mjs": "371da2e6519f0aa1a0fdd186556ec9f22f29844162870346632834f5f0844ca2",
+        "server/_ssr/createMiddleware-BD9XxpCu.mjs": "cfa2f7f46e3f432c473c865ffec29e3a949ded99512b70b7a9c2534cd417ea01",
+        "server/_ssr/createServerFn-Dl0cObD2.mjs": "f8e51d74efe27fdc9886898cadd9185597e065adbd144e6406fb2ea624dbebb1",
+        "server/_ssr/empty-plugin-adapters-Ctl8lMk6.mjs": "0e8b5a43c616825e3379bab1233137a8e19c58decbe744a2da9e90bb213071a3",
+        "server/_ssr/router-4U7nQ0yM.mjs": "dd8c77868bcf879ec7e15099a4b9416cfd62ab7497748125c78f2fab3b0b2b81",
+        "server/_ssr/routes-BVYPHbuD.mjs": "c09bac9e388cb8af45aeaac80012bd0818ca7540f584f74ebf836a67d135ec81",
+        "server/_ssr/runConfiguration-DFDIOG4D.mjs": "67f9b7351ad7c172da8d9f18ba8d331b334ea4b60912ac98235a96b4d987d1ab",
+        "server/_ssr/server-0YezBOXu.mjs": "0e3dc9bb0df2d330ac1c37ca8cb23d47445d879d5d4d2b8dfc9cf947162831f4",
+        "server/_ssr/ssr.mjs": "6f9221fc6a3d0aac1a7ad4f35120bc9c3a6223fcc9e0583e8437f56e8774932c",
+        "server/_ssr/start-CD4GHL0z.mjs": "fee6e91ec3fe2ce577e4bcc6c09ba5433321756cee38c6ba97ad41f911db7676",
+        "server/_ssr/xp.functions-DQzu14Gl.mjs": "f28fc188f706dab8adec56c7bc9e68516f3bdd296a04a70a5c6524e5dbb983c5",
+        "server/_ssr/xpContract-O7MXKplA.mjs": "f08c14c35c56c9ff4524d74ff57e870e19049dced8a903a94fccdf63cbe83aaa",
+        "server/_ssr/xpRules-iXAZwaxp.mjs": "b3c3c237335d2b77db50b20e39112745aef6c53ec07eeb7eaa22753c91978c24",
+        "server/_ssr/xpWorker.server-JDyLZZ53.mjs": "d0829374457d5460dbb8827771bba2531be55caa8e5e702d24a4e78bdef943cb",
+        "server/_tanstack-start-manifest_v-C0dBUNEG.mjs": "ce5c89c556065d7965afabf4db9280c2f581bcd8e38bd95f037d007a7e78b64e",
+        "server/index.mjs": "7a616df248b1313fda8d815316485109b59a01fcd7ba57a6bd29c5d482408c5f",
+        "server/wrangler.json": "e3901e444d2e580619008736fd550762f1b8ced33facf89beddc1e648c965884"
+      },
+      "sourceMapProof": {
+        "src/components/game/GameScreen.tsx": {
+          "sourceSha256": "a49826bf847536ca5d7ccfffef6586f5a2695ca032e472d36f5777a58e45f9e0",
+          "matchesCommit": true
+        },
+        "src/components/game/FnfField.tsx": {
+          "sourceSha256": "a96efd74388d631afa10f702427f421e326abbe0ec0e824029fefa18519bf3ee",
+          "matchesCommit": true
+        },
+        "src/components/game/NoteSprite.tsx": {
+          "sourceSha256": "17ee1ed5e656dc84db2262f11af4a82c51bf1c154100281625e779a1be9a5794",
+          "matchesCommit": true
+        },
+        "src/game/visibleNotes.ts": {
+          "sourceSha256": "02ebc6f221a396b799bc64bf878beff4088d99ea95ac710d65ab8e855765a87f",
+          "matchesCommit": true
+        }
+      }
+    }
+  },
+  "datasets": [
+    {
+      "folder": "measurements",
+      "status": "excluded",
+      "reason": "init script touched sandbox localStorage; FNF button selector timed out",
+      "labelToVariant": {
+        "A": "A"
+      },
+      "runs": 3,
+      "seconds": [
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "folder": "sprite-screen",
+      "status": "excluded",
+      "reason": "build overlapped a screening run",
+      "labelToVariant": {
+        "A": "A",
+        "B": "B"
+      },
+      "runs": 2,
+      "seconds": [
+        12,
+        12
+      ]
+    },
+    {
+      "folder": "sprite-clean",
+      "status": "screening",
+      "reason": "12s AB/BA; sprite candidate only",
+      "labelToVariant": {
+        "A": "A",
+        "B": "B"
+      },
+      "runs": 4,
+      "seconds": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "folder": "lanes-screen",
+      "status": "screening",
+      "reason": "12s AB/BA; incremental lane candidate",
+      "labelToVariant": {
+        "A": "B",
+        "B": "C"
+      },
+      "runs": 4,
+      "seconds": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "folder": "final-60s",
+      "status": "formal",
+      "reason": "5 alternating AB/BA pairs, nominal songTime 5.5–65.5",
+      "labelToVariant": {
+        "A": "A",
+        "B": "C"
+      },
+      "runs": 10,
+      "seconds": [
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60
+      ]
+    },
+    {
+      "folder": "explore-clean",
+      "status": "exploration",
+      "reason": "12s single-condition probes, not paired inference",
+      "labelToVariant": {
+        "A": "A"
+      },
+      "runs": 4,
+      "seconds": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "folder": "background-screen",
+      "status": "exploration",
+      "reason": "12s background-only ON/OFF, not paired inference",
+      "labelToVariant": {
+        "A": "A"
+      },
+      "runs": 2,
+      "seconds": [
+        12,
+        12
+      ]
+    },
+    {
+      "folder": "native-timeline",
+      "status": "excluded-for-performance",
+      "reason": "diagnostic overlapped npm preview startup",
+      "labelToVariant": {
+        "A": "A"
+      },
+      "runs": 1,
+      "seconds": [
+        12
+      ]
+    },
+    {
+      "folder": "native-clean",
+      "status": "diagnostic",
+      "reason": "Chrome timeline; tracing overhead, warmup included",
+      "labelToVariant": {
+        "A": "A"
+      },
+      "runs": 1,
+      "seconds": [
+        12
+      ]
+    }
+  ],
+  "environment": {
+    "os": "Linux",
+    "kernel": "6.18.57",
+    "cpuQuota": "2 cores (200000/100000)",
+    "node": "24.19.0",
+    "wrangler": "4.156.0",
+    "viewport": "1280x720 @1",
+    "realDevices": "not measured",
+    "osRecording": "not measured"
+  },
+  "formalObservedWindows": [
+    {
+      "run": 1,
+      "label": "A",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.51859410430839,
+      "pulses": 481
+    },
+    {
+      "run": 2,
+      "label": "B",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.53020408163265,
+      "pulses": 481
+    },
+    {
+      "run": 3,
+      "label": "B",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.5095238095238095,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481
+    },
+    {
+      "run": 4,
+      "label": "A",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517007,
+      "observedEnd": 65.5098866213152,
+      "pulses": 481
+    },
+    {
+      "run": 5,
+      "label": "A",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.500816326530612,
+      "observedEnd": 65.501179138322,
+      "pulses": 481
+    },
+    {
+      "run": 6,
+      "label": "B",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.5095238095238095,
+      "observedEnd": 65.51859410430839,
+      "pulses": 481
+    },
+    {
+      "run": 7,
+      "label": "B",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481
+    },
+    {
+      "run": 8,
+      "label": "A",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.512426303854875,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481
+    },
+    {
+      "run": 9,
+      "label": "A",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517007,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481
+    },
+    {
+      "run": 10,
+      "label": "B",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.51859410430839,
+      "pulses": 481
+    }
+  ]
+}
