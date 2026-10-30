@@ -1,4 +1,3 @@
-import { notesByLane, visibleWindow } from "@/game/visibleNotes";
 import { usePlaySession } from "@/lib/usePlaySession";
 import { createRunConfiguration } from "@/game/runConfiguration";
 import { getAudioSession } from "@/game/audioSession";
@@ -158,9 +157,20 @@ export function GameScreen({
   // time-sorted, so binary-search the window instead of scanning all of
   // them every frame (dense charts have tens of thousands).
   const visualSongTime = songTime + settings.visualOffsetMs / 1000;
-  const laneNotes = fnfDisplay
-    ? []
-    : notesByLane(visibleWindow(notes, visualSongTime, scrollTime, "difference"), chart.laneCount);
+  let lo = 0;
+  let hi = notes.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if ((notes[mid]?.time ?? Infinity) < visualSongTime - 0.25) lo = mid + 1;
+    else hi = mid;
+  }
+  const visibleNotes: typeof notes = [];
+  for (let i = lo; i < notes.length; i++) {
+    const note = notes[i];
+    if (!note) break;
+    if (note.time - visualSongTime > scrollTime) break;
+    visibleNotes.push(note);
+  }
 
   const last = play.lastJudgement;
   const judgeAge = last ? songTime - last.at : Infinity;
@@ -315,7 +325,7 @@ export function GameScreen({
                     </div>
                   )}
 
-                  {(laneNotes[lane] ?? []).map((note) => {
+                  {visibleNotes.map((note) => {
                     if (note.lane !== lane || note.judged) return null;
                     const remaining = note.time - visualSongTime;
                     if (remaining > scrollTime || remaining < -0.25) return null;
