@@ -1,0 +1,497 @@
+{
+  "source": "work/phase3/final-60s/results.json",
+  "groups": {
+    "A": {
+      "count": 5,
+      "metrics": {
+        "TaskDuration": 15.656436,
+        "ScriptDuration": 4.8007818,
+        "LayoutDuration": 1.3492562,
+        "RecalcStyleDuration": 2.8331478
+      },
+      "frameP95": 16.799999999996363,
+      "over25ms": 30.6
+    },
+    "B": {
+      "count": 5,
+      "metrics": {
+        "TaskDuration": 15.7217114,
+        "ScriptDuration": 4.7755524,
+        "LayoutDuration": 1.3678782000000003,
+        "RecalcStyleDuration": 2.8417183999999995
+      },
+      "frameP95": 16.79999999999709,
+      "over25ms": 44
+    }
+  },
+  "deltaOfMeansPercent": {
+    "TaskDuration": 0.4169237494408007,
+    "ScriptDuration": -0.5255269048053957,
+    "LayoutDuration": 1.3801678287637564,
+    "RecalcStyleDuration": 0.3025115738755302
+  },
+  "pairs": [
+    {
+      "pair": 1,
+      "order": "AB",
+      "A": 1,
+      "B": 2,
+      "deltaPercent": {
+        "TaskDuration": -4.77248348665208,
+        "ScriptDuration": -4.865537865845971,
+        "LayoutDuration": -8.60661214923687,
+        "RecalcStyleDuration": -3.7250614514163227
+      },
+      "frameP95DeltaMs": 0,
+      "over25msDelta": -6
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "A": 4,
+      "B": 3,
+      "deltaPercent": {
+        "TaskDuration": -3.360578179626217,
+        "ScriptDuration": -4.671082428342177,
+        "LayoutDuration": -2.0777189873909863,
+        "RecalcStyleDuration": -2.4285338921281596
+      },
+      "frameP95DeltaMs": -3.637978807091713e-12,
+      "over25msDelta": -19
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "A": 5,
+      "B": 6,
+      "deltaPercent": {
+        "TaskDuration": 5.911437962457677,
+        "ScriptDuration": 2.368219157575613,
+        "LayoutDuration": 7.9628084396233145,
+        "RecalcStyleDuration": 7.204915124598621
+      },
+      "frameP95DeltaMs": 3.637978807091713e-12,
+      "over25msDelta": 52
+    },
+    {
+      "pair": 4,
+      "order": "BA",
+      "A": 8,
+      "B": 7,
+      "deltaPercent": {
+        "TaskDuration": 3.9246131031213105,
+        "ScriptDuration": 6.093005284345421,
+        "LayoutDuration": 3.482391550150288,
+        "RecalcStyleDuration": 2.0505112435443618
+      },
+      "frameP95DeltaMs": 0,
+      "over25msDelta": 9
+    },
+    {
+      "pair": 5,
+      "order": "AB",
+      "A": 9,
+      "B": 10,
+      "deltaPercent": {
+        "TaskDuration": 0.8654762919363623,
+        "ScriptDuration": -0.8939365473525807,
+        "LayoutDuration": 7.162595302015462,
+        "RecalcStyleDuration": -1.3115906168563618
+      },
+      "frameP95DeltaMs": 3.637978807091713e-12,
+      "over25msDelta": 31
+    }
+  ],
+  "runs": [
+    {
+      "index": 1,
+      "label": "A",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 16.099249,
+        "ScriptDuration": 4.910639,
+        "LayoutDuration": 1.4216859999999998,
+        "RecalcStyleDuration": 2.880731,
+        "LayoutCount": 5306,
+        "RecalcStyleCount": 5307
+      },
+      "frame": {
+        "count": 3572,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999995634,
+        "p99": 16.80000000000291,
+        "over25ms": 29
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-1-A-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "373b38a2a7580e2f77492c1aa699b58bec83e355f4ebb2d46f4955cf97794a13",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.51859410430839,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 2,
+      "label": "B",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 15.330915000000001,
+        "ScriptDuration": 4.67171,
+        "LayoutDuration": 1.2993270000000001,
+        "RecalcStyleDuration": 2.773422,
+        "LayoutCount": 4226,
+        "RecalcStyleCount": 4226
+      },
+      "frame": {
+        "count": 3578,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999995634,
+        "p99": 16.80000000000291,
+        "over25ms": 23
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-2-B-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "03554640a9b4d1547d1e198effb3445049cc03b189017e9c81d657c7f73351af",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.53020408163265,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 3,
+      "label": "B",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 15.522222,
+        "ScriptDuration": 4.687402,
+        "LayoutDuration": 1.360069,
+        "RecalcStyleDuration": 2.825897,
+        "LayoutCount": 4873,
+        "RecalcStyleCount": 4874
+      },
+      "frame": {
+        "count": 3546,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999995634,
+        "p99": 33.29999999999927,
+        "over25ms": 53
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-3-B-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "9aae4558cd936b84aa61c957160d3c3b34ddfdebeb5a2ce14b3e7e08a19ceb58",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.5095238095238095,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 4,
+      "label": "A",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 16.061998,
+        "ScriptDuration": 4.917083,
+        "LayoutDuration": 1.388927,
+        "RecalcStyleDuration": 2.896233,
+        "LayoutCount": 4090,
+        "RecalcStyleCount": 4090
+      },
+      "frame": {
+        "count": 3526,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999999272,
+        "p99": 33.30000000000291,
+        "over25ms": 72
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-4-A-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "255fce6e4c3c6740d846db435239ee124b1c7692d9c3a955aab01b31665ab4bf",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517007,
+      "observedEnd": 65.5098866213152,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 5,
+      "label": "A",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 15.497769,
+        "ScriptDuration": 4.809690000000001,
+        "LayoutDuration": 1.308684,
+        "RecalcStyleDuration": 2.804405,
+        "LayoutCount": 4607,
+        "RecalcStyleCount": 4607
+      },
+      "frame": {
+        "count": 3583,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999995634,
+        "p99": 16.80000000000291,
+        "over25ms": 17
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-5-A-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "95c595d1881d5f6a81fd2b3f898a1025c171fdb19ac9d0ace12e96c219c3b5bd",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.500816326530612,
+      "observedEnd": 65.501179138322,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 6,
+      "label": "B",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 16.413909999999998,
+        "ScriptDuration": 4.923594,
+        "LayoutDuration": 1.4128919999999998,
+        "RecalcStyleDuration": 3.0064599999999997,
+        "LayoutCount": 4499,
+        "RecalcStyleCount": 4499
+      },
+      "frame": {
+        "count": 3528,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999999272,
+        "p99": 33.30000000000291,
+        "over25ms": 69
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-6-B-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "a5eaa69d5ced982b575a0bee9f028db5b5645de0b6f12e4c68b22aede6a687fd",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.5095238095238095,
+      "observedEnd": 65.51859410430839,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 7,
+      "label": "B",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 15.399783,
+        "ScriptDuration": 4.741951,
+        "LayoutDuration": 1.350855,
+        "RecalcStyleDuration": 2.7829949999999997,
+        "LayoutCount": 4241,
+        "RecalcStyleCount": 4241
+      },
+      "frame": {
+        "count": 3579,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999995634,
+        "p99": 16.80000000000291,
+        "over25ms": 21
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-7-B-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "a1b5cbd06775163050ce8a2e59c494ee3134fa9ed12c97f8fb2618b4e6aff22f",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 8,
+      "label": "A",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 14.818225,
+        "ScriptDuration": 4.4696169999999995,
+        "LayoutDuration": 1.305396,
+        "RecalcStyleDuration": 2.727076,
+        "LayoutCount": 5140,
+        "RecalcStyleCount": 5140
+      },
+      "frame": {
+        "count": 3589,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999995634,
+        "p99": 16.80000000000291,
+        "over25ms": 12
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-8-A-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "4f2849d2015364eb0ee17b80e737fbede7a10357ed201286b9c78ee1596ced6c",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.512426303854875,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 9,
+      "label": "A",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 15.804939,
+        "ScriptDuration": 4.8968799999999995,
+        "LayoutDuration": 1.321588,
+        "RecalcStyleDuration": 2.857294,
+        "LayoutCount": 4198,
+        "RecalcStyleCount": 4199
+      },
+      "frame": {
+        "count": 3577,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999995634,
+        "p99": 16.80000000000291,
+        "over25ms": 23
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-9-A-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "53eb1857c2e3dfcd61421c8b21cec244400402fca043ed22dfb818c411281d05",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517007,
+      "observedEnd": 65.50988662131519,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    },
+    {
+      "index": 10,
+      "label": "B",
+      "style": "mania",
+      "overlay": true,
+      "light": false,
+      "seconds": 60,
+      "chromium": "151.0.7922.173",
+      "headless": true,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "TaskDuration": 15.941727000000002,
+        "ScriptDuration": 4.853105,
+        "LayoutDuration": 1.416248,
+        "RecalcStyleDuration": 2.819818,
+        "LayoutCount": 5287,
+        "RecalcStyleCount": 5287
+      },
+      "frame": {
+        "count": 3548,
+        "p50": 16.69999999999709,
+        "p95": 16.799999999999272,
+        "p99": 33.30000000000291,
+        "over25ms": 54
+      },
+      "longTasks": 0,
+      "errors": [],
+      "profileName": "run-10-B-mania-overlayon-lightoff.cpuprofile.gz",
+      "profileSha256": "a091db4dd57a238f2c9080073cd15918ebe57c77ec68c7b64f978254445d70a0",
+      "requestedBegin": 5.5,
+      "observedBegin": 5.518231292517006,
+      "observedEnd": 65.51859410430839,
+      "pulses": 481,
+      "noteCount": 29,
+      "overlayPresent": true
+    }
+  ]
+}

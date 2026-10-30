@@ -1,5 +1,7 @@
 # Pulse Lane Performance Update — Phase 2実装・Phase 3–4測定待ち
 
+現在の状況は [Phase 3追補](pulse-lane-phase3.md) を参照。以下はPhase 2終了時点の履歴。Phase 3でproduction previewは復旧し60秒5組を測定したが、描画候補は改善未確認のため撤回。Phase 4は実機検証待ち。
+
 調査基準と開始時mainは `dfc071d017edfc4b358450c546f36ea50875ce76`。GitHub branches/main APIで確認。AGENTS.mdを確認し、専用branch `codex/pulse-lane-performance-phase2-4` で作業。#10/#9/#7/#6/#5/#3/#2/#1はmerged、#8はDraft/open、#4はopen。#8 headは `c00fbbc487eefcae097acaacf3e9528c4d4b6d65`、未統合のSong Settings変更は取り込んでいない。main push、merge、deploy、DB操作は行っていない。
 
 ## 変更理由と固定SHAの根拠
