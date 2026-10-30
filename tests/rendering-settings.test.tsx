@@ -150,3 +150,21 @@ it("OFF unmounts all display effects through 20 re-entries while ledger inputs c
   expect(input.accepted).toBe(20);
   expect(disconnect).toHaveBeenCalledTimes(40);
 });
+
+it("observes mutated mode values and pressed state across the sprite memo boundary", () => {
+  const mode = { ...getMode("mania"), laneColors: ["red"], noteSize: 40 };
+  const { container, rerender } = render(
+    <NoteSprite mode={mode} lane={0} receptor pressed={false} />,
+  );
+  expect((container.firstChild as HTMLElement).style.opacity).toBe("0.45");
+  mode.noteSize = 60;
+  mode.laneColors[0] = "blue";
+  rerender(<NoteSprite mode={mode} lane={0} receptor pressed />);
+  const circle = container.firstChild as HTMLElement;
+  expect(circle.style.width).toBe("60px");
+  expect(circle.style.borderColor).toBe("blue");
+  expect(circle.style.opacity).toBe("0.95");
+  mode.noteShape = "arrow";
+  rerender(<NoteSprite mode={mode} lane={2} glow={false} />);
+  expect(container.querySelector("path")?.getAttribute("transform")).toBe("rotate(270 32 32)");
+});

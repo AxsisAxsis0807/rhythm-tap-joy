@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { laneColor, type GameMode } from "@/game/modes";
 
 /** Renders a single note (or a receptor outline) in the current mode's skin. */
@@ -16,10 +17,42 @@ export function NoteSprite({
   fluid?: boolean;
   glow?: boolean;
 }) {
-  const color = laneColor(mode, lane);
-  const size = mode.noteSize;
+  // Snapshot only presentation scalars. A fresh or mutated mode object is safe;
+  // mutable runtime notes, play and activeLanes never cross this memo boundary.
+  return (
+    <Sprite
+      shape={mode.noteShape}
+      color={laneColor(mode, lane)}
+      size={mode.noteSize}
+      rotation={[180, 90, 270, 0][lane % 4] ?? 0}
+      receptor={receptor}
+      pressed={pressed}
+      fluid={fluid}
+      glow={glow}
+    />
+  );
+}
 
-  if (mode.noteShape === "bar") {
+const Sprite = memo(function Sprite({
+  shape,
+  color,
+  size,
+  rotation,
+  receptor,
+  pressed,
+  fluid,
+  glow,
+}: {
+  shape: GameMode["noteShape"];
+  color: string;
+  size: number;
+  rotation: number;
+  receptor: boolean;
+  pressed: boolean;
+  fluid: boolean;
+  glow: boolean;
+}) {
+  if (shape === "bar") {
     return (
       <div
         className={`rounded-sm ${glow ? "shadow-note" : ""}`}
@@ -34,7 +67,7 @@ export function NoteSprite({
     );
   }
 
-  if (mode.noteShape === "circle") {
+  if (shape === "circle") {
     return (
       <div
         className="rounded-full"
@@ -64,7 +97,7 @@ export function NoteSprite({
       }}
     >
       <path
-        transform={`rotate(${[180, 90, 270, 0][lane % 4] ?? 0} 32 32)`}
+        transform={`rotate(${rotation} 32 32)`}
         d="M5 23 H32 V6 L59 32 L32 58 V41 H5 Z"
         fill={receptor && !pressed ? "var(--muted-foreground)" : "currentColor"}
         stroke="var(--arrow-foreground)"
@@ -73,4 +106,4 @@ export function NoteSprite({
       />
     </svg>
   );
-}
+});
