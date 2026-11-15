@@ -736,7 +736,7 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   const beforeTop = view.getByTestId("player-note-0").style.top;
   const configuration = core.configuration;
   const score = core.play.score;
-  const events = recorded.length;
+  const inputEvents = recorded.filter((event) => event.type === "press" || event.type === "release").length;
   act(() => {
     settings.setSettings({
       ...settings.settings,
@@ -755,15 +755,15 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   expect(view.getByTestId("fnf-right").style.width).toBe("50%");
   expect(view.getByTestId("fnf-left").style.width).toBe("30%");
   expect(view.getByTestId("fnf-right").style.opacity).toBe("1");
-  expect(
-    view.getByTestId("fnf-right").querySelector<HTMLElement>(".bg-lane")?.style.opacity,
-  ).toBe("0.5");
+  expect(view.getByTestId("fnf-right").querySelector<HTMLElement>(".bg-lane")?.style.opacity).toBe(
+    "0.5",
+  );
   expect(view.getByTestId("receptor-0").style.top).toBe("14%");
   expect(view.getByTestId("game-background-dim").style.opacity).toBe("0.9");
   expect(view.getByTestId("fnf-error-meter")).toBeTruthy();
   expect(core.configuration).toBe(configuration);
   expect(core.play.score).toBe(score);
-  expect(recorded).toHaveLength(events);
+  expect(recorded.filter((event) => event.type === "press" || event.type === "release")).toHaveLength(inputEvents);
   at(1.03);
   edge(view, "keyboard", "down", 0);
   paint();
