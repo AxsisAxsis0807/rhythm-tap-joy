@@ -993,6 +993,7 @@ function Preview({ settings, fnf }: { settings: GameSettings; fnf: boolean }) {
           ))}
         </div>
         <div
+          data-testid="settings-preview-judge-line"
           className="absolute inset-x-0 h-px bg-cyan-100"
           style={{ top: `${resolveJudgeLinePct(settings, direction)}%` }}
         />
