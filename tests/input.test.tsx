@@ -305,9 +305,8 @@ it.each(["down", "up"] as const)(
         middleScroll={false}
       />,
     );
-    const lane = getByTestId("fnf-right").firstElementChild!;
-    expect((lane.firstElementChild as HTMLElement).style.top).toBe("75%");
-    expect((lane.children[1] as HTMLElement).style.top).toBe(
+    expect(getByTestId("receptor-0").style.top).toBe("75%");
+    expect(getByTestId("player-note-0").style.top).toBe(
       direction === "down" ? "37.5%" : "87.5%",
     );
   },
