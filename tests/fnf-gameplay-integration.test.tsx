@@ -736,7 +736,9 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   const beforeTop = view.getByTestId("player-note-0").style.top;
   const configuration = core.configuration;
   const score = core.play.score;
-  const inputEvents = recorded.filter((event) => event.type === "press" || event.type === "release").length;
+  const inputEvents = recorded.filter(
+    (event) => event.type === "press" || event.type === "release",
+  ).length;
   act(() => {
     settings.setSettings({
       ...settings.settings,
@@ -763,7 +765,9 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   expect(view.getByTestId("fnf-error-meter")).toBeTruthy();
   expect(core.configuration).toBe(configuration);
   expect(core.play.score).toBe(score);
-  expect(recorded.filter((event) => event.type === "press" || event.type === "release")).toHaveLength(inputEvents);
+  expect(
+    recorded.filter((event) => event.type === "press" || event.type === "release"),
+  ).toHaveLength(inputEvents);
   at(1.03);
   edge(view, "keyboard", "down", 0);
   paint();
