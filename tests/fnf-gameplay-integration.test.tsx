@@ -728,3 +728,49 @@ it.each(["primary", "secondary", "mixed"] as const)(
     expect(core.configuration.playStyle).toBe("fnf");
   },
 );
+
+it("FNF GameScreen wiring changes visuals without altering the judgement core", async () => {
+  const view = await start("fnf");
+  at(0.25);
+  paint();
+  const beforeTop = view.getByTestId("player-note-0").style.top;
+  const configuration = core.configuration;
+  const score = core.play.score;
+  const events = recorded.length;
+  act(() => {
+    settings.setSettings({
+      ...settings.settings,
+      noteScale: 140,
+      laneWidth: 125,
+      laneOpacity: 50,
+      visualOffsetMs: 100,
+      showFastLate: true,
+      showErrorMeter: true,
+    });
+  });
+  paint();
+  expect(view.getByTestId("player-note-0").style.transform).toContain("scale(1.4)");
+  expect(view.getByTestId("player-note-0").style.top).not.toBe(beforeTop);
+  expect(view.getByTestId("fnf-right").style.width).toBe("50%");
+  expect(view.getByTestId("fnf-left").style.width).toBe("30%");
+  expect(view.getByTestId("fnf-right").style.opacity).toBe("0.5");
+  expect(view.getByTestId("fnf-error-meter")).toBeTruthy();
+  expect(core.configuration).toBe(configuration);
+  expect(core.play.score).toBe(score);
+  expect(recorded).toHaveLength(events);
+  at(1.03);
+  edge(view, "keyboard", "down", 0);
+  paint();
+  expect(core.play.counts.PERFECT).toBe(1);
+  expect(view.getByText(/LATE [0-9]+ms/)).toBeTruthy();
+  act(() => {
+    settings.setSettings({
+      ...settings.settings,
+      showFastLate: false,
+      showErrorMeter: false,
+    });
+  });
+  expect(view.queryByText(/LATE [0-9]+ms/)).toBeNull();
+  expect(view.queryByTestId("fnf-error-meter")).toBeNull();
+  expect(core.play.counts.PERFECT).toBe(1);
+});
