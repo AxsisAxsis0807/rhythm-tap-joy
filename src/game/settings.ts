@@ -119,6 +119,15 @@ export interface GameSettings {
   preset: SettingsPreset;
 }
 
+/** The saved position is measured from the incoming edge (bottom for down, top for up).
+ * This keeps existing v5 slider settings while placing the receptor correctly. */
+export function resolveJudgeLinePct(
+  settings: Pick<GameSettings, "judgeLinePct">,
+  direction: "down" | "up",
+): number {
+  return direction === "up" ? 100 - settings.judgeLinePct : settings.judgeLinePct;
+}
+
 export const DEFAULT_SETTINGS: GameSettings = {
   version: 5,
   renderingPreset: "standard",
@@ -177,6 +186,7 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
   const d =
     typeof deviceStored === "object" && deviceStored ? (deviceStored as Partial<GameSettings>) : s;
   const legacy = s as Partial<GameSettings> & { keyBindings?: unknown; altKeyBindings?: unknown };
+  const hasSavedSettings = Object.keys(s).length > 0;
   const maniaKeybinds = sanitizeLaneKeys(
     s.maniaKeybinds ?? legacy.keyBindings,
     DEFAULT_SETTINGS.maniaKeybinds,
@@ -197,7 +207,7 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     renderingPreset: pick(
       s.renderingPreset,
       ["standard", "light", "recording", "custom"],
-      "custom",
+      hasSavedSettings ? "custom" : "standard",
     ),
     autoPreview: bool(s.autoPreview, true),
     previewVolume: clamp(s.previewVolume, 0, 1, 0.5),
@@ -211,8 +221,8 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     middleScroll: bool(s.middleScroll, false),
     scrollSpeed: clamp(s.scrollSpeed, 0.5, 4, 1),
     scrollDirection: pick(s.scrollDirection, ["mode", "down", "up"], "mode"),
-    timingOffsetMs: clamp(d.timingOffsetMs, -300, 300, 0),
-    visualOffsetMs: clamp(d.visualOffsetMs, -300, 300, 0),
+    timingOffsetMs: clamp(d.timingOffsetMs ?? s.timingOffsetMs, -300, 300, 0),
+    visualOffsetMs: clamp(d.visualOffsetMs ?? s.visualOffsetMs, -300, 300, 0),
     masterVolume: clamp(s.masterVolume, 0, 1, 0.8),
     musicVolume: clamp(s.musicVolume, 0, 1, 0.9),
     hitSoundVolume: clamp(s.hitSoundVolume, 0, 1, 0.55),
@@ -220,9 +230,9 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     hitSoundEnabled: bool(s.hitSoundEnabled, true),
     maniaKeybinds,
     fnfKeybinds: { primary, secondary },
-    laneWidth: clamp(d.laneWidth, 70, 130, 100),
+    laneWidth: clamp(d.laneWidth ?? s.laneWidth, 70, 130, 100),
     noteScale: clamp(s.noteScale, 70, 140, 100),
-    judgeLinePct: clamp(d.judgeLinePct, 65, 92, 86),
+    judgeLinePct: clamp(d.judgeLinePct ?? s.judgeLinePct, 65, 92, 86),
     noteShape: pick(s.noteShape, ["mode", "bar", "circle", "arrow"], "mode"),
     backgroundDim: clamp(s.backgroundDim, 0, 90, 55),
     laneOpacity: clamp(s.laneOpacity, 25, 100, 82),
@@ -236,7 +246,7 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     reducedMotion: bool(s.reducedMotion, false),
     lightweightMode: bool(s.lightweightMode, false),
     showFps: bool(s.showFps, false),
-    touchAreaHeight: clamp(d.touchAreaHeight, 45, 100, 100),
+    touchAreaHeight: clamp(d.touchAreaHeight ?? s.touchAreaHeight, 45, 100, 100),
     inputOverlayEnabled: bool(s.inputOverlayEnabled, true),
     inputOverlayX: clamp(
       s.inputOverlayX,
