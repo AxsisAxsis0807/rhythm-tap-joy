@@ -203,6 +203,7 @@ export function GameScreen({
       )}
       <div
         aria-hidden="true"
+        data-testid="game-background-dim"
         className="pointer-events-none absolute inset-0 bg-black"
         style={{ opacity: settings.backgroundDim / 100 }}
       />
