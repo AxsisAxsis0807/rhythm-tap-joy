@@ -460,7 +460,11 @@ export function SettingsPanel({
                   percent
                   onChange={(v) => set("hitSoundVolume", v)}
                 />
-                <SoundTest volume={settings.hitSoundEnabled ? settings.masterVolume * settings.hitSoundVolume : 0} />
+                <SoundTest
+                  volume={
+                    settings.hitSoundEnabled ? settings.masterVolume * settings.hitSoundVolume : 0
+                  }
+                />
                 <RangeRow
                   label="メニュー・試聴音量"
                   value={settings.menuVolume}
