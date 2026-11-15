@@ -32,7 +32,9 @@ describe("settings source of truth", () => {
     expect(sanitizeSettings(undefined).renderingPreset).toBe("standard");
     expect(sanitizeSettings({}).renderingPreset).toBe("standard");
     // Existing users without a preset must retain custom rendering flags.
-    expect(sanitizeSettings({ ...DEFAULT_SETTINGS, renderingPreset: undefined }).renderingPreset).toBe("custom");
+    expect(
+      sanitizeSettings({ ...DEFAULT_SETTINGS, renderingPreset: undefined }).renderingPreset,
+    ).toBe("custom");
   });
 
   it("keeps general device preferences when a partial device record exists", () => {
