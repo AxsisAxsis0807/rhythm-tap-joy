@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildRuntimeNotes, createPlayState } from "@/game/engine";
-import { sanitizeSettings } from "@/game/settings";
+import { DEFAULT_SETTINGS, resolveJudgeLinePct, sanitizeSettings } from "@/game/settings";
 import type { Chart } from "@/game/types";
 
 describe("settings migration", () => {
@@ -24,6 +24,50 @@ describe("settings migration", () => {
     expect(sanitizeSettings({ timingOffsetMs: 10 }, { timingOffsetMs: -27 }).timingOffsetMs).toBe(
       -27,
     );
+  });
+});
+
+describe("settings source of truth", () => {
+  it("keeps new users on the advertised standard rendering preset", () => {
+    expect(sanitizeSettings(undefined).renderingPreset).toBe("standard");
+    expect(sanitizeSettings({}).renderingPreset).toBe("standard");
+    // Existing users without a preset must retain custom rendering flags.
+    expect(sanitizeSettings({ ...DEFAULT_SETTINGS, renderingPreset: undefined }).renderingPreset).toBe("custom");
+  });
+
+  it("keeps general device preferences when a partial device record exists", () => {
+    const saved = {
+      ...DEFAULT_SETTINGS,
+      timingOffsetMs: 11,
+      visualOffsetMs: -34,
+      laneWidth: 125,
+      judgeLinePct: 78,
+      touchAreaHeight: 65,
+    };
+    const loaded = sanitizeSettings(saved, { timingOffsetMs: -27 });
+    expect(loaded).toMatchObject({
+      timingOffsetMs: -27,
+      visualOffsetMs: -34,
+      laneWidth: 125,
+      judgeLinePct: 78,
+      touchAreaHeight: 65,
+    });
+    expect(sanitizeSettings(saved, { laneWidth: 80, judgeLinePct: 70 })).toMatchObject({
+      laneWidth: 80,
+      judgeLinePct: 70,
+      timingOffsetMs: 11,
+      visualOffsetMs: -34,
+    });
+  });
+
+  it("maps judge positions symmetrically between down and up scrolls", () => {
+    for (const stored of [65, 70, 86, 92]) {
+      const settings = { judgeLinePct: stored };
+      expect(resolveJudgeLinePct(settings, "down")).toBe(stored);
+      expect(resolveJudgeLinePct(settings, "up")).toBe(100 - stored);
+    }
+    expect(resolveJudgeLinePct(DEFAULT_SETTINGS, "up")).toBe(14);
+    expect(resolveJudgeLinePct(DEFAULT_SETTINGS, "down")).toBe(86);
   });
 });
 
