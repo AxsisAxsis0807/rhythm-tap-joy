@@ -141,8 +141,29 @@ it("geometry applies each dimension independently and reset does not alter gamep
     masterVolume: 0.3,
     touchAreaHeight: 60,
     preset: "custom",
+    renderingPreset: "custom",
   });
 });
+it("resetting the input overlay clears the Light rendering preset only, not gameplay timing", () => {
+  const original = {
+    ...DEFAULT_SETTINGS,
+    renderingPreset: "light" as const,
+    inputOverlayEnabled: false,
+    timingOffsetMs: 37,
+    noteScale: 140,
+    masterVolume: 0.3,
+  };
+  const reset = resetInputOverlay(original);
+  expect(reset).toMatchObject({
+    renderingPreset: "custom",
+    preset: "custom",
+    inputOverlayEnabled: true,
+    timingOffsetMs: 37,
+    noteScale: 140,
+    masterVolume: 0.3,
+  });
+});
+
 it("saves and restores v5 fields only after hydration; device timing remains separate", async () => {
   const saved = {
     ...DEFAULT_SETTINGS,
