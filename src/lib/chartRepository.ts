@@ -5,6 +5,9 @@ import type { SongMetadataForm } from "@/components/app/SongMetadataFields";
 import type { Chart } from "@/game/types";
 import { parseChartByType } from "@/game/chartFile";
 import { assertManagedPath, MAX_CHART_BYTES, validateCanonicalChart } from "./chartValidation";
+// Some tables/RPCs are not in the generated types yet.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const untyped = supabase as any;
 
 type BaseSongRow = Database["public"]["Tables"]["songs"]["Row"];
 export type SongRow = BaseSongRow & {
@@ -39,7 +42,7 @@ export function normalizeSong(row: LooseSongRow): SongRow {
   };
 }
 export async function listPublicSongs() {
-  const { data, error } = await supabase
+  const { data, error } = await untyped
     .from("songs")
     .select("*")
     .eq("is_published", true)
@@ -127,7 +130,7 @@ export async function loadPlayableChart(value: LooseSongRow): Promise<Chart> {
 export async function getSongPreview(value: SongRow) {
   const row = normalizeSong(value);
   if (!row.current_revision_id) return null; // Neither official nor old publication establishes permission.
-  const { data: r, error } = await supabase
+  const { data: r, error } = await untyped
     .from("chart_revisions")
     .select("*")
     .eq("id", row.current_revision_id)
@@ -154,7 +157,7 @@ export async function updateSongMetadata(input: {
   metadata: SongMetadataForm;
 }) {
   const m = input.metadata;
-  const { data, error } = await supabase.rpc("update_chart_metadata", {
+  const { data, error } = await untyped.rpc("update_chart_metadata", {
     p_song_id: input.songId,
     p_expected_version: input.expectedMetadataVersion,
     p_expected_revision: input.expectedRevisionId,

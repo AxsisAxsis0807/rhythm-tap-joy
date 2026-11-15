@@ -5,8 +5,11 @@ import {
   type CardPreferences,
   type CardPreferencePatch,
 } from "./accountGrowth";
+// Some tables/RPCs are not in the generated types yet.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const untyped = supabase as any;
 export async function getOwnCardPreferences(userId: string): Promise<CardPreferences> {
-  const { data: p, error } = await supabase
+  const { data: p, error } = await untyped
     .from("profile_preferences")
     .select("*")
     .eq("user_id", userId)
@@ -14,7 +17,7 @@ export async function getOwnCardPreferences(userId: string): Promise<CardPrefere
   if (error) throw new Error(error.message);
   let cardImage: CardPreferences["cardImage"] = null;
   if (p?.background_asset_id) {
-    const { data: a, error: assetError } = await supabase
+    const { data: a, error: assetError } = await untyped
       .from("image_assets")
       .select("*")
       .eq("id", p.background_asset_id)
@@ -50,7 +53,7 @@ export async function saveOwnCardPreferences(
     throw new Error("アカウントが変更されました。設定を開き直してください。");
   const crop = patch.crop ?? current.crop;
   if (!validCardCrop(crop)) throw new Error("画像の位置が範囲外です");
-  const { error } = await supabase
+  const { error } = await untyped
     .rpc("save_profile_preferences", {
       p_expected_version: patch.expectedVersion,
       p_level_public: patch.levelPublic ?? current.levelPublic,

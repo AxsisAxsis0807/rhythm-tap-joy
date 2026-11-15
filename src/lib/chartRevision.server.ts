@@ -9,6 +9,9 @@ import {
 } from "./chartValidation";
 import { sha256 } from "./xpContract";
 import { CHART_PARSER_VERSION } from "@/game/runConfiguration";
+// Some tables/RPCs are not in the generated types yet.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const untyped = supabaseAdmin as any;
 export async function createRevision(
   actor: string,
   input: {
@@ -25,7 +28,7 @@ export async function createRevision(
     previewStartMs: number;
   },
 ) {
-  const { data: song, error } = await supabaseAdmin
+  const { data: song, error } = await untyped
     .from("songs")
     .select("*")
     .eq("id", input.songId)
@@ -37,7 +40,7 @@ export async function createRevision(
     throw new Error("このRevisionのアップロードパスが必要です");
   assertManagedPath(input.audioPath, actor);
   assertManagedPath(input.chartPath, actor);
-  const { data: existing, error: existingError } = await supabaseAdmin
+  const { data: existing, error: existingError } = await untyped
     .from("chart_revisions")
     .select("*")
     .eq("id", input.requestId)
@@ -109,14 +112,14 @@ export async function createRevision(
     };
     await write(chartPath, canonical, "application/json", chartHash);
     await write(audioPath, audioBytes, mime, audioHash);
-    const { data: latest, error: latestError } = await supabaseAdmin
+    const { data: latest, error: latestError } = await untyped
       .from("chart_revisions")
       .select("revision_number")
       .eq("chart_key", song.id)
       .order("revision_number", { ascending: false })
       .limit(1);
     if (latestError) throw new Error(latestError.message);
-    const { error: insertError } = await supabaseAdmin.from("chart_revisions").insert({
+    const { error: insertError } = await untyped.from("chart_revisions").insert({
       id: input.requestId,
       song_id: song.id,
       chart_key: song.id,
@@ -140,7 +143,7 @@ export async function createRevision(
           : insertError.message,
       );
   }
-  const { data: published, error: publishError } = await supabaseAdmin.rpc(
+  const { data: published, error: publishError } = await untyped.rpc(
     "publish_chart_revision",
     {
       p_actor: actor,

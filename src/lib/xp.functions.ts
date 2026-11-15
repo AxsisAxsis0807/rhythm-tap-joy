@@ -16,7 +16,7 @@ import { XP_RULES } from "./xpRules";
 export const getOwnProgress = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.rpc("get_own_xp_progress");
+    const { data, error } = await (context.supabase as any).rpc("get_own_xp_progress");
     if (error?.code === "PGRST202")
       return { enabled: false, growth: null, rules: XP_RULES, boostEnabled: false as const };
     if (error) throw new Error(error.message);
@@ -27,7 +27,7 @@ export const getPublicProgress = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ userId: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: result, error } = await supabaseAdmin.rpc("get_public_xp_progress", {
+    const { data: result, error } = await (supabaseAdmin as any).rpc("get_public_xp_progress", {
       p_user_id: data.userId,
     });
     if (error) throw new Error(error.message);
@@ -37,7 +37,7 @@ export const getXpReceipt = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ playId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
-    const { data: result, error } = await context.supabase.rpc("get_xp_receipt", {
+    const { data: result, error } = await (context.supabase as any).rpc("get_xp_receipt", {
       p_play_id: data.playId,
     });
     if (error) throw new Error(error.message);
@@ -58,7 +58,7 @@ export const beginPlay = createServerFn({ method: "POST" })
     if (process.env["PULSE_XP_ENABLED"] !== "true")
       return { enabled: false, sessionId: null, expiresAt: null, reason: "XP受付は現在準備中です" };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: result, error } = await supabaseAdmin.rpc("begin_verified_play", {
+    const { data: result, error } = await (supabaseAdmin as any).rpc("begin_verified_play", {
       p_user_id: context.userId,
       p_nonce: data.requestNonce,
       p_revision_id: data.revisionId,
@@ -80,7 +80,7 @@ export const finishPlay = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const hash = await sha256(new TextEncoder().encode(canonicalJson(data.evidence)));
-    const { data: result, error } = await supabaseAdmin.rpc("accept_play_evidence", {
+    const { data: result, error } = await (supabaseAdmin as any).rpc("accept_play_evidence", {
       p_user_id: context.userId,
       p_session_id: data.sessionId,
       p_hash: hash,
@@ -94,7 +94,7 @@ export const finishPlay = createServerFn({ method: "POST" })
         await verifyAcceptedSession(data.sessionId);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Verification worker failed";
-        const { error: jobError } = await supabaseAdmin
+        const { error: jobError } = await (supabaseAdmin as any)
           .from("verification_jobs")
           .update({
             status: "retry",
@@ -105,7 +105,7 @@ export const finishPlay = createServerFn({ method: "POST" })
           .neq("status", "completed");
         if (jobError) throw new Error("Evidence saved; verification retry could not be scheduled");
       }
-      const { data: receipt, error: receiptError } = await context.supabase.rpc("get_xp_receipt", {
+      const { data: receipt, error: receiptError } = await (context.supabase as any).rpc("get_xp_receipt", {
         p_play_id: data.sessionId,
       });
       if (receiptError) throw new Error(receiptError.message);
