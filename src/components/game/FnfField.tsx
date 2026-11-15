@@ -29,6 +29,9 @@ export function FnfField({
   scrollTime,
   activeLanes,
   middleScroll,
+  noteScale = 100,
+  laneWidth = 100,
+  laneOpacity = 100,
   glow = true,
 }: {
   chart: Chart;
@@ -38,6 +41,9 @@ export function FnfField({
   scrollTime: number;
   activeLanes: Set<number>;
   middleScroll: boolean;
+  noteScale?: number;
+  laneWidth?: number;
+  laneOpacity?: number;
   glow?: boolean;
 }) {
   const fnf = chart.fnf;
@@ -63,8 +69,10 @@ export function FnfField({
         const player = side === fnf.playerSide;
         // Selected side changes the SOURCE, never the player's horizontal center.
         const bankClass = player
-          ? "left-1/2 w-[40%] max-w-[520px] -translate-x-1/2"
-          : `${side === "left" ? "left-[3%]" : "right-[3%]"} w-[24%] ${middleScroll ? "opacity-40" : ""}`;
+          ? "left-1/2 -translate-x-1/2"
+          : side === "left"
+            ? "left-[3%]"
+            : "right-[3%]";
         const visible = player ? playerVisible : opponentVisible;
         return (
           <div
@@ -72,6 +80,11 @@ export function FnfField({
             data-testid={`fnf-${side}`}
             data-player={player}
             className={`absolute inset-y-0 ${bankClass}`}
+            style={{
+              width: `${((player ? 40 : 24) * laneWidth) / 100}%`,
+              maxWidth: player ? `${(520 * laneWidth) / 100}px` : undefined,
+              opacity: (laneOpacity / 100) * (!player && middleScroll ? 0.4 : 1),
+            }}
           >
             {[0, 1, 2, 3].map((lane) => (
               <div
@@ -81,8 +94,8 @@ export function FnfField({
               >
                 <div
                   data-testid={player ? `receptor-${lane}` : `opponent-receptor-${lane}`}
-                  className="absolute left-1/2 w-[80%] max-w-[76px] -translate-x-1/2 -translate-y-1/2"
-                  style={{ top: `${judge}%` }}
+                  className="absolute left-1/2 w-[80%] max-w-[76px]"
+                  style={{ top: `${judge}%`, transform: `translate(-50%, -50%) scale(${noteScale / 100})` }}
                 >
                   <NoteSprite
                     mode={mode}
@@ -107,8 +120,8 @@ export function FnfField({
                     <div
                       key={note.id}
                       data-testid={player ? `player-note-${note.id}` : undefined}
-                      className="absolute left-1/2 w-[80%] max-w-[76px] -translate-x-1/2 -translate-y-1/2"
-                      style={{ top: `${top}%` }}
+                      className="absolute left-1/2 w-[80%] max-w-[76px]"
+                      style={{ top: `${top}%`, transform: `translate(-50%, -50%) scale(${noteScale / 100})` }}
                     >
                       <NoteSprite mode={mode} lane={lane} fluid glow={glow} />
                     </div>
