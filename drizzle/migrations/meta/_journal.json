@@ -8,6 +8,13 @@
       "when": 1791076296465,
       "tag": "0000_add_chart_author_to_songs",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794732133630,
+      "tag": "0001_tighten_profile_and_song_file_access",
+      "breakpoints": true
     }
   ]
 }
