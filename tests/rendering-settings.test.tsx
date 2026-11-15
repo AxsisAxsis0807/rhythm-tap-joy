@@ -9,6 +9,9 @@ import {
 } from "@/game/settings";
 import { InputOverlayLayer } from "@/components/game/InputOverlay";
 import { NoteSprite } from "@/components/game/NoteSprite";
+import { FnfField } from "@/components/game/FnfField";
+import { buildRuntimeNotes } from "@/game/engine";
+import type { Chart } from "@/game/types";
 import { InputLedger } from "@/game/input";
 import { getMode } from "@/game/modes";
 
@@ -166,4 +169,57 @@ it("updates sprite presentation when mode properties mutate without a new object
   mode.noteShape = "arrow";
   rerender(<NoteSprite mode={mode} lane={2} glow={false} />);
   expect(container.querySelector("path")?.getAttribute("transform")).toBe("rotate(270 32 32)");
+});
+
+it("FNF applies note scale, lane width, opacity and visual timing to both banks", () => {
+  const chart: Chart = {
+    id: "fnf-display-settings",
+    title: "Display Settings",
+    artist: "Test",
+    audioUrl: "/fixture.wav",
+    bpm: 60,
+    offset: 0,
+    laneCount: 4,
+    difficultyName: "Test",
+    notes: [{ beat: 1, lane: 0, kind: "tap" }],
+    fnf: {
+      playerSide: "right",
+      right: [{ beat: 1, lane: 0, kind: "tap" }],
+      left: [{ beat: 0.5, lane: 0, kind: "tap" }],
+    },
+  };
+  const notes = buildRuntimeNotes(chart);
+  const base = {
+    chart,
+    mode: getMode("fnf"),
+    notes,
+    scrollTime: 2,
+    activeLanes: new Set<number>(),
+    middleScroll: false,
+  };
+  const view = render(<FnfField {...base} songTime={0.25} />);
+  const beforeTop = view.getByTestId("player-note-0").style.top;
+  const beforeTime = notes[0]!.time;
+  view.rerender(
+    <FnfField
+      {...base}
+      songTime={0.35}
+      noteScale={140}
+      laneWidth={125}
+      laneOpacity={50}
+      middleScroll
+    />,
+  );
+  expect(view.getByTestId("player-note-0").style.transform).toContain("scale(1.4)");
+  expect(view.getByTestId("player-note-0").style.top).not.toBe(beforeTop);
+  expect(view.getByTestId("fnf-right").style.width).toBe("50%");
+  expect(view.getByTestId("fnf-right").style.opacity).toBe("0.5");
+  expect(view.getByTestId("fnf-left").style.width).toBe("30%");
+  expect(view.getByTestId("fnf-left").style.opacity).toBe("0.2");
+  expect(view.getByTestId("opponent-receptor-0").style.transform).toContain("scale(1.4)");
+  expect(notes[0]!.time).toBe(beforeTime);
+  expect(notes[0]!.judged).toBe(false);
+  view.rerender(<FnfField {...base} songTime={0.25} noteScale={70} laneWidth={70} />);
+  expect(view.getByTestId("player-note-0").style.transform).toContain("scale(0.7)");
+  expect(view.getByTestId("fnf-right").style.width).toBe("28%");
 });
