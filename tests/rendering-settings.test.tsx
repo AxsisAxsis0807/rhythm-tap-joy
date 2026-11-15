@@ -264,6 +264,7 @@ it("settings panel preview tracks the effective judge line and visual percentage
     "ResizeObserver",
     class {
       observe() {}
+      unobserve() {}
       disconnect() {}
     },
   );
