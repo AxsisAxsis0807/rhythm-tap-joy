@@ -815,12 +815,8 @@ function AuthScreen({
     if (!idValid) return setIdStatus("invalid");
     setIdStatus("checking");
     const t = setTimeout(async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", normalizedId)
-        .maybeSingle();
-      setIdStatus(data ? "taken" : "free");
+      const { data } = await supabase.rpc("username_available", { _username: normalizedId });
+      setIdStatus(data === false ? "taken" : "free");
     }, 400);
     return () => clearTimeout(t);
   }, [normalizedId, idValid, mode]);
