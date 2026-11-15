@@ -231,6 +231,12 @@ it("FNF applies note scale, lane width, opacity and visual timing to both banks"
 });
 
 it("input overlay preview uses the same judge position as each gameplay direction", () => {
+  vi.stubGlobal("ResizeObserver", class {
+    observe() {}
+    disconnect() {}
+  });
+  vi.stubGlobal("requestAnimationFrame", () => 1);
+  vi.stubGlobal("cancelAnimationFrame", () => {});
   const view = render(<InputOverlayPreview settings={DEFAULT_SETTINGS} playStyle="fnf" />);
   expect(view.getByTestId("input-preview-judge-line-0").style.top).toBe("14%");
   view.rerender(
