@@ -83,7 +83,7 @@ export function FnfField({
             style={{
               width: `${((player ? 40 : 24) * laneWidth) / 100}%`,
               maxWidth: player ? `${(520 * laneWidth) / 100}px` : undefined,
-              opacity: (laneOpacity / 100) * (!player && middleScroll ? 0.4 : 1),
+              opacity: !player && middleScroll ? 0.4 : 1,
             }}
           >
             {[0, 1, 2, 3].map((lane) => (
@@ -92,6 +92,11 @@ export function FnfField({
                 className="absolute inset-y-0 w-1/4"
                 style={{ left: `${lane * 25}%` }}
               >
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-lane"
+                  style={{ opacity: laneOpacity / 100 }}
+                />
                 <div
                   data-testid={player ? `receptor-${lane}` : `opponent-receptor-${lane}`}
                   className="absolute left-1/2 w-[80%] max-w-[76px]"
