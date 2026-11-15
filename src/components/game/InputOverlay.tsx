@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { DIRECTIONS, InputLedger } from "@/game/input";
-import { resolveKeyMap, type GameSettings } from "@/game/settings";
+import { resolveJudgeLinePct, resolveKeyMap, type GameSettings } from "@/game/settings";
+import { getMode } from "@/game/modes";
 import type { PlayStyleId } from "@/game/types";
 import {
   inputOverlayLayout,
@@ -301,6 +302,8 @@ export function InputOverlayPreview({
   settings: GameSettings;
   playStyle?: PlayStyleId;
 }) {
+  const mode = getMode(playStyle === "fnf" ? "fnf" : settings.maniaSkin === "classic" ? "classic" : "mania");
+  const direction = settings.scrollDirection === "mode" ? mode.scroll : settings.scrollDirection;
   const [inputs] = useState(() => {
     const input = new InputLedger(),
       now = performance.now();
@@ -321,7 +324,7 @@ export function InputOverlayPreview({
             <div key={lane} className="relative">
               <i
                 className="absolute inset-x-1 h-2 border border-cyan-200/40"
-                style={{ top: `${settings.judgeLinePct}%` }}
+                style={{ top: `${resolveJudgeLinePct(settings, direction)}%` }}
               />
             </div>
           ))}
