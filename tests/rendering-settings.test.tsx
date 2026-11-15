@@ -7,7 +7,7 @@ import {
   effectiveRendering,
   sanitizeSettings,
 } from "@/game/settings";
-import { InputOverlayLayer } from "@/components/game/InputOverlay";
+import { InputOverlayLayer, InputOverlayPreview } from "@/components/game/InputOverlay";
 import { NoteSprite } from "@/components/game/NoteSprite";
 import { FnfField } from "@/components/game/FnfField";
 import { buildRuntimeNotes } from "@/game/engine";
@@ -213,13 +213,38 @@ it("FNF applies note scale, lane width, opacity and visual timing to both banks"
   expect(view.getByTestId("player-note-0").style.transform).toContain("scale(1.4)");
   expect(view.getByTestId("player-note-0").style.top).not.toBe(beforeTop);
   expect(view.getByTestId("fnf-right").style.width).toBe("50%");
-  expect(view.getByTestId("fnf-right").style.opacity).toBe("0.5");
+  expect(view.getByTestId("fnf-right").style.opacity).toBe("1");
   expect(view.getByTestId("fnf-left").style.width).toBe("30%");
-  expect(view.getByTestId("fnf-left").style.opacity).toBe("0.2");
+  expect(view.getByTestId("fnf-left").style.opacity).toBe("0.4");
+  expect(
+    view.getByTestId("fnf-right").querySelector<HTMLElement>(".bg-lane")?.style.opacity,
+  ).toBe("0.5");
+  expect(
+    view.getByTestId("fnf-left").querySelector<HTMLElement>(".bg-lane")?.style.opacity,
+  ).toBe("0.5");
   expect(view.getByTestId("opponent-receptor-0").style.transform).toContain("scale(1.4)");
   expect(notes[0]!.time).toBe(beforeTime);
   expect(notes[0]!.judged).toBe(false);
   view.rerender(<FnfField {...base} songTime={0.25} noteScale={70} laneWidth={70} />);
   expect(view.getByTestId("player-note-0").style.transform).toContain("scale(0.7)");
   expect(view.getByTestId("fnf-right").style.width).toBe("28%");
+});
+
+it("input overlay preview uses the same judge position as each gameplay direction", () => {
+  const view = render(<InputOverlayPreview settings={DEFAULT_SETTINGS} playStyle="fnf" />);
+  expect(view.getByTestId("input-preview-judge-line-0").style.top).toBe("14%");
+  view.rerender(
+    <InputOverlayPreview
+      settings={{ ...DEFAULT_SETTINGS, scrollDirection: "down", judgeLinePct: 70 }}
+      playStyle="fnf"
+    />,
+  );
+  expect(view.getByTestId("input-preview-judge-line-0").style.top).toBe("70%");
+  view.rerender(
+    <InputOverlayPreview
+      settings={{ ...DEFAULT_SETTINGS, scrollDirection: "mode", judgeLinePct: 85 }}
+      playStyle="mania"
+    />,
+  );
+  expect(view.getByTestId("input-preview-judge-line-0").style.top).toBe("85%");
 });
