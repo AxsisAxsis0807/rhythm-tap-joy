@@ -323,6 +323,7 @@ export function InputOverlayPreview({
           {[0, 1, 2, 3].map((lane) => (
             <div key={lane} className="relative">
               <i
+                data-testid={`input-preview-judge-line-${lane}`}
                 className="absolute inset-x-1 h-2 border border-cyan-200/40"
                 style={{ top: `${resolveJudgeLinePct(settings, direction)}%` }}
               />
