@@ -6,8 +6,24 @@ import type { Chart } from "@/game/types";
 import { parseChartByType } from "@/game/chartFile";
 import { assertManagedPath, MAX_CHART_BYTES, validateCanonicalChart } from "./chartValidation";
 
-export type SongRow = Database["public"]["Tables"]["songs"]["Row"];
-export function normalizeSong(row: SongRow): SongRow {
+type BaseSongRow = Database["public"]["Tables"]["songs"]["Row"];
+export type SongRow = BaseSongRow & {
+  description: string | null;
+  recommended_play_style: string | null;
+  preview_start_ms: number | null;
+  metadata_version: number;
+  current_revision_id: string | null;
+};
+type LooseSongRow = BaseSongRow & Partial<Omit<SongRow, keyof BaseSongRow>>;
+type ChartRevisionRow = {
+  id: string;
+  song_id: string;
+  chart_path: string;
+  audio_path: string;
+  duration_ms: number;
+  parser_version: string;
+};
+export function normalizeSong(row: LooseSongRow): SongRow {
   return {
     ...row,
     description: row.description ?? null,
@@ -31,7 +47,7 @@ export async function listPublicSongs() {
   if (error) throw new Error(error.message);
   return (data ?? []).map(normalizeSong);
 }
-export function songToEntry(value: SongRow): SongEntry {
+export function songToEntry(value: LooseSongRow): SongEntry {
   const row = normalizeSong(value);
   return {
     id: row.id,
@@ -49,10 +65,18 @@ async function signed(bucket: string, path: string) {
   if (error || !data) throw new Error(error?.message ?? "音源URLを発行できませんでした");
   return data.signedUrl;
 }
-export async function loadPlayableChart(value: SongRow): Promise<Chart> {
+export async function loadPlayableChart(value: LooseSongRow): Promise<Chart> {
   const row = normalizeSong(value);
   if (row.current_revision_id) {
-    const { data: revision, error } = await supabase
+    const { data: revision, error } = await (supabase as unknown as {
+      from: (t: string) => {
+        select: (c: string) => {
+          eq: (k: string, v: string) => {
+            single: () => Promise<{ data: ChartRevisionRow | null; error: { message: string } | null }>;
+          };
+        };
+      };
+    })
       .from("chart_revisions")
       .select("*")
       .eq("id", row.current_revision_id)
