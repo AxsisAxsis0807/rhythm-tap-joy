@@ -95,7 +95,10 @@ export function FnfField({
                 <div
                   data-testid={player ? `receptor-${lane}` : `opponent-receptor-${lane}`}
                   className="absolute left-1/2 w-[80%] max-w-[76px]"
-                  style={{ top: `${judge}%`, transform: `translate(-50%, -50%) scale(${noteScale / 100})` }}
+                  style={{
+                    top: `${judge}%`,
+                    transform: `translate(-50%, -50%) scale(${noteScale / 100})`,
+                  }}
                 >
                   <NoteSprite
                     mode={mode}
@@ -121,7 +124,10 @@ export function FnfField({
                       key={note.id}
                       data-testid={player ? `player-note-${note.id}` : undefined}
                       className="absolute left-1/2 w-[80%] max-w-[76px]"
-                      style={{ top: `${top}%`, transform: `translate(-50%, -50%) scale(${noteScale / 100})` }}
+                      style={{
+                        top: `${top}%`,
+                        transform: `translate(-50%, -50%) scale(${noteScale / 100})`,
+                      }}
                     >
                       <NoteSprite mode={mode} lane={lane} fluid glow={glow} />
                     </div>
