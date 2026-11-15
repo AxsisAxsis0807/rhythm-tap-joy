@@ -58,5 +58,5 @@ export function inputOverlayLayout(s: GameSettings, viewport: OverlayViewport) {
   };
 }
 export function resetInputOverlay(settings: GameSettings): GameSettings {
-  return { ...settings, ...INPUT_OVERLAY_DEFAULTS, preset: "custom" };
+  return { ...settings, ...INPUT_OVERLAY_DEFAULTS, preset: "custom", renderingPreset: "custom" };
 }

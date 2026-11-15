@@ -7,6 +7,7 @@ import { getMode } from "@/game/modes";
 import { InputTest, InputOverlayPreview } from "./InputOverlay";
 import {
   applyRenderingPreset,
+  resolveJudgeLinePct,
   isBindableKey,
   DEFAULT_SETTINGS,
   type GameSettings,
@@ -459,9 +460,13 @@ export function SettingsPanel({
                   percent
                   onChange={(v) => set("hitSoundVolume", v)}
                 />
-                <SoundTest volume={settings.masterVolume * settings.hitSoundVolume} />
+                <SoundTest
+                  volume={
+                    settings.hitSoundEnabled ? settings.masterVolume * settings.hitSoundVolume : 0
+                  }
+                />
                 <RangeRow
-                  label="メニュー効果音"
+                  label="メニュー・試聴音量"
                   value={settings.menuVolume}
                   min={0}
                   max={1}
@@ -867,6 +872,7 @@ function KeyCapture({
 }
 function SoundTest({ volume }: { volume: number }) {
   const play = () => {
+    if (volume <= 0) return;
     const Ctx =
       window.AudioContext ??
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -886,7 +892,8 @@ function SoundTest({ volume }: { volume: number }) {
       <button
         type="button"
         onClick={play}
-        className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs"
+        disabled={volume <= 0}
+        className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs disabled:opacity-40"
       >
         <Volume2 className="size-4" />
         ヒット音をテスト
@@ -965,10 +972,17 @@ function Preview({ settings, fnf }: { settings: GameSettings; fnf: boolean }) {
       <p className="mb-2 text-xs tracking-widest text-white/45 max-md:[@media(max-height:500px)]:mb-1">
         LIVE PREVIEW
       </p>
-      <div
-        className="relative mx-auto h-32 max-w-[280px] max-md:[@media(max-height:500px)]:h-10 overflow-hidden rounded-xl border border-white/10 bg-black"
-        style={{ opacity: 0.4 + settings.laneOpacity / 170 }}
-      >
+      <div className="relative mx-auto h-32 max-w-[280px] max-md:[@media(max-height:500px)]:h-10 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-slate-800 to-indigo-950">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-black"
+          style={{ opacity: settings.backgroundDim / 100 }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-lane"
+          style={{ opacity: settings.laneOpacity / 100 }}
+        />
         <div className="absolute inset-0 grid grid-cols-4">
           {[0, 1, 2, 3].map((lane) => (
             <div key={lane} className="relative border-r border-white/10 last:border-0">
@@ -983,8 +997,9 @@ function Preview({ settings, fnf }: { settings: GameSettings; fnf: boolean }) {
           ))}
         </div>
         <div
+          data-testid="settings-preview-judge-line"
           className="absolute inset-x-0 h-px bg-cyan-100"
-          style={{ top: `${settings.judgeLinePct}%` }}
+          style={{ top: `${resolveJudgeLinePct(settings, direction)}%` }}
         />
       </div>
       <p className="mt-2 text-[11px] leading-relaxed text-white/35 max-md:[@media(max-height:500px)]:hidden">

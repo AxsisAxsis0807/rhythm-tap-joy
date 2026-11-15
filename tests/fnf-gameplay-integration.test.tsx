@@ -736,13 +736,16 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   const beforeTop = view.getByTestId("player-note-0").style.top;
   const configuration = core.configuration;
   const score = core.play.score;
-  const events = recorded.length;
+  const inputEvents = recorded.filter(
+    (event) => event.type === "press" || event.type === "release",
+  ).length;
   act(() => {
     settings.setSettings({
       ...settings.settings,
       noteScale: 140,
       laneWidth: 125,
       laneOpacity: 50,
+      backgroundDim: 90,
       visualOffsetMs: 100,
       showFastLate: true,
       showErrorMeter: true,
@@ -753,24 +756,67 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   expect(view.getByTestId("player-note-0").style.top).not.toBe(beforeTop);
   expect(view.getByTestId("fnf-right").style.width).toBe("50%");
   expect(view.getByTestId("fnf-left").style.width).toBe("30%");
-  expect(view.getByTestId("fnf-right").style.opacity).toBe("0.5");
+  expect(view.getByTestId("fnf-right").style.opacity).toBe("1");
+  expect(view.getByTestId("fnf-right").querySelector<HTMLElement>(".bg-lane")?.style.opacity).toBe(
+    "0.5",
+  );
+  expect(view.getByTestId("receptor-0").style.top).toBe("14%");
+  expect(view.getByTestId("game-background-dim").style.opacity).toBe("0.9");
   expect(view.getByTestId("fnf-error-meter")).toBeTruthy();
   expect(core.configuration).toBe(configuration);
   expect(core.play.score).toBe(score);
-  expect(recorded).toHaveLength(events);
+  expect(
+    recorded.filter((event) => event.type === "press" || event.type === "release"),
+  ).toHaveLength(inputEvents);
   at(1.03);
   edge(view, "keyboard", "down", 0);
   paint();
   expect(core.play.counts.PERFECT).toBe(1);
   expect(view.getByText(/LATE [0-9]+ms/)).toBeTruthy();
+  expect(view.getByTestId("fnf-hit-effect")).toBeTruthy();
   act(() => {
     settings.setSettings({
       ...settings.settings,
       showFastLate: false,
       showErrorMeter: false,
+      hitEffects: false,
     });
   });
   expect(view.queryByText(/LATE [0-9]+ms/)).toBeNull();
   expect(view.queryByTestId("fnf-error-meter")).toBeNull();
+  expect(view.queryByTestId("fnf-hit-effect")).toBeNull();
+  expect(core.play.counts.PERFECT).toBe(1);
+});
+
+it("mania GameScreen uses note, receptor, background, and mirrored judge preferences without affecting the score", async () => {
+  const view = await start("4k", "mania");
+  at(0.25);
+  paint();
+  const configuration = core.configuration;
+  const score = core.play.score;
+  expect(view.getByTestId("judge-line-0").style.top).toBe("86%");
+  expect(view.getByTestId("game-background-dim").style.opacity).toBe("0.55");
+  act(() => {
+    settings.setSettings({
+      ...settings.settings,
+      noteScale: 140,
+      scrollDirection: "up",
+      laneOpacity: 25,
+      backgroundDim: 90,
+    });
+  });
+  paint();
+  expect(view.getByTestId("player-note-0").style.transform).toContain("scale(1.4)");
+  expect(view.getByTestId("receptor-0").style.transform).toContain("scale(1.4)");
+  expect(view.getByTestId("judge-line-0").style.top).toBe("14%");
+  expect(view.getByTestId("game-background-dim").style.opacity).toBe("0.9");
+  expect(
+    view.getByTestId("player-lanes").querySelector<HTMLElement>(".bg-lane")?.style.opacity,
+  ).toBe("0.25");
+  expect(core.configuration).toBe(configuration);
+  expect(core.play.score).toBe(score);
+  at(1);
+  edge(view, "keyboard", "down", 0);
+  paint();
   expect(core.play.counts.PERFECT).toBe(1);
 });

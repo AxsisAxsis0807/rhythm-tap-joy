@@ -1,0 +1,72 @@
+name: Pulse Lane settings regression
+on:
+  push:
+    branches:
+      - fix/pulse-lane-settings-audit-20261115
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck, tests, build and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - id: typecheck
+        name: TypeScript
+        continue-on-error: true
+        run: bun run typecheck
+      - id: tests
+        name: Vitest
+        continue-on-error: true
+        run: bun run test
+      - id: repeat
+        name: Repeat input regressions three times
+        continue-on-error: true
+        run: |
+          for i in 1 2 3; do
+            echo "Input regression pass $i"
+            bun run test tests/style-keybinds.test.tsx tests/input.test.tsx tests/fnf-gameplay-integration.test.tsx
+          done
+      - id: build
+        name: Production build
+        continue-on-error: true
+        run: bun run build
+      - id: lint
+        name: ESLint for changed settings-related files
+        continue-on-error: true
+        run: >-
+          bunx eslint
+          src/game/settings.ts
+          src/game/inputOverlayLayout.ts
+          src/components/game/GameScreen.tsx
+          src/components/game/FnfField.tsx
+          src/components/game/SettingsPanel.tsx
+          src/components/game/InputOverlay.tsx
+          tests/game-settings-engine.test.ts
+          tests/input-overlay-settings.test.tsx
+          tests/rendering-settings.test.tsx
+          tests/fnf-gameplay-integration.test.tsx
+          tests/input.test.tsx
+      - name: Existing full-repository lint debt (informational)
+        continue-on-error: true
+        run: bun run lint
+      - name: Require all checks to pass
+        if: ${{ always() }}
+        run: |
+          test "${{ steps.typecheck.outcome }}" = "success"
+          test "${{ steps.tests.outcome }}" = "success"
+          test "${{ steps.repeat.outcome }}" = "success"
+          test "${{ steps.build.outcome }}" = "success"
+          test "${{ steps.lint.outcome }}" = "success"

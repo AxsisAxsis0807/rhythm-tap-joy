@@ -9,7 +9,12 @@ import type { Chart, PlayStyleId } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { FnfField } from "./FnfField";
-import { effectiveRendering, resolveKeyMap, useGameSettings } from "@/game/settings";
+import {
+  effectiveRendering,
+  resolveJudgeLinePct,
+  resolveKeyMap,
+  useGameSettings,
+} from "@/game/settings";
 import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
@@ -114,9 +119,9 @@ export function GameScreen({
   }, [autoStart, status]);
 
   const lanes = Array.from({ length: chart.laneCount }, (_, i) => i);
-  const judge = settings.judgeLinePct;
   const scrollDirection =
     settings.scrollDirection === "mode" ? mode.scroll : settings.scrollDirection;
+  const judge = resolveJudgeLinePct(settings, scrollDirection);
   const noteShape = settings.noteShape === "mode" ? mode.noteShape : settings.noteShape;
   const renderMode = { ...mode, noteShape, scroll: scrollDirection, judgeLinePct: judge };
   const [isLandscape, setIsLandscape] = useState(false);
@@ -203,8 +208,9 @@ export function GameScreen({
       )}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-10 bg-black"
-        style={{ opacity: settings.backgroundDim / 200 }}
+        data-testid="game-background-dim"
+        className="pointer-events-none absolute inset-0 bg-black"
+        style={{ opacity: settings.backgroundDim / 100 }}
       />
       {/* Top HUD */}
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center gap-3 px-3 py-1.5 pt-[max(.375rem,env(safe-area-inset-top))] text-[10px] tracking-widest text-foreground sm:text-sm">
@@ -281,15 +287,19 @@ export function GameScreen({
             }`}
             style={{
               maxWidth: `${(520 * settings.laneWidth) / 100}px`,
-              opacity: settings.laneOpacity / 100,
             }}
           >
             <div className="absolute inset-0 flex">
               {lanes.map((lane) => (
                 <div
                   key={lane}
-                  className="relative flex-1 border-r border-lane-border last:border-r-0 bg-lane"
+                  className="relative flex-1 border-r border-lane-border last:border-r-0"
                 >
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-lane"
+                    style={{ opacity: settings.laneOpacity / 100 }}
+                  />
                   {activeLanes.has(lane) && <div className="absolute inset-0 bg-lane-active" />}
 
                   {/* Judgement line + receptor */}
@@ -416,6 +426,13 @@ export function GameScreen({
           <div className="pointer-events-none absolute inset-x-0 top-[40%] z-20 text-center">
             {play.combo > 1 && (
               <p className="font-display text-4xl tabular-nums text-combo">{play.combo}</p>
+            )}
+            {showJudge && drawing.hitPing && last?.judgement !== "MISS" && (
+              <i
+                aria-hidden="true"
+                data-testid="fnf-hit-effect"
+                className="pointer-events-none absolute left-1/2 top-0 size-24 -translate-x-1/2 animate-ping rounded-full border border-cyan-200/30"
+              />
             )}
             {showJudge && last && (
               <p
