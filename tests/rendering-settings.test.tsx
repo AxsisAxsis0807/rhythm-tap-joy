@@ -260,6 +260,13 @@ it("input overlay preview uses the same judge position as each gameplay directio
 });
 
 it("settings panel preview tracks the effective judge line and visual percentages", () => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
   const props = { open: true, onChange: () => {}, onClose: () => {}, fnf: true };
   const view = render(<SettingsPanel {...props} settings={DEFAULT_SETTINGS} />);
   expect(view.getByTestId("settings-preview-judge-line").style.top).toBe("14%");
