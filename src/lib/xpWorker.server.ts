@@ -3,13 +3,16 @@ import { canonicalJson, sha256, toJson } from "./xpContract";
 import { validateCanonicalChart, MAX_CHART_BYTES } from "./chartValidation";
 import { verifyReplay } from "./playVerifier";
 import { z } from "zod";
+// Some tables/RPCs are not in the generated types yet.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const untyped = supabaseAdmin as any;
 
 /** Durable jobs may retry this entrypoint. Awarding remains transactionally idempotent. */
 export async function verifyAcceptedSession(sessionId: string) {
   const [{ data: session, error: sessionError }, { data: evidence, error: evidenceError }] =
     await Promise.all([
-      supabaseAdmin.from("play_sessions").select("*").eq("id", sessionId).single(),
-      supabaseAdmin.from("play_evidence").select("*").eq("session_id", sessionId).single(),
+      untyped.from("play_sessions").select("*").eq("id", sessionId).single(),
+      untyped.from("play_evidence").select("*").eq("session_id", sessionId).single(),
     ]);
   if (sessionError || evidenceError || !session || !evidence)
     throw new Error("Accepted session/evidence unavailable");
@@ -56,7 +59,7 @@ export async function verifyAcceptedSession(sessionId: string) {
       reason: error instanceof Error ? error.message.slice(0, 300) : "replay_invalid",
     };
   }
-  const { error: finalError } = await supabaseAdmin.rpc("finalize_verified_play", {
+  const { error: finalError } = await untyped.rpc("finalize_verified_play", {
     p_session_id: session.id,
     p_hash: evidence.payload_hash,
     p_result: toJson(result),

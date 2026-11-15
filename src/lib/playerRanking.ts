@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CompletedPlay } from "@/game/types";
+// Some tables/RPCs are not in the generated types yet.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const untyped = supabase as any;
 
 export type PlayerRanking = {
   user_id: string;
@@ -29,13 +32,13 @@ export class PlayResultSaveError extends Error {
 }
 
 export async function fetchLeaderboard(): Promise<PlayerRanking[]> {
-  const { data, error } = await supabase.rpc("get_global_leaderboard");
+  const { data, error } = await untyped.rpc("get_global_leaderboard");
   if (error) throw new Error(error.message);
   return data ?? [];
 }
 
 export async function fetchPlayerRanking(userId: string): Promise<PlayerRanking | null> {
-  const { data, error } = await supabase.rpc("get_player_ranking", { p_user_id: userId });
+  const { data, error } = await untyped.rpc("get_player_ranking", { p_user_id: userId });
   if (error) throw new Error(error.message);
   return data?.[0] ?? null;
 }
@@ -79,7 +82,7 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
   };
   const config = result.configuration;
   const query = config
-    ? supabase.rpc("record_play_result_v2", {
+    ? untyped.rpc("record_play_result_v2", {
         ...args,
         p_revision_id: config.revisionId,
         p_play_style: config.playStyle,
@@ -87,13 +90,13 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
         p_parser_version: config.chartParserVersion,
         p_scoring_side: config.scoringSide,
       })
-    : supabase.rpc("record_play_result", args);
+    : untyped.rpc("record_play_result", args);
   let { error } = await query
     .setHeader("Authorization", `Bearer ${session.access_token}`)
     .abortSignal(AbortSignal.timeout(15_000));
   // A server not yet expanded still accepts the original, identical score payload.
   if (config && error?.code === "PGRST202") {
-    ({ error } = await supabase
+    ({ error } = await untyped
       .rpc("record_play_result", args)
       .setHeader("Authorization", `Bearer ${session.access_token}`)
       .abortSignal(AbortSignal.timeout(15_000)));
