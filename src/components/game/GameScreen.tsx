@@ -264,10 +264,13 @@ export function GameScreen({
             chart={chart}
             mode={renderMode}
             notes={notes}
-            songTime={songTime}
+            songTime={visualSongTime}
             scrollTime={scrollTime}
             activeLanes={activeLanes}
             middleScroll={settings.middleScroll}
+            noteScale={settings.noteScale}
+            laneWidth={settings.laneWidth}
+            laneOpacity={settings.laneOpacity}
             glow={drawing.glow}
           />
         ) : (
@@ -301,8 +304,11 @@ export function GameScreen({
                   {mode.receptors && (
                     <div
                       data-testid={`receptor-${lane}`}
-                      className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
-                      style={{ top: `${judge}%` }}
+                      className="absolute left-1/2 z-10"
+                      style={{
+                        top: `${judge}%`,
+                        transform: `translate(-50%, -50%) scale(${settings.noteScale / 100})`,
+                      }}
                     >
                       <NoteSprite
                         mode={renderMode}
@@ -347,10 +353,10 @@ export function GameScreen({
                       <div
                         key={note.id}
                         data-testid={`player-note-${note.id}`}
-                        className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        className="absolute left-1/2"
                         style={{
                           top: `${top}%`,
-                          transform: `scale(${settings.noteScale / 100})`,
+                          transform: `translate(-50%, -50%) scale(${settings.noteScale / 100})`,
                         }}
                       >
                         <NoteSprite mode={renderMode} lane={lane} glow={drawing.glow} />
@@ -418,6 +424,24 @@ export function GameScreen({
               >
                 {last.judgement}
               </p>
+            )}
+            {showJudge && last && settings.showFastLate && last.judgement !== "MISS" && (
+              <p className="text-[10px] tracking-[.2em] text-white/65">
+                {last.deltaMs < 0 ? "FAST" : "LATE"} {Math.abs(Math.round(last.deltaMs))}ms
+              </p>
+            )}
+            {settings.showErrorMeter && (
+              <div
+                data-testid="fnf-error-meter"
+                className="relative mx-auto mt-1 h-1 w-28 rounded bg-white/10"
+              >
+                <i
+                  className="absolute top-1/2 size-2 -translate-y-1/2 rounded-full bg-cyan-200"
+                  style={{
+                    left: `${50 + Math.max(-45, Math.min(45, (last?.deltaMs ?? 0) / 3))}%`,
+                  }}
+                />
+              </div>
             )}
           </div>
         )}
