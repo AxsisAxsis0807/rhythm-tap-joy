@@ -23,13 +23,6 @@ jobs:
           bun-version: latest
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
-      - name: Inspect existing main-branch FNF keyboard-test baseline
-        run: |
-          original=$(git rev-parse HEAD)
-          git fetch origin main
-          git checkout --detach origin/main
-          bun run test tests/style-keybinds.test.tsx || echo "BASELINE_FNF_KEYBIND_TEST_FAILED"
-          git checkout --detach "$original"
       - id: typecheck
         name: TypeScript
         continue-on-error: true
@@ -38,6 +31,14 @@ jobs:
         name: Vitest
         continue-on-error: true
         run: bun run test
+      - id: repeat
+        name: Repeat input regressions three times
+        continue-on-error: true
+        run: |
+          for i in 1 2 3; do
+            echo "Input regression pass $i"
+            bun run test tests/style-keybinds.test.tsx tests/input.test.tsx tests/fnf-gameplay-integration.test.tsx
+          done
       - id: build
         name: Production build
         continue-on-error: true
@@ -64,5 +65,6 @@ jobs:
         run: |
           test "${{ steps.typecheck.outcome }}" = "success"
           test "${{ steps.tests.outcome }}" = "success"
+          test "${{ steps.repeat.outcome }}" = "success"
           test "${{ steps.build.outcome }}" = "success"
           test "${{ steps.lint.outcome }}" = "success"
