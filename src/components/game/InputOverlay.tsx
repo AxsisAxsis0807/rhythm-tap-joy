@@ -302,7 +302,9 @@ export function InputOverlayPreview({
   settings: GameSettings;
   playStyle?: PlayStyleId;
 }) {
-  const mode = getMode(playStyle === "fnf" ? "fnf" : settings.maniaSkin === "classic" ? "classic" : "mania");
+  const mode = getMode(
+    playStyle === "fnf" ? "fnf" : settings.maniaSkin === "classic" ? "classic" : "mania",
+  );
   const direction = settings.scrollDirection === "mode" ? mode.scroll : settings.scrollDirection;
   const [inputs] = useState(() => {
     const input = new InputLedger(),
