@@ -9,7 +9,12 @@ import type { Chart, PlayStyleId } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { FnfField } from "./FnfField";
-import { effectiveRendering, resolveJudgeLinePct, resolveKeyMap, useGameSettings } from "@/game/settings";
+import {
+  effectiveRendering,
+  resolveJudgeLinePct,
+  resolveKeyMap,
+  useGameSettings,
+} from "@/game/settings";
 import { DEFAULT_SCROLL_TIME } from "@/game/config";
 import { ModePicker } from "./ModePicker";
 import { SettingsPanel } from "./SettingsPanel";
