@@ -12,7 +12,7 @@ const untyped = supabase as any;
 type BaseSongRow = Database["public"]["Tables"]["songs"]["Row"];
 export type SongRow = BaseSongRow & {
   description: string | null;
-  recommended_play_style: string | null;
+  recommended_play_style: "mania" | "fnf" | null;
   preview_start_ms: number | null;
   metadata_version: number;
   current_revision_id: string | null;
