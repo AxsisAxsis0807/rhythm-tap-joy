@@ -211,3 +211,42 @@ it("does not expose the previous owner's pending count after a late request fail
   expect(hook.result.current.pending).toBe(0);
   hook.unmount();
 });
+
+it("BOTPLAY result hook never saves or reports success; the following manual result saves normally", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+  const manual = {
+    id: "human",
+    songId: chart.id,
+    competitive: true,
+    play: {
+      score: 1002,
+      combo: 1,
+      maxCombo: 1,
+      counts: { PERFECT: 1, GREAT: 0, GOOD: 0, MISS: 0 },
+      timingErrorsMs: [],
+    },
+  };
+  const bot = {
+    ...manual,
+    id: "bot",
+    configuration: {
+      autoplay: true,
+      competitive: true,
+    } as import("@/game/runConfiguration").RunConfiguration,
+  };
+  const hook = renderHook(({ result }) => usePlayResult(result, "user-a"), {
+    wrapper,
+    initialProps: { result: bot as typeof manual },
+  });
+  await act(async () => {
+    await hook.result.current.retrySave();
+  });
+  expect(recordCompletedPlay).not.toHaveBeenCalled();
+  expect(hook.result.current.state).toBeNull();
+  hook.rerender({ result: manual });
+  await waitFor(() => expect(hook.result.current.state?.status).toBe("saved"));
+  expect(recordCompletedPlay).toHaveBeenCalledExactlyOnceWith(manual, "user-a");
+});

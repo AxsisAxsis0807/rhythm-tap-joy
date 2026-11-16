@@ -25,6 +25,7 @@ export function usePlaySession(ownerId: string | null, evidence: ReplayEvidence 
       session.current = null;
       setStorageWarning(false);
       reason.current = "承認されたRevisionの通常プレイのみXP対象です。";
+      if (configuration.autoplay || !configuration.competitive) return undefined;
       if (!ownerId || !configuration.revisionId) return undefined;
       try {
         const transport = await ownerTransport(ownerId);
@@ -51,7 +52,7 @@ export function usePlaySession(ownerId: string | null, evidence: ReplayEvidence 
     [ownerId],
   );
   useEffect(() => {
-    if (!evidence) return;
+    if (!evidence || evidence.configuration.autoplay || !evidence.configuration.competitive) return;
     const started = session.current;
     if (!started || started.id !== evidence.runId) {
       if (ownerId)

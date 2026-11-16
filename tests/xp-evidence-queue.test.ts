@@ -77,3 +77,39 @@ it("offline failures stay retryable errors rather than fabricated zero XP", asyn
   expect(states).toEqual(["checking", "error"]);
   expect(await pendingXpEvidence(owner)).toHaveLength(1);
 });
+
+it("BOTPLAY evidence never enters the XP queue even if competitive is forged", async () => {
+  const owner = crypto.randomUUID(),
+    id = crypto.randomUUID();
+  const replay = evidence(id);
+  await expect(
+    enqueueXpEvidence(owner, id, new Date(Date.now() + 3600000).toISOString(), {
+      ...replay,
+      configuration: { ...replay.configuration, autoplay: true, competitive: true },
+    }),
+  ).rejects.toThrow(/非競技/);
+  expect(await pendingXpEvidence(owner)).toHaveLength(0);
+  const send = vi.fn();
+  await flushXpEvidence(owner, () => owner, send);
+  expect(send).not.toHaveBeenCalled();
+});
+
+it("rejects a BOTPLAY envelope discovered on a later persisted retry before transport", async () => {
+  const owner = crypto.randomUUID(),
+    id = crypto.randomUUID();
+  await enqueueXpEvidence(owner, id, new Date(Date.now() + 3600000).toISOString(), evidence(id));
+  await flushXpEvidence(
+    owner,
+    () => owner,
+    async (envelope) => {
+      const payload = JSON.parse(envelope.evidenceJson);
+      payload.configuration.autoplay = true;
+      envelope.evidenceJson = JSON.stringify(payload);
+      return { status: "pending" };
+    },
+  );
+  const send = vi.fn();
+  await flushXpEvidence(owner, () => owner, send, true);
+  expect(send).not.toHaveBeenCalled();
+  expect(await pendingXpEvidence(owner)).toHaveLength(0);
+});

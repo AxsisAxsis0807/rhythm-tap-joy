@@ -69,7 +69,7 @@ export class GameplayCore {
           this.hitHeadIds.add(note.id);
           if (note.kind === "hold") {
             note.holding = true;
-            this.heldNotes.set(event.lane, note);
+            this.heldNotes.set(this.configuration.autoplay ? note.id : event.lane, note);
             this.holdStartedAt.set(note.id, calibratedTime);
           }
         }
@@ -88,20 +88,25 @@ export class GameplayCore {
         if (lane === undefined) return undefined;
         this.sources.delete(event.source);
         if ([...this.sources.values()].includes(lane)) return undefined;
-        const held = this.heldNotes.get(lane);
-        if (!held) return undefined;
-        const failed =
-          event.type === "cancel" ||
-          (held.endTime !== undefined &&
-            calibratedTime < held.endTime - this.configuration.windows.good - TIMING_EPSILON);
-        this.endHold(held, calibratedTime, !failed);
+        const heldNotes = this.configuration.autoplay
+          ? [...this.heldNotes.values()].filter((note) => note.lane === lane)
+          : [this.heldNotes.get(lane)].filter((note): note is RuntimeNote => Boolean(note));
+        for (const held of heldNotes) {
+          const failed =
+            event.type === "cancel" ||
+            (held.endTime !== undefined &&
+              calibratedTime < held.endTime - this.configuration.windows.good - TIMING_EPSILON);
+          this.endHold(held, calibratedTime, !failed);
+        }
         return undefined;
       }
       case "clear":
         this.clear(time);
         return undefined;
       case "pause":
-        this.clear(time);
+        // BOT sources are internal and remain held while the audio clock is stopped.
+        // Human pause/clear semantics are unchanged.
+        if (!this.configuration.autoplay) this.clear(time);
         this.state = "paused";
         return undefined;
       case "resume":
@@ -134,7 +139,7 @@ export class GameplayCore {
     );
     this.holdStartedAt.delete(note.id);
     note.holding = false;
-    this.heldNotes.delete(note.lane);
+    this.heldNotes.delete(this.configuration.autoplay ? note.id : note.lane);
   }
 
   private clear(time: number) {

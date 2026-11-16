@@ -1,3 +1,4 @@
+import { canSaveCompetitiveResult } from "@/game/competitive";
 import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { CompletedPlay } from "@/game/types";
@@ -89,7 +90,7 @@ export function usePlayResult(result: CompletedPlay | null, ownerId: string | nu
   const [state, setState] = useState<SaveState | null>(null);
 
   useEffect(() => {
-    if (!result || !ownerId || result.competitive === false) return;
+    if (!result || !ownerId || !canSaveCompetitiveResult(result)) return;
     const update = (event: QueueEvent) => {
       if (event.ownerId !== ownerId || event.playId !== result.id) return;
       if (event.status === "saved") {
@@ -115,13 +116,21 @@ export function usePlayResult(result: CompletedPlay | null, ownerId: string | nu
   }, [ownerId, queryClient, result]);
 
   const retrySave = useCallback(async () => {
-    if (!result || !ownerId || state?.retryable === false) return;
+    if (!result || !ownerId || !canSaveCompetitiveResult(result) || state?.retryable === false)
+      return;
     setState({ id: result.id, ownerId, status: "saving" });
     await flushPlayResultQueue(ownerId);
   }, [ownerId, result, state?.retryable]);
 
   return {
-    state: result && ownerId && state?.id === result.id && state.ownerId === ownerId ? state : null,
+    state:
+      result &&
+      canSaveCompetitiveResult(result) &&
+      ownerId &&
+      state?.id === result.id &&
+      state.ownerId === ownerId
+        ? state
+        : null,
     retrySave,
   };
 }

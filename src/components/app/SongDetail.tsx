@@ -21,13 +21,15 @@ export function SongDetail({
   explicitStyle?: PlayStyleId | undefined;
   explicitSelection?: boolean;
   onStyleChange: (style: PlayStyleId) => void;
-  onStart: (style: PlayStyleId) => Promise<void>;
+  onStart: (style: PlayStyleId, autoplay: boolean) => Promise<void>;
   onEdit?: (() => void) | undefined;
 }) {
   const { settings, setSettings, loaded } = useGameSettings();
   const [previewAsset, setPreviewAsset] =
     useState<Awaited<ReturnType<typeof getSongPreview>>>(null);
   const [previewError, setPreviewError] = useState("");
+  const [autoplay, setAutoplay] = useState(false);
+  useEffect(() => setAutoplay(false), [song.id]);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -89,7 +91,7 @@ export function SongDetail({
     getAudioSession().stopPreview();
     void getAudioSession()
       .unlock()
-      .then(() => onStart(style))
+      .then(() => onStart(style, autoplay))
       .catch((reason: unknown) => {
         setError(reason instanceof Error ? reason.message : "再生を開始できませんでした");
       })
@@ -204,6 +206,20 @@ export function SongDetail({
               : "指定なし"}
         </strong>
       </p>
+      <label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-sm">
+        BOTPLAY {autoplay ? "ON" : "OFF"}
+        <input
+          type="checkbox"
+          role="switch"
+          aria-label="BOTPLAY"
+          checked={autoplay}
+          disabled={starting}
+          onChange={(event) => setAutoplay(event.target.checked)}
+        />
+      </label>
+      <p className="mb-3 text-xs text-white/70">
+        譜面を自動演奏します。ランキング・XP・実績の対象外です。
+      </p>
       <ModePicker value={style} onChange={onStyleChange} />
       {style === "mania" && (
         <label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-sm text-white/70">
@@ -232,7 +248,7 @@ export function SongDetail({
         onClick={begin}
         className="mt-4 min-h-12 w-full rounded-xl bg-cyan-200 px-4 py-3 font-display font-bold tracking-widest text-[#0b101a] disabled:opacity-40"
       >
-        {starting ? "LOADING…" : "START"}
+        {starting ? "LOADING…" : autoplay ? "START BOTPLAY" : "START"}
       </button>
       {error && (
         <p role="alert" className="mt-3 text-sm text-rose-200">

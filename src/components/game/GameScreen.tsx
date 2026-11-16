@@ -1,3 +1,4 @@
+import { canSaveCompetitiveResult } from "@/game/competitive";
 import { usePlaySession } from "@/lib/usePlaySession";
 import { createRunConfiguration } from "@/game/runConfiguration";
 import { getAudioSession } from "@/game/audioSession";
@@ -31,6 +32,7 @@ export function GameScreen({
   onModeChange,
   playStyle = modeId === "fnf" ? "fnf" : "mania",
   autoStart = false,
+  autoplay = false,
   onExit,
 }: {
   chart: Chart;
@@ -39,13 +41,18 @@ export function GameScreen({
   onModeChange?: (id: string) => void;
   playStyle?: PlayStyleId;
   autoStart?: boolean;
+  autoplay?: boolean;
   onExit?: () => void;
 }) {
   const { settings, setSettings, saveError } = useGameSettings();
   const drawing = effectiveRendering(settings);
   const mode = getMode(modeId);
+  // The route selection is fixed for this screen, including audio loading and RETRY.
+  const [selectedAutoplay] = useState(autoplay);
+  const botplay = selectedAutoplay;
   const fnfDisplay = playStyle === "fnf" && Boolean(chart.fnf);
   const game = useRhythmGame(chart, {
+    autoplay: selectedAutoplay,
     playStyle,
     visualMode: mode.id,
     scrollTime: DEFAULT_SCROLL_TIME / settings.scrollSpeed,
@@ -76,7 +83,7 @@ export function GameScreen({
   const [startError, setStartError] = useState("");
   const { state: saveState, retrySave } = usePlayResult(game.completedPlay, runOwner.current);
   const persistCompleted = () => {
-    if (runOwner.current && game.completedPlay) {
+    if (runOwner.current && game.completedPlay && canSaveCompetitiveResult(game.completedPlay)) {
       enqueuePlayResult(runOwner.current, game.completedPlay);
       void flushPlayResultQueue(runOwner.current);
     }
@@ -91,6 +98,7 @@ export function GameScreen({
       const unlocking = getAudioSession().unlock();
       getAudioSession().stopPreview();
       const configuration = createRunConfiguration(chart, {
+        autoplay: selectedAutoplay,
         playStyle,
         visualMode: mode.id,
         timingOffsetMs: settings.timingOffsetMs,
@@ -178,7 +186,9 @@ export function GameScreen({
   }
 
   const last = play.lastJudgement;
-  const judgeAge = last ? songTime - last.at : Infinity;
+  const judgementTime =
+    songTime + (botplay ? (game.runConfiguration?.timingOffsetMs ?? 0) / 1000 : 0);
+  const judgeAge = last ? judgementTime - last.at : Infinity;
   const showJudge = judgeAge >= 0 && judgeAge < 0.45;
 
   const c = play.counts;
@@ -221,6 +231,15 @@ export function GameScreen({
         <span className="tabular-nums">ACC {accuracy.toFixed(2)}%</span>
       </header>
 
+      {botplay && (
+        <strong
+          data-testid="botplay-badge"
+          className="pointer-events-none absolute inset-x-0 top-[calc(24px+env(safe-area-inset-top))] z-40 text-center text-[10px] tracking-widest text-cyan-200"
+        >
+          BOTPLAY
+        </strong>
+      )}
+
       {/* Settings button (start / result screens) */}
       {showOverlay && (
         <Button
@@ -256,7 +275,10 @@ export function GameScreen({
         saveError={saveError}
       />
 
-      <div className="shrink-0" style={{ height: "calc(36px + env(safe-area-inset-top))" }} />
+      <div
+        className="shrink-0"
+        style={{ height: `calc(${botplay ? 52 : 36}px + env(safe-area-inset-top))` }}
+      />
       {/* Overlay is a sibling display layer INSIDE the field, never a flex item. */}
       <div
         data-testid="gameplay-area"
@@ -464,7 +486,7 @@ export function GameScreen({
         )}
 
         <TouchInput
-          disabled={status !== "playing" || settingsOpen}
+          disabled={botplay || status !== "playing" || settingsOpen}
           borders={settings.showTouchBorders}
           height={settings.touchAreaHeight}
           onPress={pressLane}
@@ -590,7 +612,9 @@ export function GameScreen({
 
       {status === "finished" && (
         <Overlay>
-          <h2 className="font-display text-xl tracking-[0.3em] text-muted-foreground">RESULT</h2>
+          <h2 className="font-display text-xl tracking-[0.3em] text-muted-foreground">
+            {botplay ? "BOTPLAY RESULT" : "RESULT"}
+          </h2>
           <p className="font-display text-4xl tabular-nums text-foreground">
             {play.score.toLocaleString()}
           </p>
@@ -641,12 +665,18 @@ export function GameScreen({
               入力記録を端末に保存できません。再読み込みすると未送信のXP確認データが失われることがあります。
             </p>
           )}
-          <ResultXpCard userId={runOwner.current} playId={game.completedPlay?.id ?? null} />
+          {botplay ? (
+            <p className="text-xs text-cyan-100">
+              自動演奏のためランキング・XP・実績には反映されません。
+            </p>
+          ) : (
+            <ResultXpCard userId={runOwner.current} playId={game.completedPlay?.id ?? null} />
+          )}
           <div
             className="w-full max-w-sm break-words text-xs text-muted-foreground"
             aria-live="polite"
           >
-            {!runOwner.current && "ログインすると累計スコアを保存できます"}
+            {!botplay && !runOwner.current && "ログインすると累計スコアを保存できます"}
             {saveState?.status === "saving" && "スコアを保存中…"}
             {saveState?.status === "queued" &&
               (saveState.durable === false

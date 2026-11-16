@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Botplay } from "./botplay";
 import { InputLedger } from "./input";
 import { AudioClock } from "./audio";
 import { getAudioSession } from "./audioSession";
@@ -25,6 +26,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const clockRef = useRef<AudioClock | null>(null);
   const coreRef = useRef<GameplayCore | null>(null);
   if (!coreRef.current) coreRef.current = new GameplayCore(chart, createRunConfiguration(chart));
+  const botRef = useRef<Botplay | null>(null);
   const replayRef = useRef<ReplayRecorder | null>(null);
   const leaseRef = useRef<ReturnType<ReturnType<typeof getAudioSession>["beginGameplay"]> | null>(
     null,
@@ -92,7 +94,9 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const dispatch = useCallback((event: GameplayEventInput) => {
     const recorder = replayRef.current;
     if (!recorder) return undefined;
-    const outcome = coreRef.current?.process(recorder.append(event));
+    const outcome = coreRef.current?.process(
+      recorder.configuration.autoplay ? { ...event, sequence: 0 } : recorder.append(event),
+    );
     // The replay is now ineligible; retain only currently active sources for gameplay.
     if (!recorder.recording) sourceIdsRef.current.clear();
     return outcome;
@@ -110,7 +114,8 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     inputs.clear();
     activeSourceIdsRef.current.clear();
     if (statusRef.current === "playing" || statusRef.current === "paused") {
-      dispatch({ type: "clear", ...eventTime(timeRef.current) });
+      if (!coreRef.current?.configuration.autoplay)
+        dispatch({ type: "clear", ...eventTime(timeRef.current) });
     }
   }, [inputs, dispatch, eventTime]);
 
@@ -141,6 +146,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
         activeSourceIdsRef.current.clear();
         sourceSequenceRef.current = 0;
         coreRef.current = core;
+        botRef.current = configuration.autoplay ? new Botplay(core) : null;
         replayRef.current = new ReplayRecorder(runId ?? crypto.randomUUID(), configuration);
         startedAtRef.current = performance.now();
         setRunConfiguration(configuration);
@@ -164,7 +170,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
 
   const pressSource = useCallback(
     (source: string, lane: number, stamp?: number) => {
-      if (statusRef.current !== "playing") return;
+      if (statusRef.current !== "playing" || coreRef.current?.configuration.autoplay) return;
       const bar = inputs.press(source, lane, stamp);
       if (!bar) return;
       const token = sourceIdsRef.current.get(source) ?? ++sourceSequenceRef.current;
@@ -186,6 +192,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
 
   const releaseSource = useCallback(
     (source: string, stamp?: number, cancelled = false) => {
+      if (coreRef.current?.configuration.autoplay) return;
       const bar = inputs.release(source, stamp, cancelled);
       const token = activeSourceIdsRef.current.get(source);
       if (!bar || token === undefined) return;
@@ -209,10 +216,19 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
       const clock = clockRef.current;
       if (clock) timeRef.current = clock.now();
       const time = timeRef.current;
-      dispatch({ type: "advance", ...eventTime(time, time) });
+      if (botRef.current) botRef.current.advance(time, dispatch);
+      else dispatch({ type: "advance", ...eventTime(time, time) });
       const core = coreRef.current!;
       const last = core.notes[core.notes.length - 1];
-      if (time > Math.max(clock?.duration ?? 0, (last?.time ?? 0) + 2.5)) {
+      if (
+        time >
+        Math.max(
+          clock?.duration ?? 0,
+          (botRef.current
+            ? botRef.current.endTime - core.configuration.timingOffsetMs / 1000
+            : (last?.time ?? 0)) + 2.5,
+        )
+      ) {
         dispatch({ type: "complete", ...eventTime(time, time) });
         inputs.clear();
         activeSourceIdsRef.current.clear();
@@ -226,7 +242,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
             configuration: recorder.configuration,
             replayStatus: recorder.replayStatus,
           });
-          setCompletedReplay(recorder.snapshot());
+          setCompletedReplay(recorder.configuration.autoplay ? null : recorder.snapshot());
         }
         leaseRef.current?.release();
         leaseRef.current = null;
@@ -243,7 +259,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
   const latestInput = useRef({ pressSource, releaseSource });
   latestInput.current = { pressSource, releaseSource };
   useEffect(() => {
-    if (status !== "playing") return;
+    if (status !== "playing" || coreRef.current?.configuration.autoplay) return;
     const down = (event: KeyboardEvent) => {
       if (event.repeat || event.defaultPrevented || statusRef.current !== "playing") return;
       const lane = keyToLane.get(event.code);
@@ -333,7 +349,7 @@ export function useRhythmGame(chart: Chart, options: RhythmGameOptions = {}) {
     songTime: timeRef.current,
     notes: coreRef.current.notes,
     play: coreRef.current.play,
-    activeLanes: inputs.activeLanes,
+    activeLanes: botRef.current?.activeLanes(timeRef.current) ?? inputs.activeLanes,
     duration: clockRef.current?.duration ?? 0,
   };
 }

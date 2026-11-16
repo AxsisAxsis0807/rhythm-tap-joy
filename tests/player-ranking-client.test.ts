@@ -87,3 +87,21 @@ it("rejects damaged persisted play data instead of retrying a local TypeError fo
   ).rejects.toMatchObject({ kind: "invalid", retryable: false });
   expect(api.rpc).not.toHaveBeenCalled();
 });
+
+it("rejects BOTPLAY with a forged competitive flag before auth or score RPC", async () => {
+  await expect(
+    recordCompletedPlay(
+      {
+        ...result,
+        competitive: true,
+        configuration: {
+          autoplay: true,
+          competitive: true,
+        } as import("@/game/runConfiguration").RunConfiguration,
+      },
+      "user-a",
+    ),
+  ).rejects.toMatchObject({ kind: "invalid" });
+  expect(api.getSession).not.toHaveBeenCalled();
+  expect(api.rpc).not.toHaveBeenCalled();
+});
