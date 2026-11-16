@@ -1,3 +1,4 @@
+import { canSaveCompetitiveResult } from "@/game/competitive";
 import type { CompletedPlay } from "@/game/types";
 import { PlayResultSaveError, recordCompletedPlay } from "./playerRanking";
 
@@ -95,7 +96,7 @@ export function subscribeToPlayResultQueue(listener: (event: QueueEvent) => void
   };
 }
 export function enqueuePlayResult(ownerId: string, result: CompletedPlay) {
-  if (result.competitive === false) return;
+  if (!canSaveCompetitiveResult(result)) return;
   const previous = settled.get(keyFor(ownerId, result.id));
   if (previous) {
     emit(previous);
@@ -129,6 +130,10 @@ export function flushPlayResultQueue(ownerId: string, force = true) {
       );
       if (!item) break;
       visited.add(item.result.id);
+      if (!canSaveCompetitiveResult(item.result)) {
+        remove(item);
+        continue;
+      }
       emit({ ownerId, playId: item.result.id, status: "saving" });
       try {
         await recordCompletedPlay(item.result, ownerId);

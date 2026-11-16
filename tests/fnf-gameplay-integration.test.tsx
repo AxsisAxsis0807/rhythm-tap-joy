@@ -820,3 +820,104 @@ it("mania GameScreen uses note, receptor, background, and mirrored judge prefere
   paint();
   expect(core.play.counts.PERFECT).toBe(1);
 });
+
+it.each(["fnf", "mania", "classic"])(
+  "BOTPLAY %s: visible badge, disabled input, perfect holds, pause/resume and fixed RETRY",
+  async (mode) => {
+    const chart = {
+      ...makeChart(mode === "fnf" ? "fnf" : "4k", "hold"),
+      revisionId: "approved-revision",
+    };
+    const view = render(
+      <GameScreen
+        chart={chart}
+        modeId={mode}
+        playStyle={mode === "fnf" ? "fnf" : "mania"}
+        userId="owner"
+        autoplay
+        autoStart
+      />,
+    );
+    await act(async () => {});
+    paint();
+    expect(view.getByTestId("botplay-badge").textContent).toBe("BOTPLAY");
+    expect(view.queryByRole("switch", { name: "BOTPLAY" })).toBeNull();
+    at(0.85);
+    edge(view, "keyboard", "down", 0);
+    edge(view, "touch", "down", 0);
+    paint();
+    expect(core.play.score).toBe(0);
+    at(1.1);
+    paint();
+    expect(core.play.counts.PERFECT).toBe(4);
+    expect(core.notes.every((n) => n.holding)).toBe(true);
+    await act(async () => fireEvent.click(view.getByRole("button", { name: "一時停止" })));
+    expect(view.getByTestId("botplay-badge")).toBeTruthy();
+    const before = core.snapshotPlay();
+    at(1.5);
+    paint();
+    expect(core.play).toEqual(before);
+    await act(async () => fireEvent.click(view.getByRole("button", { name: "カウントして再開" })));
+    at(5);
+    paint();
+    expect(core.successfulHoldIds.size).toBe(4);
+    expect(core.play.counts.MISS).toBe(0);
+    expect(view.getByText("BOTPLAY RESULT")).toBeTruthy();
+    expect(view.getByText("自動演奏のためランキング・XP・実績には反映されません。")).toBeTruthy();
+    expect(view.queryByText("累計スコアに加算しました")).toBeNull();
+    expect(recorded).toHaveLength(0);
+    const previous = core;
+    await act(async () => fireEvent.click(view.getByRole("button", { name: "RETRY" })));
+    paint();
+    expect(core).not.toBe(previous);
+    expect(core.configuration).toMatchObject({ autoplay: true, competitive: false });
+  },
+);
+
+it("SongDetail defaults OFF, snapshots ON through START, and resets for a different song", async () => {
+  const onStart = vi.fn(async () => {});
+  const chart = makeChart("4k");
+  const song = { id: chart.id, title: chart.title, artist: chart.artist, chart };
+  const view = render(<SongDetail song={song} onStyleChange={() => {}} onStart={onStart} />);
+  await act(async () => {});
+  const toggle = view.getByRole("switch", { name: "BOTPLAY" }) as HTMLInputElement;
+  expect(toggle.checked).toBe(false);
+  fireEvent.click(toggle);
+  expect(toggle.checked).toBe(true);
+  await act(async () => fireEvent.click(view.getByRole("button", { name: "START BOTPLAY" })));
+  expect(onStart.mock.calls[0]?.[1]).toBe(true);
+  view.rerender(
+    <SongDetail song={{ ...song, id: "another" }} onStyleChange={() => {}} onStart={onStart} />,
+  );
+  expect((view.getByRole("switch", { name: "BOTPLAY" }) as HTMLInputElement).checked).toBe(false);
+  await act(async () => fireEvent.click(view.getByRole("button", { name: "START" })));
+  expect(onStart.mock.calls[1]?.[1]).toBe(false);
+});
+
+it("real hub passes BOTPLAY from detail to run and returns to a clean manual selection", async () => {
+  const chart = makeChart("4k");
+  const view = render(
+    <>
+      <HubSettings />
+      <RhythmHub localSongs={[{ id: chart.id, title: chart.title, artist: chart.artist, chart }]} />
+    </>,
+  );
+  await act(async () => {});
+  act(() => settings.setSettings({ ...DEFAULT_SETTINGS, hitSoundEnabled: false }));
+  fireEvent.click(view.getByRole("button", { name: "曲を探して遊ぶ" }));
+  fireEvent.click(view.getByRole("switch", { name: "BOTPLAY" }));
+  await act(async () => fireEvent.click(view.getByRole("button", { name: "START BOTPLAY" })));
+  paint();
+  expect(core.configuration.autoplay).toBe(true);
+  at(5);
+  paint();
+  expect(core.play.counts.PERFECT).toBe(4);
+  await act(async () => fireEvent.click(view.getByRole("button", { name: "BACK" })));
+  expect((view.getByRole("switch", { name: "BOTPLAY" }) as HTMLInputElement).checked).toBe(false);
+  await act(async () => fireEvent.click(view.getByRole("button", { name: "START" })));
+  paint();
+  expect(core.configuration.autoplay).toBe(false);
+  at(1);
+  edge(view, "keyboard", "down", 0);
+  expect(core.play.counts.PERFECT).toBe(1);
+});

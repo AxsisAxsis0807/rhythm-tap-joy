@@ -158,3 +158,20 @@ it("emergency revoke overrides an accepted catalog snapshot without touching Sco
   expect((await finish(s.sessionId)).outcome.status).toBe("ineligible");
   expect((await db.query("SELECT * FROM play_results")).rows).toHaveLength(0);
 });
+
+it("server refuses BOTPLAY even with competitive=true and creates no session or XP ledger entry", async () => {
+  const nonce = randomUUID();
+  const result = await db.query<{ r: { enabled: boolean } }>(
+    "SELECT public.begin_verified_play($1,$2,$3,'single',$4) r",
+    [
+      owner,
+      nonce,
+      revision,
+      JSON.stringify({ ...configuration, autoplay: true, competitive: true }),
+    ],
+  );
+  expect(result.rows[0]!.r.enabled).toBe(false);
+  expect(
+    (await db.query("SELECT * FROM play_sessions WHERE request_nonce=$1", [nonce])).rows,
+  ).toHaveLength(0);
+});

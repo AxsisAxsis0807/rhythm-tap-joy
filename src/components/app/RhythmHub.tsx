@@ -104,6 +104,7 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
   const [mySongs, setMySongs] = useState<SongRow[]>([]);
   const [selectedSong, setSelectedSong] = useState<SongEntry | null>(null);
   const [explicitStyles, setExplicitStyles] = useState<Record<string, PlayStyleId>>({});
+  const [runAutoplay, setRunAutoplay] = useState(false);
   const [runStyle, setRunStyle] = useState<PlayStyleId>("mania");
   const [runMode, setRunMode] = useState<VisualModeId>("mania");
   const [editingSong, setEditingSong] = useState<SongRow | null>(null);
@@ -199,12 +200,13 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
     setSelectedSong(song);
     setScreen("detail");
   };
-  const startSong = async (song: SongEntry, style: PlayStyleId) => {
+  const startSong = async (song: SongEntry, style: PlayStyleId, autoplay = false) => {
     const generation = ++startGeneration.current;
     const origin = screenRef.current;
     const chart = song.source ? await loadPlayableChart(song.source) : song.chart;
     if (!chart) throw new Error("譜面を取得できませんでした");
     if (generation !== startGeneration.current || screenRef.current !== origin) return;
+    setRunAutoplay(autoplay);
     setRunStyle(style);
     setRunMode(style === "fnf" ? "fnf" : settings.maniaSkin === "classic" ? "classic" : "mania");
     setSelectedSong({ ...song, chart });
@@ -235,6 +237,7 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
         userId={user?.id ?? null}
         modeId={runMode}
         playStyle={runStyle}
+        autoplay={runAutoplay}
         autoStart
         onExit={() => setScreen("detail")}
       />
@@ -318,7 +321,7 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
               song={selectedSong}
               explicitStyle={explicitStyles[selectedSong.id]}
               onStyleChange={(style) => setSongStyle(selectedSong.id, style)}
-              onStart={(style) => startSong(selectedSong, style)}
+              onStart={(style, autoplay) => startSong(selectedSong, style, autoplay)}
               onEdit={
                 selectedSong.source?.user_id === user?.id && selectedSong.source
                   ? () => editSong(selectedSong.source!)
@@ -621,7 +624,7 @@ function SelectScreen({
   explicitStyles: Record<string, PlayStyleId>;
   onSelect: (song: SongEntry) => void;
   onStyleChange: (id: string, style: PlayStyleId) => void;
-  onStart: (song: SongEntry, style: PlayStyleId) => Promise<void>;
+  onStart: (song: SongEntry, style: PlayStyleId, autoplay?: boolean) => Promise<void>;
   onEdit: (song: SongRow) => void;
   userId: string | null;
 }) {
@@ -667,7 +670,7 @@ function SelectScreen({
               song={selected}
               explicitStyle={explicitStyles[selected.id]}
               onStyleChange={(style) => onStyleChange(selected.id, style)}
-              onStart={(style) => onStart(selected, style)}
+              onStart={(style, autoplay) => onStart(selected, style, autoplay)}
               onEdit={
                 selected.source?.user_id === userId && selected.source
                   ? () => onEdit(selected.source!)

@@ -170,3 +170,24 @@ it("backs off transient errors and retries the same UUID after the due time", as
     clock.mockRestore();
   }
 });
+
+it("BOTPLAY cannot enqueue or resend, even with competitive=true; following manual play saves", async () => {
+  const bot = {
+    ...result,
+    competitive: true,
+    configuration: {
+      autoplay: true,
+      competitive: true,
+    } as import("@/game/runConfiguration").RunConfiguration,
+  };
+  enqueuePlayResult("user-a", bot);
+  expect(pendingPlayCount("user-a")).toBe(0);
+  const key = `pulse-lane:play-result-queue:v2:user-a:${result.id}`;
+  localStorage.setItem(key, JSON.stringify({ ownerId: "user-a", result: bot, attempts: 0 }));
+  await flushPlayResultQueue("user-a");
+  expect(recordCompletedPlay).not.toHaveBeenCalled();
+  expect(localStorage.getItem(key)).toBeNull();
+  enqueuePlayResult("user-a", result);
+  await flushPlayResultQueue("user-a");
+  expect(recordCompletedPlay).toHaveBeenCalledExactlyOnceWith(result, "user-a");
+});

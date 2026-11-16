@@ -1,3 +1,4 @@
+import { canSaveCompetitiveResult } from "@/game/competitive";
 import { supabase } from "@/integrations/supabase/client";
 import type { CompletedPlay } from "@/game/types";
 // Some tables/RPCs are not in the generated types yet.
@@ -44,6 +45,8 @@ export async function fetchPlayerRanking(userId: string): Promise<PlayerRanking 
 }
 
 export async function recordCompletedPlay(result: CompletedPlay, ownerId: string) {
+  if (!canSaveCompetitiveResult(result))
+    throw new PlayResultSaveError("練習プレイは累計スコア対象外です", false, "invalid");
   // Do not attribute an earlier result to a different account after an auth change.
   const {
     data: { session },
@@ -56,8 +59,6 @@ export async function recordCompletedPlay(result: CompletedPlay, ownerId: string
       false,
       "auth",
     );
-  if (result.competitive === false)
-    throw new PlayResultSaveError("練習プレイは累計スコア対象外です", false, "invalid");
   const { play } = result;
   const c = play?.counts;
   if (

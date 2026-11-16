@@ -151,6 +151,8 @@ export async function enqueueXpEvidence(
   const expiration = Date.parse(expiresAt);
   if (!ownerId || evidence.runId !== sessionId || !Number.isFinite(expiration))
     throw new Error("XP sessionと入力記録が一致しません");
+  if (evidence.configuration.autoplay || !evidence.configuration.competitive)
+    throw new Error("非競技プレイはXP対象外です");
   const evidenceJson = JSON.stringify(evidence);
   if (
     evidence.status !== "complete" ||
@@ -194,6 +196,17 @@ export function flushXpEvidence(
     for (const envelope of await readOwner(ownerId)) {
       if (currentOwner() !== ownerId) return;
       if (!force && envelope.nextAttemptAt > Date.now()) continue;
+      // Old persisted envelopes are untrusted too; reject BOTPLAY before transport.
+      try {
+        const configuration = JSON.parse(envelope.evidenceJson)?.configuration;
+        if (configuration?.autoplay === true || configuration?.competitive === false) {
+          await remove(envelope);
+          emit(envelope, { status: "ineligible", reason: "非競技プレイはXP対象外です" });
+          continue;
+        }
+      } catch {
+        /* The normal delivery schema handles malformed evidence. */
+      }
       emit(envelope, { status: "checking" });
       try {
         const outcome = await send(envelope);
