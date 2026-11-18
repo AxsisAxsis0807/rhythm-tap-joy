@@ -231,6 +231,66 @@ it("FNF applies note scale, lane width, opacity and visual timing to both banks"
   expect(view.getByTestId("fnf-right").style.width).toBe("28%");
 });
 
+it.each(
+  (["left", "right"] as const).flatMap((side) =>
+    (["up", "down"] as const).flatMap((direction) =>
+      (["circle", "arrow", "bar"] as const).map((shape) => [side, direction, shape] as const),
+    ),
+  ),
+)("FNF middle scroll centers sprites without changing Y, scale or OFF layout (%s/%s/%s)", (playerSide, direction, shape) => {
+  const laneNotes = Array.from({ length: 4 }, (_, lane) => ({
+    beat: 1, lane, kind: "tap" as const,
+  }));
+  const chart: Chart = {
+    id: "middle-scroll-centering",
+    title: "Middle scroll",
+    artist: "Test",
+    audioUrl: "/fixture.wav",
+    bpm: 60,
+    offset: 0,
+    laneCount: 4,
+    difficultyName: "Test",
+    notes: laneNotes,
+    fnf: { playerSide, left: laneNotes, right: laneNotes },
+  };
+  const props = {
+    chart,
+    mode: { ...getMode("fnf"), scroll: direction, noteShape: shape, judgeLinePct: 75 },
+    notes: buildRuntimeNotes(chart),
+    songTime: 1,
+    scrollTime: 2,
+    activeLanes: new Set<number>(),
+    noteScale: 140,
+    laneWidth: 70,
+  };
+  const view = render(<FnfField {...props} middleScroll={false} />);
+  const elements = () => Array.from({ length: 4 }, (_, lane) => {
+    const opponent = view.getByTestId(`opponent-receptor-${lane}`);
+    return [
+      view.getByTestId(`receptor-${lane}`),
+      view.getByTestId(`player-note-${lane}`),
+      opponent,
+      opponent.nextElementSibling as HTMLElement,
+    ];
+  }).flat();
+  const snapshot = () => elements().map((el) => ({
+    top: el.style.top, transform: el.style.transform, className: el.className,
+  }));
+  const off = snapshot();
+  expect(off).toHaveLength(16);
+  expect(off.every((el) => el.top === "75%" && !el.className.includes("justify-center"))).toBe(true);
+  view.rerender(<FnfField {...props} middleScroll />);
+  elements().forEach((el, i) => {
+    expect(el.classList.contains("justify-center")).toBe(true);
+    expect(el.classList.contains("[&>*]:shrink-0")).toBe(true);
+    expect(el.style.top).toBe(off[i]!.top);
+    expect(el.style.transform).toBe(off[i]!.transform);
+  });
+  expect(view.getByTestId(`fnf-${playerSide}`).style.opacity).toBe("1");
+  view.rerender(<FnfField {...props} middleScroll={false} />);
+  expect(snapshot()).toEqual(off);
+});
+
 it("input overlay preview uses the same judge position as each gameplay direction", () => {
   vi.stubGlobal(
     "ResizeObserver",
