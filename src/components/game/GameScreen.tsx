@@ -129,9 +129,7 @@ export function GameScreen({
   const lanes = Array.from({ length: chart.laneCount }, (_, i) => i);
   const scrollDirection =
     settings.scrollDirection === "mode" ? mode.scroll : settings.scrollDirection;
-  // Keep both FNF receptor banks and their incoming notes centered vertically.
-  // Other modes retain the player's configured judgement-line position.
-  const judge = fnfDisplay ? 50 : resolveJudgeLinePct(settings, scrollDirection);
+  const judge = resolveJudgeLinePct(settings, scrollDirection);
   const noteShape = settings.noteShape === "mode" ? mode.noteShape : settings.noteShape;
   const renderMode = { ...mode, noteShape, scroll: scrollDirection, judgeLinePct: judge };
   const [isLandscape, setIsLandscape] = useState(false);
