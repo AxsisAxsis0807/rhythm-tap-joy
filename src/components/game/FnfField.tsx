@@ -99,7 +99,7 @@ export function FnfField({
                 />
                 <div
                   data-testid={player ? `receptor-${lane}` : `opponent-receptor-${lane}`}
-                  className="absolute left-1/2 w-[80%] max-w-[76px]"
+                  className="absolute left-1/2 flex w-[80%] max-w-[76px] justify-center"
                   style={{
                     top: `${judge}%`,
                     transform: `translate(-50%, -50%) scale(${noteScale / 100})`,
@@ -128,7 +128,7 @@ export function FnfField({
                     <div
                       key={note.id}
                       data-testid={player ? `player-note-${note.id}` : undefined}
-                      className="absolute left-1/2 w-[80%] max-w-[76px]"
+                      className="absolute left-1/2 flex w-[80%] max-w-[76px] justify-center"
                       style={{
                         top: `${top}%`,
                         transform: `translate(-50%, -50%) scale(${noteScale / 100})`,
