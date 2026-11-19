@@ -10,6 +10,7 @@ import type { Chart, PlayStyleId } from "@/game/types";
 import { getMode, type GameMode } from "@/game/modes";
 import { NoteSprite } from "./NoteSprite";
 import { FnfField } from "./FnfField";
+import { ComboCounter } from "./ComboCounter";
 import {
   effectiveRendering,
   resolveJudgeLinePct,
@@ -404,19 +405,9 @@ export function GameScreen({
               className="pointer-events-none absolute inset-x-0 z-20 flex flex-col items-center gap-1"
               style={{ top: `${mode.popupPct}%` }}
             >
-              {showJudge && drawing.hitPing && last?.judgement !== "MISS" && (
-                <i
-                  aria-hidden="true"
-                  className="absolute size-24 animate-ping rounded-full border border-cyan-200/30"
-                />
-              )}
+              <ComboCounter combo={play.combo} enabled={drawing.hitPing && status === "playing"} />
               {play.combo > 1 && (
-                <>
-                  <span className="font-display text-4xl tabular-nums text-combo drop-shadow sm:text-5xl">
-                    {play.combo}
-                  </span>
-                  <span className="text-[10px] tracking-[0.4em] text-muted-foreground">COMBO</span>
-                </>
+                <span className="text-[10px] tracking-[0.4em] text-muted-foreground">COMBO</span>
               )}
               {showJudge && last && (
                 <span
@@ -446,16 +437,11 @@ export function GameScreen({
         )}
         {fnfDisplay && (
           <div className="pointer-events-none absolute inset-x-0 top-[40%] z-20 text-center">
-            {play.combo > 1 && (
-              <p className="font-display text-4xl tabular-nums text-combo">{play.combo}</p>
-            )}
-            {showJudge && drawing.hitPing && last?.judgement !== "MISS" && (
-              <i
-                aria-hidden="true"
-                data-testid="fnf-hit-effect"
-                className="pointer-events-none absolute left-1/2 top-0 size-24 -translate-x-1/2 animate-ping rounded-full border border-cyan-200/30"
-              />
-            )}
+            <ComboCounter
+              combo={play.combo}
+              enabled={drawing.hitPing && status === "playing"}
+              fnf
+            />
             {showJudge && last && (
               <p
                 className="font-display text-xl"

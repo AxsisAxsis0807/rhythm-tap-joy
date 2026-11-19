@@ -531,7 +531,7 @@ export function SettingsPanel({
             {show("visual", "エフェクト 発光 揺れ 背景演出") && (
               <Group title="演出">
                 <ToggleRow
-                  label="ヒットエフェクト"
+                  label="コンボ波紋エフェクト"
                   checked={settings.hitEffects}
                   onChange={(v) => set("hitEffects", v)}
                 />
