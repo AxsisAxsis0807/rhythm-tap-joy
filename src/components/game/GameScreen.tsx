@@ -437,7 +437,11 @@ export function GameScreen({
         )}
         {fnfDisplay && (
           <div className="pointer-events-none absolute inset-x-0 top-[40%] z-20 text-center">
-            <ComboCounter combo={play.combo} enabled={drawing.hitPing && status === "playing"} fnf />
+            <ComboCounter
+              combo={play.combo}
+              enabled={drawing.hitPing && status === "playing"}
+              fnf
+            />
             {showJudge && last && (
               <p
                 className="font-display text-xl"
