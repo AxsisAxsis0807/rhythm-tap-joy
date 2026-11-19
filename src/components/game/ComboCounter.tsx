@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function ComboCounter({
   combo,
@@ -17,6 +17,17 @@ export function ComboCounter({
     setMilestone({ tier, enabled, active: enabled && tier > milestone.tier });
   }
 
+  const active = enabled && milestone.active && milestone.tier === tier;
+  useEffect(() => {
+    if (!active) return;
+    // CSS finishes the visual at 700ms. Clean up even if a browser does not
+    // dispatch animationend (e.g. reduced motion or a background tab).
+    const timeout = window.setTimeout(() => {
+      setMilestone({ tier, enabled, active: false });
+    }, 750);
+    return () => window.clearTimeout(timeout);
+  }, [active, tier, enabled]);
+
   if (combo <= 1) return null;
 
   const Tag = fnf ? "p" : "span";
@@ -32,7 +43,7 @@ export function ComboCounter({
       style={{ color }}
     >
       {combo}
-      {enabled && milestone.active && milestone.tier === tier && (
+      {active && (
         <span
           key={tier}
           aria-hidden="true"
@@ -41,7 +52,6 @@ export function ComboCounter({
           <i
             data-testid="combo-milestone-ping"
             className="animate-combo-milestone-ping absolute inset-0 rounded-full border border-current"
-            onAnimationEnd={() => setMilestone({ tier, enabled, active: false })}
           />
         </span>
       )}
