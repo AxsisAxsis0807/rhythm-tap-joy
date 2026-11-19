@@ -52,6 +52,8 @@ import {
 } from "./AccountGrowth";
 import { Menu, Settings } from "lucide-react";
 import { AdMaxBanner } from "./AdMaxBanner";
+import { PlayerAvatar } from "./PlayerAvatar";
+import { AVATAR_BUCKET, loadAvatarImage, normalizeAvatar } from "@/lib/avatarImage";
 
 type HubScreen =
   | "home"
@@ -74,8 +76,6 @@ type Profile = {
   bio: string;
   avatar_url: string | null;
 };
-
-const BUCKET = "songs";
 
 function displayName(user: User | null, profile: Profile | null) {
   return (
@@ -360,13 +360,22 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
         {screen === "ranking" && (
           <RankingScreen userId={user?.id ?? null} onBack={() => setScreen("home")} />
         )}
-        {screen === "profile" && user && (
+        {screen === "profile" && user && (!profile || profile.id !== user.id) && (
+          <div className="px-4 py-8 text-sm text-white/70">
+            プロフィールを読み込み中です。
+            <button type="button" onClick={() => void loadAccount(user)} className="ml-3 underline">再読み込み</button>
+            <button type="button" onClick={() => setScreen("home")} className="ml-3 underline">戻る</button>
+          </div>
+        )}
+        {screen === "profile" && user && profile?.id === user.id && (
           <ProfileScreen
+            key={user.id}
             user={user}
             profile={profile}
             songs={mySongs}
             onBack={() => setScreen("home")}
             onSaved={(next) => {
+              if (accountOwner.current !== next.id) return;
               setProfile(next);
               setNotice("プロフィールを保存しました");
             }}
@@ -457,11 +466,11 @@ function HubHeader({
           onClick={onProfile}
           className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-3 text-sm hover:bg-white/10"
         >
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="" className="size-8 rounded-full object-cover" />
-          ) : (
-            <CircleUserRound className="size-8 text-cyan-200" />
-          )}
+          <PlayerAvatar
+            src={profile?.avatar_url}
+            imageClassName="size-8 rounded-full object-cover"
+            fallbackClassName="size-8 text-cyan-200"
+          />
           <span className="min-w-0 max-w-20 truncate sm:max-w-28">
             {displayName(user, profile)}
           </span>
@@ -1004,41 +1013,89 @@ function ProfileScreen({
   const [display, setDisplay] = useState(profile?.display_name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? "");
+  const [candidate, setCandidate] = useState<{ blob: Blob; preview: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const operation = useRef(false);
+  const mounted = useRef(false);
+  const uploaded = useRef<{ blob: Blob; url: string } | null>(null);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useEffect(() => {
+    const preview = candidate?.preview;
+    return () => { if (preview) URL.revokeObjectURL(preview); };
+  }, [candidate]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (operation.current || !profile || profile.id !== user.id) return;
+    operation.current = true;
     setBusy(true);
     setError("");
-    const next = {
-      id: user.id,
-      username: username.trim(),
-      display_name: display.trim(),
-      bio: bio.trim(),
-      avatar_url: avatarUrl || null,
-    };
-    const { data, error: saveError } = await supabase
-      .from("profiles")
-      .upsert(next)
-      .select()
-      .single();
-    setBusy(false);
-    if (saveError) setError(saveError.message);
-    else if (data) onSaved(data as Profile);
-  };
-  const uploadAvatar = async (file: File) => {
-    const path = `${user.id}/avatar-${Date.now()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (uploadError) {
-      setError(uploadError.message);
-      return;
+    try {
+      let nextAvatar = avatarUrl;
+      if (candidate) {
+        if (uploaded.current?.blob !== candidate.blob) {
+          const path = `${user.id}/avatar-${crypto.randomUUID()}.png`;
+          const bucket = supabase.storage.from(AVATAR_BUCKET);
+          const { error: uploadError } = await bucket.upload(path, candidate.blob, {
+            upsert: false,
+            contentType: "image/png",
+          });
+          if (uploadError) throw new Error(`画像のアップロードに失敗しました: ${uploadError.message}`);
+          if (!mounted.current) return;
+          uploaded.current = { blob: candidate.blob, url: bucket.getPublicUrl(path).data.publicUrl };
+        }
+        const url = uploaded.current?.url;
+        if (!url) throw new Error("画像URLを取得できませんでした。");
+        try {
+          await loadAvatarImage(url);
+        } catch {
+          throw new Error("保存先の画像を読み込めませんでした。通信状態または画像保存先の設定を確認してください。");
+        }
+        nextAvatar = url;
+      }
+      if (!mounted.current) return;
+      const { data, error: saveError } = await supabase
+        .from("profiles")
+        .update({ display_name: display.trim(), bio: bio.trim(), avatar_url: nextAvatar || null })
+        .eq("id", user.id)
+        .select()
+        .single();
+      if (saveError) throw new Error(saveError.message);
+      if (!data || !mounted.current) return;
+      setAvatarUrl(nextAvatar);
+      setCandidate(null);
+      uploaded.current = null;
+      onSaved(data as Profile);
+    } catch (err) {
+      if (mounted.current) setError(err instanceof Error ? err.message : "プロフィールを保存できませんでした。");
+    } finally {
+      operation.current = false;
+      if (mounted.current) setBusy(false);
     }
-    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-    setAvatarUrl(data.publicUrl);
+  };
+  const selectAvatar = async (file: File) => {
+    if (operation.current) return;
+    operation.current = true;
+    setPreparing(true);
+    setError("");
+    try {
+      const blob = await normalizeAvatar(file);
+      if (!mounted.current) return;
+      const preview = URL.createObjectURL(blob);
+      uploaded.current = null;
+      setCandidate({ blob, preview });
+    } catch (err) {
+      if (mounted.current) setError(err instanceof Error ? err.message : "画像を読み込めませんでした。");
+    } finally {
+      operation.current = false;
+      if (mounted.current) setPreparing(false);
+    }
   };
   return (
     <main className="flex-1 px-4 pb-28 md:px-8">
@@ -1058,13 +1115,15 @@ function ProfileScreen({
         <button
           type="button"
           onClick={() => avatarInput.current?.click()}
-          className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-200/40 to-violet-400/50"
+          disabled={busy || preparing}
+          aria-label="プロフィール画像を変更"
+          className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-200/40 to-violet-400/50 disabled:opacity-60"
         >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="size-full object-cover" />
-          ) : (
-            <CircleUserRound className="size-10 text-white/70" />
-          )}
+          <PlayerAvatar
+            src={candidate?.preview ?? avatarUrl}
+            imageClassName="size-full object-cover"
+            fallbackClassName="size-10 text-white/70"
+          />
           <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[10px]">
             変更
           </span>
@@ -1072,11 +1131,13 @@ function ProfileScreen({
         <input
           ref={avatarInput}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,.heic,.heif"
+          disabled={busy || preparing}
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0];
-            if (file) void uploadAvatar(file);
+            event.target.value = "";
+            if (file) void selectAvatar(file);
           }}
         />
         <div className="min-w-0 flex-1">
@@ -1123,9 +1184,18 @@ function ProfileScreen({
                 className="field resize-none"
               />
             </label>
-            {error && <p className="text-xs text-rose-200">{error}</p>}
+            {preparing && <p role="status" className="text-xs text-white/60">画像を確認中…</p>}
+            {candidate && <p className="text-xs text-white/60">画像は保存すると他のプレイヤーにも公開されます。</p>}
+            {candidate && (
+              <button type="button" disabled={busy || preparing} onClick={() => {
+                setCandidate(null);
+                uploaded.current = null;
+                setError("");
+              }} className="text-xs underline disabled:opacity-50">画像の変更を取り消す</button>
+            )}
+            {error && <p role="alert" className="text-xs text-rose-200">{error}</p>}
             <button
-              disabled={busy}
+              disabled={busy || preparing}
               className="w-full rounded-xl bg-cyan-200 py-3 text-sm font-bold text-[#0b101a] disabled:opacity-50"
             >
               {busy ? "保存中…" : "プロフィールを保存"}
