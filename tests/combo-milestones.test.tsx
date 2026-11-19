@@ -1,6 +1,12 @@
-import { fireEvent, render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, cleanup, render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ComboCounter } from "@/components/game/ComboCounter";
+
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe.each([false, true])("combo milestone effects (FNF: %s)", (fnf) => {
   it("changes color only at milestones and plays each ripple once", () => {
@@ -20,7 +26,7 @@ describe.each([false, true])("combo milestone effects (FNF: %s)", (fnf) => {
     const blue = view.getByTestId("combo-milestone-ping");
     update(101);
     expect(ping()).toBe(blue);
-    fireEvent.animationEnd(blue);
+    act(() => vi.advanceTimersByTime(750));
     expect(ping()).toBeNull();
     update(999);
     expect(counter().style.color).toBe("rgb(59, 158, 255)");
@@ -31,7 +37,7 @@ describe.each([false, true])("combo milestone effects (FNF: %s)", (fnf) => {
     const red = view.getByTestId("combo-milestone-ping");
     update(1001);
     expect(ping()).toBe(red);
-    fireEvent.animationEnd(red);
+    act(() => vi.advanceTimersByTime(750));
     expect(ping()).toBeNull();
 
     update(0);
