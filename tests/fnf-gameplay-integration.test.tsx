@@ -773,7 +773,9 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   paint();
   expect(core.play.counts.PERFECT).toBe(1);
   expect(view.getByText(/LATE [0-9]+ms/)).toBeTruthy();
-  expect(view.getByTestId("fnf-hit-effect")).toBeTruthy();
+  expect(view.getByText("PERFECT")).toBeTruthy();
+  expect(view.queryByTestId("fnf-hit-effect")).toBeNull();
+  expect(view.queryByTestId("combo-milestone-ping")).toBeNull();
   act(() => {
     settings.setSettings({
       ...settings.settings,
@@ -784,7 +786,7 @@ it("FNF GameScreen wiring changes visuals without altering the judgement core", 
   });
   expect(view.queryByText(/LATE [0-9]+ms/)).toBeNull();
   expect(view.queryByTestId("fnf-error-meter")).toBeNull();
-  expect(view.queryByTestId("fnf-hit-effect")).toBeNull();
+  expect(view.queryByTestId("combo-milestone-ping")).toBeNull();
   expect(core.play.counts.PERFECT).toBe(1);
 });
 
