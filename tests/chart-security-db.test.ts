@@ -70,14 +70,15 @@ it("immutable snapshots and canonical objects resist mutation; deletion preserve
 });
 it("private bucket and profile settings deny direct image reference and forged uploads", async () => {
   const buckets = (
-    await db.query<{ id: string; public: boolean; file_size_limit: number; allowed_mime_types: string[] }>(
-      "SELECT id,public,file_size_limit,allowed_mime_types FROM storage.buckets",
-    )
+    await db.query<{
+      id: string;
+      public: boolean;
+      file_size_limit: number;
+      allowed_mime_types: string[];
+    }>("SELECT id,public,file_size_limit,allowed_mime_types FROM storage.buckets")
   ).rows;
   expect(
-    buckets
-      .filter((bucket) => bucket.id !== "player-avatars")
-      .every((bucket) => !bucket.public),
+    buckets.filter((bucket) => bucket.id !== "player-avatars").every((bucket) => !bucket.public),
   ).toBe(true);
   expect(buckets.find((bucket) => bucket.id === "player-avatars")).toMatchObject({
     public: true,
