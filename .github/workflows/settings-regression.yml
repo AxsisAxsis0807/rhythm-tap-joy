@@ -59,6 +59,18 @@ jobs:
           tests/rendering-settings.test.tsx
           tests/fnf-gameplay-integration.test.tsx
           tests/input.test.tsx
+      - id: avatar_lint
+        name: ESLint for player avatar changes
+        continue-on-error: true
+        run: >-
+          bunx eslint
+          src/components/app/PlayerAvatar.tsx
+          src/components/app/RankingScreen.tsx
+          src/components/app/RhythmHub.tsx
+          src/lib/avatarImage.ts
+          tests/player-avatar.test.tsx
+          tests/chart-security-db.test.ts
+          tests/helpers/database.ts
       - name: Existing full-repository lint debt (informational)
         continue-on-error: true
         run: bun run lint
@@ -70,3 +82,4 @@ jobs:
           test "${{ steps.repeat.outcome }}" = "success"
           test "${{ steps.build.outcome }}" = "success"
           test "${{ steps.lint.outcome }}" = "success"
+          test "${{ steps.avatar_lint.outcome }}" = "success"

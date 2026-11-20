@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CircleUserRound, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy } from "lucide-react";
+import { PlayerAvatar } from "./PlayerAvatar";
 import type { PlayerRanking } from "@/lib/playerRanking";
 import { fetchLeaderboard, fetchPlayerRanking, rankingKeys } from "@/lib/playerRanking";
 
@@ -74,15 +75,11 @@ function RankingRow({ player, own }: { player: PlayerRanking; own: boolean }) {
       <span className="w-12 shrink-0 break-words text-center font-display text-sm tabular-nums text-cyan-100">
         #{formatInteger(player.global_rank)}
       </span>
-      {player.avatar_url ? (
-        <img
-          src={player.avatar_url}
-          alt=""
-          className="size-10 shrink-0 rounded-full object-cover"
-        />
-      ) : (
-        <CircleUserRound aria-hidden="true" className="size-10 shrink-0 text-white/35" />
-      )}
+      <PlayerAvatar
+        src={player.avatar_url}
+        imageClassName="size-10 shrink-0 rounded-full object-cover"
+        fallbackClassName="size-10 shrink-0 text-white/35"
+      />
       <div className="min-w-0 flex-1">
         <p className="flex min-w-0 items-center gap-2 text-sm font-bold">
           <span className="min-w-0 truncate">{player.display_name || player.username}</span>
