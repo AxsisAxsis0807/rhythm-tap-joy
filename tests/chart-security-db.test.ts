@@ -69,12 +69,35 @@ it("immutable snapshots and canonical objects resist mutation; deletion preserve
   ).toEqual({ song_id: null, chart_key: song });
 });
 it("private bucket and profile settings deny direct image reference and forged uploads", async () => {
+  const buckets = (
+    await db.query<{ id: string; public: boolean; file_size_limit: number; allowed_mime_types: string[] }>(
+      "SELECT id,public,file_size_limit,allowed_mime_types FROM storage.buckets",
+    )
+  ).rows;
   expect(
-    (await db.query<{ public: boolean }>("SELECT public FROM storage.buckets")).rows.every(
-      (r) => !r.public,
-    ),
+    buckets
+      .filter((bucket) => bucket.id !== "player-avatars")
+      .every((bucket) => !bucket.public),
   ).toBe(true);
+  expect(buckets.find((bucket) => bucket.id === "player-avatars")).toMatchObject({
+    public: true,
+    file_size_limit: 3145728,
+    allowed_mime_types: ["image/png"],
+  });
   await asUser(db, owner, async () => {
+    await db.query("INSERT INTO storage.objects VALUES('player-avatars',$1)", [
+      `${owner}/avatar-${randomUUID()}.png`,
+    ]);
+    await expect(
+      db.query("INSERT INTO storage.objects VALUES('player-avatars',$1)", [
+        `${other}/avatar-${randomUUID()}.png`,
+      ]),
+    ).rejects.toThrow();
+    await expect(
+      db.query("INSERT INTO storage.objects VALUES('player-avatars',$1)", [
+        `${owner}/../malicious.png`,
+      ]),
+    ).rejects.toThrow();
     await expect(
       db.exec("INSERT INTO storage.objects VALUES('asset-staging','fake/source')"),
     ).rejects.toThrow();
@@ -83,6 +106,13 @@ it("private bucket and profile settings deny direct image reference and forged u
     ).rejects.toThrow();
     await expect(
       db.exec("SELECT save_profile_preferences(0,true,'NaN',0.5,1,false)"),
+    ).rejects.toThrow();
+  });
+  await asUser(db, other, async () => {
+    await expect(
+      db.query("INSERT INTO storage.objects VALUES('player-avatars',$1)", [
+        `${owner}/avatar-${randomUUID()}.png`,
+      ]),
     ).rejects.toThrow();
   });
 });

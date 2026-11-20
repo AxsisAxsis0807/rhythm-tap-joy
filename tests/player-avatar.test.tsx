@@ -15,11 +15,15 @@ describe("player avatar", () => {
     expect(view.container.querySelector("img")).toBeNull();
     expect(view.container.querySelector(".avatar-fallback")).not.toBeNull();
     view.rerender(<PlayerAvatar {...props} src="https://example.com/new.png" />);
-    expect(view.container.querySelector("img")?.getAttribute("src")).toBe("https://example.com/new.png");
+    expect(view.container.querySelector("img")?.getAttribute("src")).toBe(
+      "https://example.com/new.png",
+    );
   });
 
   it("uses a fallback when no avatar is saved", () => {
-    const view = render(<PlayerAvatar src={null} imageClassName="avatar-image" fallbackClassName="avatar-fallback" />);
+    const view = render(
+      <PlayerAvatar src={null} imageClassName="avatar-image" fallbackClassName="avatar-fallback" />,
+    );
     expect(view.container.querySelector(".avatar-fallback")).not.toBeNull();
   });
 

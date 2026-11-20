@@ -363,8 +363,12 @@ export function RhythmHub({ localSongs }: { localSongs: SongEntry[] }) {
         {screen === "profile" && user && (!profile || profile.id !== user.id) && (
           <div className="px-4 py-8 text-sm text-white/70">
             プロフィールを読み込み中です。
-            <button type="button" onClick={() => void loadAccount(user)} className="ml-3 underline">再読み込み</button>
-            <button type="button" onClick={() => setScreen("home")} className="ml-3 underline">戻る</button>
+            <button type="button" onClick={() => void loadAccount(user)} className="ml-3 underline">
+              再読み込み
+            </button>
+            <button type="button" onClick={() => setScreen("home")} className="ml-3 underline">
+              戻る
+            </button>
           </div>
         )}
         {screen === "profile" && user && profile?.id === user.id && (
@@ -1021,11 +1025,15 @@ function ProfileScreen({
   const uploaded = useRef<{ blob: Blob; url: string } | null>(null);
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
   useEffect(() => {
     const preview = candidate?.preview;
-    return () => { if (preview) URL.revokeObjectURL(preview); };
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
   }, [candidate]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState("");
@@ -1046,16 +1054,22 @@ function ProfileScreen({
             upsert: false,
             contentType: "image/png",
           });
-          if (uploadError) throw new Error(`画像のアップロードに失敗しました: ${uploadError.message}`);
+          if (uploadError)
+            throw new Error(`画像のアップロードに失敗しました: ${uploadError.message}`);
           if (!mounted.current) return;
-          uploaded.current = { blob: candidate.blob, url: bucket.getPublicUrl(path).data.publicUrl };
+          uploaded.current = {
+            blob: candidate.blob,
+            url: bucket.getPublicUrl(path).data.publicUrl,
+          };
         }
         const url = uploaded.current?.url;
         if (!url) throw new Error("画像URLを取得できませんでした。");
         try {
           await loadAvatarImage(url);
         } catch {
-          throw new Error("保存先の画像を読み込めませんでした。通信状態または画像保存先の設定を確認してください。");
+          throw new Error(
+            "保存先の画像を読み込めませんでした。通信状態または画像保存先の設定を確認してください。",
+          );
         }
         nextAvatar = url;
       }
@@ -1073,7 +1087,8 @@ function ProfileScreen({
       uploaded.current = null;
       onSaved(data as Profile);
     } catch (err) {
-      if (mounted.current) setError(err instanceof Error ? err.message : "プロフィールを保存できませんでした。");
+      if (mounted.current)
+        setError(err instanceof Error ? err.message : "プロフィールを保存できませんでした。");
     } finally {
       operation.current = false;
       if (mounted.current) setBusy(false);
@@ -1091,7 +1106,8 @@ function ProfileScreen({
       uploaded.current = null;
       setCandidate({ blob, preview });
     } catch (err) {
-      if (mounted.current) setError(err instanceof Error ? err.message : "画像を読み込めませんでした。");
+      if (mounted.current)
+        setError(err instanceof Error ? err.message : "画像を読み込めませんでした。");
     } finally {
       operation.current = false;
       if (mounted.current) setPreparing(false);
@@ -1184,16 +1200,35 @@ function ProfileScreen({
                 className="field resize-none"
               />
             </label>
-            {preparing && <p role="status" className="text-xs text-white/60">画像を確認中…</p>}
-            {candidate && <p className="text-xs text-white/60">画像は保存すると他のプレイヤーにも公開されます。</p>}
-            {candidate && (
-              <button type="button" disabled={busy || preparing} onClick={() => {
-                setCandidate(null);
-                uploaded.current = null;
-                setError("");
-              }} className="text-xs underline disabled:opacity-50">画像の変更を取り消す</button>
+            {preparing && (
+              <p role="status" className="text-xs text-white/60">
+                画像を確認中…
+              </p>
             )}
-            {error && <p role="alert" className="text-xs text-rose-200">{error}</p>}
+            {candidate && (
+              <p className="text-xs text-white/60">
+                画像は保存すると他のプレイヤーにも公開されます。
+              </p>
+            )}
+            {candidate && (
+              <button
+                type="button"
+                disabled={busy || preparing}
+                onClick={() => {
+                  setCandidate(null);
+                  uploaded.current = null;
+                  setError("");
+                }}
+                className="text-xs underline disabled:opacity-50"
+              >
+                画像の変更を取り消す
+              </button>
+            )}
+            {error && (
+              <p role="alert" className="text-xs text-rose-200">
+                {error}
+              </p>
+            )}
             <button
               disabled={busy || preparing}
               className="w-full rounded-xl bg-cyan-200 py-3 text-sm font-bold text-[#0b101a] disabled:opacity-50"

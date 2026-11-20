@@ -12,3 +12,7 @@ New uploads use the dedicated public player-avatars bucket (public profile image
 - Run typecheck, complete tests, build, input regressions, changed-file lint and real Safari/iPhone + PC tests. Test select, cancel, invalid file, rapid selection, save success/failure/retry, reload, login, header and ranking. Verify account switch and storage errors. Existing broken images require re-selection if the original object is inaccessible.
 - Client-side PNG conversion is not server-side byte verification. Do not enable wider public uploads without considering server-side validation, quota/rate limiting and abuse controls.
 - Unique upload paths avoid overwrites and stale cache. Old/abandoned uploaded objects can remain; cleanup and deletion policy need a separate reviewed design. No automatic deletion, migration of old avatar objects, production deployment or DB changes are authorized by this patch.
+
+## First CI audit findings (before follow-up)
+- Full suite initially failed: existing FNF keyboard-resume test (not touched by avatar patch), and an assertion requiring every Storage bucket to be private (new public avatar bucket requires the security test to distinguish avatar assets from canonical private buckets).
+- Original avatar unit tests passed. Typecheck, production build and triple input regression passed. Full lint includes unrelated pre-existing debt and is informational in the existing workflow; changed-file lint coverage needs dedicated verification.
