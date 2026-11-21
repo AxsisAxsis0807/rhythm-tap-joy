@@ -43,9 +43,7 @@ export function ComboCounter({
   if (combo <= 1) return null;
 
   const Tag = fnf ? "p" : "span";
-  const borderColor = isFixedRedComboMilestone(milestone)
-    ? FIXED_COMBO_RIPPLE_RED
-    : rippleColor;
+  const borderColor = isFixedRedComboMilestone(milestone) ? FIXED_COMBO_RIPPLE_RED : rippleColor;
 
   return (
     <Tag
