@@ -138,7 +138,8 @@ describe.each([false, true])("combo milestone effects (FNF: %s)", (fnf) => {
   });
 
   it("keeps the ripple circle dimensions and animation unchanged at 1000", () => {
-    const view = render(renderAt(900));
+    const view = render(renderAt(899));
+    view.rerender(renderAt(900));
     const first = ring(view);
     expect(first?.className).toContain("rounded-full");
     expect(first?.className).toContain("animate-combo-milestone-ping");
