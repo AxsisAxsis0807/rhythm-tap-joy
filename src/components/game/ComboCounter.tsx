@@ -1,37 +1,50 @@
 import { useEffect, useState } from "react";
+import {
+  DEFAULT_COMBO_RIPPLE_COLOR,
+  FIXED_COMBO_RIPPLE_RED,
+  getComboMilestone,
+  isFixedRedComboMilestone,
+} from "@/game/comboMilestone";
 
 export function ComboCounter({
   combo,
   enabled,
   fnf = false,
+  rippleColor = DEFAULT_COMBO_RIPPLE_COLOR,
 }: {
   combo: number;
   enabled: boolean;
   fnf?: boolean;
+  rippleColor?: string;
 }) {
-  const tier = combo >= 1000 ? 1000 : combo >= 100 ? 100 : 0;
-  const [milestone, setMilestone] = useState({ tier, enabled, active: false });
-  // Track the displayed tier, rather than an exact combo value: a chord may
-  // cross a threshold between rendered frames.
-  if (tier !== milestone.tier || enabled !== milestone.enabled) {
-    setMilestone({ tier, enabled, active: enabled && tier > milestone.tier });
+  const milestone = getComboMilestone(combo);
+  const [effect, setEffect] = useState({ milestone, enabled, active: false });
+
+  // Compare milestone numbers, not display frames: simultaneous notes may skip
+  // an exact multiple of 100, and the display must never replay an old ripple.
+  if (milestone !== effect.milestone || enabled !== effect.enabled) {
+    setEffect({
+      milestone,
+      enabled,
+      active: enabled && milestone > effect.milestone,
+    });
   }
 
-  const active = enabled && milestone.active && milestone.tier === tier;
+  const active = enabled && effect.active && effect.milestone === milestone;
   useEffect(() => {
     if (!active) return;
-    // CSS finishes the visual at 700ms. Clean up even if a browser does not
-    // dispatch animationend (e.g. reduced motion or a background tab).
+    // Clear the ripple when the animation completes, even without animationend.
     const timeout = window.setTimeout(() => {
-      setMilestone({ tier, enabled, active: false });
+      setEffect({ milestone, enabled, active: false });
     }, 750);
     return () => window.clearTimeout(timeout);
-  }, [active, tier, enabled]);
+  }, [active, milestone, enabled]);
 
   if (combo <= 1) return null;
 
   const Tag = fnf ? "p" : "span";
-  const color = tier === 1000 ? "#ff4848" : tier === 100 ? "#3b9eff" : undefined;
+  const borderColor = isFixedRedComboMilestone(milestone) ? FIXED_COMBO_RIPPLE_RED : rippleColor;
+
   return (
     <Tag
       data-testid="combo-counter"
@@ -40,18 +53,18 @@ export function ComboCounter({
           ? "relative font-display text-4xl tabular-nums text-combo"
           : "relative font-display text-4xl tabular-nums text-combo drop-shadow sm:text-5xl"
       }
-      style={{ color }}
     >
       {combo}
       {active && (
         <span
-          key={tier}
+          key={milestone}
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 motion-reduce:hidden"
         >
           <i
             data-testid="combo-milestone-ping"
-            className="animate-combo-milestone-ping absolute inset-0 rounded-full border border-current"
+            className="animate-combo-milestone-ping absolute inset-0 rounded-full border"
+            style={{ borderColor }}
           />
         </span>
       )}

@@ -528,13 +528,31 @@ export function SettingsPanel({
                 />
               </Group>
             )}
-            {show("visual", "エフェクト 発光 揺れ 背景演出") && (
+            {show("visual", "エフェクト 発光 揺れ 背景演出 コンボ 波紋 色") && (
               <Group title="演出">
                 <ToggleRow
                   label="コンボ波紋エフェクト"
                   checked={settings.hitEffects}
                   onChange={(v) => set("hitEffects", v)}
                 />
+                <label className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <span>
+                    通常コンボ波紋の色
+                    <span className="block text-xs text-white/40">
+                      100、200…900、1100…1900など、100コンボごとの波紋色を変更できます。
+                    </span>
+                    <span className="block text-xs text-rose-300">
+                      1000、2000、3000…の波紋は赤色固定です。
+                    </span>
+                  </span>
+                  <input
+                    type="color"
+                    aria-label="通常コンボ波紋の色"
+                    value={settings.comboRippleColor}
+                    onChange={(e) => set("comboRippleColor", e.target.value)}
+                    className="h-10 w-14 shrink-0 cursor-pointer rounded-md border border-white/20 bg-transparent p-1"
+                  />
+                </label>
                 <ToggleRow
                   label="発光"
                   checked={settings.glowEffects}
