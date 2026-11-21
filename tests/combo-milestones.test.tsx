@@ -16,6 +16,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe("combo milestone arithmetic", () => {
@@ -46,12 +47,9 @@ describe("combo milestone arithmetic", () => {
   it.each([1000, 2000, 3000, 10000])("%s is fixed red", (milestone) => {
     expect(isFixedRedComboMilestone(milestone)).toBe(true);
   });
-  it.each([0, 100, 200, 900, 1100, 1900, 2100])(
-    "%s is not fixed red",
-    (milestone) => {
-      expect(isFixedRedComboMilestone(milestone)).toBe(false);
-    },
-  );
+  it.each([0, 100, 200, 900, 1100, 1900, 2100])("%s is not fixed red", (milestone) => {
+    expect(isFixedRedComboMilestone(milestone)).toBe(false);
+  });
 });
 
 describe.each([false, true])("combo milestone effects (FNF: %s)", (fnf) => {
@@ -184,6 +182,14 @@ describe("customizable ripple settings", () => {
 
   it("allows editing only the ordinary color in the visual settings panel", () => {
     vi.useRealTimers();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
     const onChange = vi.fn();
     const view = render(
       <SettingsPanel open settings={DEFAULT_SETTINGS} onChange={onChange} onClose={() => {}} />,
@@ -194,8 +200,6 @@ describe("customizable ripple settings", () => {
     expect(view.getByText(/赤色固定です/)).toBeTruthy();
     expect(view.queryByLabelText("1000コンボの波紋色")).toBeNull();
     fireEvent.change(picker, { target: { value: "#aa33bb" } });
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ comboRippleColor: "#aa33bb" }),
-    );
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ comboRippleColor: "#aa33bb" }));
   });
 });
