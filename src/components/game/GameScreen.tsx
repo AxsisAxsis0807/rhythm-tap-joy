@@ -405,7 +405,11 @@ export function GameScreen({
               className="pointer-events-none absolute inset-x-0 z-20 flex flex-col items-center gap-1"
               style={{ top: `${mode.popupPct}%` }}
             >
-              <ComboCounter combo={play.combo} enabled={drawing.hitPing && status === "playing"} />
+              <ComboCounter
+                combo={play.combo}
+                enabled={drawing.hitPing && status === "playing"}
+                rippleColor={settings.comboRippleColor}
+              />
               {play.combo > 1 && (
                 <span className="text-[10px] tracking-[0.4em] text-muted-foreground">COMBO</span>
               )}
@@ -441,6 +445,7 @@ export function GameScreen({
               combo={play.combo}
               enabled={drawing.hitPing && status === "playing"}
               fnf
+              rippleColor={settings.comboRippleColor}
             />
             {showJudge && last && (
               <p

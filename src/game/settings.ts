@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { PlayStyleId } from "./types";
 import { INPUT_OVERLAY_DEFAULTS } from "./inputOverlayLayout";
+import { DEFAULT_COMBO_RIPPLE_COLOR } from "./comboMilestone";
 
 export type LaneKeys = [string, string, string, string];
 /** Reserve dialog/pause/navigation keys. Use physical KeyboardEvent.code, independent of layout. */
@@ -99,6 +100,7 @@ export interface GameSettings {
   showErrorMeter: boolean;
   showProgress: boolean;
   hitEffects: boolean;
+  comboRippleColor: string;
   glowEffects: boolean;
   screenShake: boolean;
   backgroundEffects: boolean;
@@ -161,6 +163,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   showErrorMeter: true,
   showProgress: true,
   hitEffects: true,
+  comboRippleColor: DEFAULT_COMBO_RIPPLE_COLOR,
   glowEffects: true,
   screenShake: false,
   backgroundEffects: true,
@@ -177,6 +180,10 @@ const DEVICE_STORAGE_KEY = "pulse-lane:device-settings:v2";
 const clamp = (v: unknown, min: number, max: number, fallback: number) =>
   typeof v === "number" && Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : fallback;
 const bool = (v: unknown, fallback: boolean) => (typeof v === "boolean" ? v : fallback);
+const hexColor = (v: unknown) =>
+  typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)
+    ? v.toLowerCase()
+    : DEFAULT_COMBO_RIPPLE_COLOR;
 
 export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameSettings {
   const s =
@@ -240,6 +247,7 @@ export function sanitizeSettings(stored: unknown, deviceStored?: unknown): GameS
     showErrorMeter: bool(s.showErrorMeter, true),
     showProgress: bool(s.showProgress, true),
     hitEffects: bool(s.hitEffects, true),
+    comboRippleColor: hexColor(s.comboRippleColor),
     glowEffects: bool(s.glowEffects, true),
     screenShake: bool(s.screenShake, false),
     backgroundEffects: bool(s.backgroundEffects, true),

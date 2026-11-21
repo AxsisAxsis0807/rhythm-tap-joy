@@ -49,12 +49,15 @@ jobs:
         run: >-
           bunx eslint
           src/game/settings.ts
+          src/game/comboMilestone.ts
           src/game/inputOverlayLayout.ts
           src/components/game/GameScreen.tsx
+          src/components/game/ComboCounter.tsx
           src/components/game/FnfField.tsx
           src/components/game/SettingsPanel.tsx
           src/components/game/InputOverlay.tsx
           tests/game-settings-engine.test.ts
+          tests/combo-milestones.test.tsx
           tests/input-overlay-settings.test.tsx
           tests/rendering-settings.test.tsx
           tests/fnf-gameplay-integration.test.tsx
