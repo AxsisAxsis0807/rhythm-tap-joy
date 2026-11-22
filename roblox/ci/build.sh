@@ -2,20 +2,27 @@
 set -euo pipefail
 
 download_release() {
-  local repository=$1 tag=$2 asset=$3 destination=$4 metadata digest
+  local repository=$1 tag=$2 asset=$3 destination=$4 metadata digest archive
   mkdir -p "$destination"
   metadata=$(curl -qfsS --max-time 30 "https://api.github.com/repos/$repository/releases/tags/$tag")
   digest=$(jq -er --arg asset "$asset" '.assets[] | select(.name == $asset) | .digest | select(test("^sha256:[a-f0-9]{64}$"))' <<<"$metadata")
+  archive="$destination/$asset"
   curl -qfsSL --proto '=https' --max-time 90 \
-    "https://github.com/$repository/releases/download/$tag/$asset" -o "$destination/release.zip"
-  printf '%s  %s\n' "${digest#sha256:}" "$destination/release.zip" | sha256sum --check --status
-  unzip -q "$destination/release.zip" -d "$destination"
+    "https://github.com/$repository/releases/download/$tag/$asset" -o "$archive"
+  printf '%s  %s\n' "${digest#sha256:}" "$archive" | sha256sum --check --status
+  case "$asset" in
+    *.zip) unzip -q "$archive" -d "$destination" ;;
+    *.tar.gz) tar -xzf "$archive" -C "$destination" ;;
+  esac
 }
 
 tools_dir=$(mktemp -d)
 trap 'rm -rf -- "$tools_dir"' EXIT
 download_release rojo-rbx/rojo v7.6.1 rojo-7.6.1-linux-x86_64.zip "$tools_dir/rojo"
 download_release luau-lang/luau 0.744 luau-ubuntu.zip "$tools_dir/luau"
+download_release rhysd/actionlint v1.7.11 actionlint_1.7.11_linux_amd64.tar.gz "$tools_dir/actionlint"
+
+"$tools_dir/actionlint/actionlint" .github/workflows/pulse-lane-roblox-*.yml
 
 for source in roblox/src/*.luau roblox/tests/*.luau; do
   "$tools_dir/luau/luau-compile" "$source" >/dev/null

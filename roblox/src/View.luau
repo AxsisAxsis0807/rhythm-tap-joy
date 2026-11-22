@@ -47,8 +47,8 @@ function View.create(playerGui)
 		local area = Instance.new("Frame")
 		area.Name = "Lane" .. lane
 		area.Position = UDim2.fromScale((lane - 1) / 4, 0)
-		area.Size = UDim2.new(0.25, -2, 1, 0)
-		area.BackgroundColor3 = View.laneColor(false)
+		area.Size = UDim2.fromScale(0.25, 1)
+		area.BackgroundColor3 = View.laneColor(false, lane)
 		area.BorderSizePixel = 0
 		area.Active = true
 		area.Parent = field
@@ -63,6 +63,7 @@ function View.create(playerGui)
 	line.BackgroundColor3 = Color3.fromRGB(244, 249, 255)
 	line.BorderSizePixel = 0
 	line.ZIndex = 4
+	line.Interactable = false
 	line.Parent = field
 
 	local mode = label(background, "FNF", UDim2.fromScale(0.03, 0.015), UDim2.fromScale(0.25, 0.08), true)
@@ -72,8 +73,11 @@ function View.create(playerGui)
 	return lanes, mode, start, result
 end
 
-function View.laneColor(held)
-	return held and Color3.fromRGB(36, 97, 143) or Color3.fromRGB(17, 31, 51)
+function View.laneColor(held, lane)
+	if held then
+		return Color3.fromRGB(36, 97, 143)
+	end
+	return if lane % 2 == 0 then Color3.fromRGB(21, 37, 59) else Color3.fromRGB(17, 31, 51)
 end
 
 function View.createNote(lane)

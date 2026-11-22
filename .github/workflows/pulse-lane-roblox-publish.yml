@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 concurrency:
   group: pulse-lane-roblox-development-publish
@@ -42,6 +41,9 @@ jobs:
 
   publish:
     needs: build
+    if: github.run_attempt == '1'
+    permissions:
+      actions: read
     runs-on: ubuntu-24.04
     timeout-minutes: 6
     environment: roblox-development
@@ -55,7 +57,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api "repos/AxsisAxsis0807/rhythm-tap-joy/actions/runs/$GITHUB_RUN_ID/approvals" \
+          gh api --method GET "repos/AxsisAxsis0807/rhythm-tap-joy/actions/runs/$GITHUB_RUN_ID/approvals" \
             | jq -e 'any(.[]; .state == "approved" and .user.id == 208330027 and any(.environments[]; .name == "roblox-development"))' >/dev/null
       - name: Publish the approved development place
         env:

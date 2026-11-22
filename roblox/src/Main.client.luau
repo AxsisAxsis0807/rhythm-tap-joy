@@ -19,7 +19,7 @@ local menuOpen = false
 
 local function redrawInput()
 	for lane, area in lanes do
-		area.BackgroundColor3 = View.laneColor(held.held(lane))
+		area.BackgroundColor3 = View.laneColor(held.held(lane), lane)
 	end
 	local caption = string.format("4K PEAK %d/4  |  %s", held.peak(), result)
 	if status.Text ~= caption then

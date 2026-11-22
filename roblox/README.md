@@ -10,7 +10,7 @@ Rojo 7.6.1 を [公式リリース](https://github.com/rojo-rbx/rojo/releases/ta
 rojo build roblox/default.project.json --output roblox/PulseLane.rbxlx
 ```
 
-Studio の **Open from File** で生成ファイルを開き、**Play** で確認できます。GitHub Actions の **Pulse Lane Roblox build** でも、成功した実行の Artifacts から同じ形式を取得できます。CI は Luau の構文検査、純粋ロジックの型検査と単体テスト、Rojo ビルド、生成物の構造検査を実行します。
+Studio の **Open from File** で生成ファイルを開き、**Play** で確認できます。GitHub Actions の **Pulse Lane Roblox build** でも、成功した実行の Artifacts から同じ形式を取得できます。CI は actionlint によるワークフロー検査、Luau の構文検査、純粋ロジックの型検査と単体テスト、Rojo ビルド、生成物の構造検査を実行します。
 
 ## 開発用Placeの初回公開
 
