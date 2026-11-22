@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     env:
+      GH_TOKEN: ${{ github.token }}
       CONFIRMATION: ${{ inputs.confirmation }}
       UNIVERSE_ID: ${{ vars.ROBLOX_UNIVERSE_ID }}
       PLACE_ID: ${{ vars.ROBLOX_PLACE_ID }}
@@ -32,7 +33,7 @@ jobs:
             echo 'Confirmation or development destination is incorrect.'
             exit 1
           fi
-          curl -qfsS --max-time 20 'https://api.github.com/repos/AxsisAxsis0807/rhythm-tap-joy/environments/roblox-development' \
+          gh api --method GET 'repos/AxsisAxsis0807/rhythm-tap-joy/environments/roblox-development' \
             | jq -e 'any(.protection_rules[]; .type == "required_reviewers" and (.reviewers | length == 1) and .reviewers[0].type == "User" and .reviewers[0].reviewer.id == 208330027)' >/dev/null
 
   build:

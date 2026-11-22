@@ -4,10 +4,11 @@ set -euo pipefail
 download_release() {
   local repository=$1 tag=$2 asset=$3 destination=$4 metadata digest archive
   mkdir -p "$destination"
-  metadata=$(curl -qfsS --max-time 30 "https://api.github.com/repos/$repository/releases/tags/$tag")
+  printf 'Downloading %s %s (%s)\n' "$repository" "$tag" "$asset"
+  metadata=$(gh api --method GET "repos/$repository/releases/tags/$tag")
   digest=$(jq -er --arg asset "$asset" '.assets[] | select(.name == $asset) | .digest | select(test("^sha256:[a-f0-9]{64}$"))' <<<"$metadata")
   archive="$destination/$asset"
-  curl -qfsSL --proto '=https' --max-time 90 \
+  curl -qfsSL --retry 2 --proto '=https' --max-time 90 \
     "https://github.com/$repository/releases/download/$tag/$asset" -o "$archive"
   printf '%s  %s\n' "${digest#sha256:}" "$archive" | sha256sum --check --status
   case "$asset" in
