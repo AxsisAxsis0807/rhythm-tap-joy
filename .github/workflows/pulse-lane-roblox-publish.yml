@@ -1,0 +1,81 @@
+name: Pulse Lane Roblox development publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type PUBLISH 94836487284054'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pulse-lane-roblox-development-publish
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.repository == 'AxsisAxsis0807/rhythm-tap-joy' && github.ref == 'refs/heads/main' && github.run_attempt == '1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+      UNIVERSE_ID: ${{ vars.ROBLOX_UNIVERSE_ID }}
+      PLACE_ID: ${{ vars.ROBLOX_PLACE_ID }}
+    steps:
+      - name: Verify destination and owner review requirement
+        run: |
+          set -euo pipefail
+          if [[ "$CONFIRMATION" != 'PUBLISH 94836487284054' || "$UNIVERSE_ID" != 6296385428 || "$PLACE_ID" != 94836487284054 ]]; then
+            echo 'Confirmation or development destination is incorrect.'
+            exit 1
+          fi
+          gh api --method GET 'repos/AxsisAxsis0807/rhythm-tap-joy/environments/roblox-development' \
+            | jq -e 'any(.protection_rules[]; .type == "required_reviewers" and (.reviewers | length == 1) and .reviewers[0].type == "User" and .reviewers[0].reviewer.id == 208330027)' >/dev/null
+
+  build:
+    needs: verify
+    uses: ./.github/workflows/pulse-lane-roblox-build.yml
+
+  publish:
+    needs: build
+    if: github.run_attempt == '1'
+    permissions:
+      actions: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    environment: roblox-development
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: pulse-lane-roblox-${{ github.sha }}
+          path: place
+      - name: Check recorded approval by the repository owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --method GET "repos/AxsisAxsis0807/rhythm-tap-joy/actions/runs/$GITHUB_RUN_ID/approvals" \
+            | jq -e 'any(.[]; .state == "approved" and .user.id == 208330027 and any(.environments[]; .name == "roblox-development"))' >/dev/null
+      - name: Publish the approved development place
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+          UNIVERSE_ID: ${{ vars.ROBLOX_UNIVERSE_ID }}
+          PLACE_ID: ${{ vars.ROBLOX_PLACE_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$UNIVERSE_ID" == 6296385428 && "$PLACE_ID" == 94836487284054 && -n "$ROBLOX_API_KEY" ]]
+          [[ -s place/PulseLane.rbxlx ]]
+          status=$(curl -qsS --max-time 90 --output "$RUNNER_TEMP/roblox-publish.json" --write-out '%{http_code}' \
+            --request POST --header "x-api-key: $ROBLOX_API_KEY" --header 'Content-Type: application/xml' \
+            --data-binary @place/PulseLane.rbxlx \
+            'https://apis.roblox.com/universes/v1/6296385428/places/94836487284054/versions?versionType=Published')
+          if [[ "$status" != 200 ]]; then
+            echo "Roblox rejected the request (HTTP $status). Check Creator Dashboard before retrying."
+            exit 1
+          fi
+          jq -er '.versionNumber | select(type == "number" and . > 0)' "$RUNNER_TEMP/roblox-publish.json" \
+            | xargs -r printf 'Published development place version %s\n'
